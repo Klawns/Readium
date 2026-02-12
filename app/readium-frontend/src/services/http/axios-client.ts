@@ -1,0 +1,102 @@
+import axios, { AxiosInstance, AxiosResponse } from 'axios';
+import { HttpClient, HttpRequest, HttpResponse } from './types.ts';
+
+export class AxiosHttpClient implements HttpClient {
+  private readonly api: AxiosInstance;
+  private readonly baseURL: string;
+
+  constructor(baseURL: string) {
+    this.baseURL = baseURL;
+    this.api = axios.create({
+      baseURL,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    this.api.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        if (import.meta.env.DEV) {
+          console.error('API Error:', error);
+        }
+        return Promise.reject(error);
+      }
+    );
+  }
+
+  async request<T = unknown>(data: HttpRequest<T>): Promise<HttpResponse<T>> {
+    // Se keepalive for true, usamos fetch nativo para garantir envio no unload
+    if (data.keepalive) {
+      const url = `${this.baseURL}${data.url}`;
+      try {
+        const response = await fetch(url, {
+          method: data.method?.toUpperCase() || 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            ...data.headers,
+          },
+          body: data.body ? JSON.stringify(data.body) : undefined,
+          keepalive: true,
+        });
+        
+        // Fetch não lança erro em 4xx/5xx, precisamos verificar ok
+        if (!response.ok) {
+           // Em caso de beacon/keepalive, muitas vezes ignoramos o erro ou logamos apenas
+           console.error(`Keepalive request failed: ${response.status}`);
+        }
+
+        // Para keepalive, geralmente não esperamos resposta JSON útil no unload,
+        // mas mantemos a assinatura
+        return {
+          data: {} as T,
+          status: response.status,
+        };
+      } catch (error) {
+        console.error('Keepalive fetch error:', error);
+        throw error;
+      }
+    }
+
+    let response: AxiosResponse;
+    try {
+      response = await this.api.request({
+        url: data.url,
+        method: data.method,
+        data: data.body,
+        headers: data.headers,
+        params: data.params,
+      });
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error) && error.response) {
+        response = error.response;
+      } else {
+        throw error;
+      }
+    }
+    return {
+      data: response.data,
+      status: response.status,
+    };
+  }
+
+  async get<T = unknown>(url: string, config?: Omit<HttpRequest<T>, 'url' | 'method'>): Promise<HttpResponse<T>> {
+    return this.request<T>({ ...config, url, method: 'get' });
+  }
+
+  async post<T = unknown>(url: string, body?: unknown, config?: Omit<HttpRequest<T>, 'url' | 'method' | 'body'>): Promise<HttpResponse<T>> {
+    return this.request<T>({ ...config, url, body, method: 'post' });
+  }
+
+  async put<T = unknown>(url: string, body?: unknown, config?: Omit<HttpRequest<T>, 'url' | 'method' | 'body'>): Promise<HttpResponse<T>> {
+    return this.request<T>({ ...config, url, body, method: 'put' });
+  }
+
+  async delete<T = unknown>(url: string, config?: Omit<HttpRequest<T>, 'url' | 'method'>): Promise<HttpResponse<T>> {
+    return this.request<T>({ ...config, url, method: 'delete' });
+  }
+
+  async patch<T = unknown>(url: string, body?: unknown, config?: Omit<HttpRequest<T>, 'url' | 'method' | 'body'>): Promise<HttpResponse<T>> {
+    return this.request<T>({ ...config, url, body, method: 'patch' });
+  }
+}

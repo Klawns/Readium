@@ -1,0 +1,20 @@
+# IDEs e Editores
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Sistema Operacional
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Dados locais (para não comitar o banco de dados ou livros se rodar localmente na raiz)
+data/
+
+# ENV do Docker Compose (app/.env)
+app/.env
+app/.env.*
+!app/.env.example

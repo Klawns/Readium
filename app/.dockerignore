@@ -1,0 +1,27 @@
+# VCS / IDE
+.git
+**/.git
+.idea
+**/.idea
+.vscode
+**/.vscode
+
+# Env / Secrets
+.env
+.env.*
+**/.env
+**/.env.*
+
+# Frontend
+readium-frontend/node_modules
+readium-frontend/dist
+readium-frontend/.vite
+readium-frontend/coverage
+
+# Backend
+readium-backend/target
+
+# Generic / caches
+**/*.log
+**/.DS_Store
+**/Thumbs.db

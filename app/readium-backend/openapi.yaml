@@ -1,0 +1,512 @@
+openapi: 3.0.3
+info:
+  title: Readium Backend API
+  version: 1.0.0
+servers:
+  - url: /api
+paths:
+  /books:
+    get:
+      summary: List books
+      parameters:
+        - in: query
+          name: page
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+        - in: query
+          name: size
+          schema:
+            type: integer
+            minimum: 1
+            default: 12
+        - in: query
+          name: status
+          schema:
+            $ref: '#/components/schemas/BookStatus'
+        - in: query
+          name: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Paginated books
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookPage'
+    post:
+      summary: Upload book
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '200':
+          description: Uploaded book
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Book'
+
+  /books/{bookId}:
+    get:
+      summary: Get book by id
+      parameters:
+        - $ref: '#/components/parameters/BookId'
+      responses:
+        '200':
+          description: Book
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Book'
+
+  /books/status:
+    patch:
+      summary: Update book status
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateBookStatusRequest'
+      responses:
+        '204':
+          description: Updated
+
+  /books/{bookId}/progress:
+    patch:
+      summary: Update read progress
+      parameters:
+        - $ref: '#/components/parameters/BookId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateProgressRequest'
+      responses:
+        '204':
+          description: Updated
+
+  /books/{bookId}/file:
+    get:
+      summary: Download file
+      parameters:
+        - $ref: '#/components/parameters/BookId'
+      responses:
+        '200':
+          description: Book file
+          content:
+            application/octet-stream:
+              schema:
+                type: string
+                format: binary
+
+  /books/{bookId}/cover:
+    get:
+      summary: Get cover
+      parameters:
+        - $ref: '#/components/parameters/BookId'
+      responses:
+        '200':
+          description: Cover image
+          content:
+            image/jpeg:
+              schema:
+                type: string
+                format: binary
+
+  /books/{bookId}/ocr:
+    post:
+      summary: Queue OCR job
+      parameters:
+        - $ref: '#/components/parameters/BookId'
+      responses:
+        '202':
+          description: OCR job queued
+
+  /books/{bookId}/ocr-status:
+    get:
+      summary: Get OCR status
+      parameters:
+        - $ref: '#/components/parameters/BookId'
+      responses:
+        '200':
+          description: OCR status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookOcrStatus'
+
+  /books/{bookId}/text-layer-quality:
+    get:
+      summary: Get text layer quality
+      parameters:
+        - $ref: '#/components/parameters/BookId'
+      responses:
+        '200':
+          description: Text layer quality score
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookTextLayerQuality'
+
+  /books/{bookId}/annotations:
+    get:
+      summary: List annotations by book
+      parameters:
+        - $ref: '#/components/parameters/BookId'
+      responses:
+        '200':
+          description: Annotations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Annotation'
+
+  /annotations/book/{bookId}/page/{page}:
+    get:
+      summary: List annotations by book and page
+      parameters:
+        - $ref: '#/components/parameters/BookId'
+        - in: path
+          name: page
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Annotations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Annotation'
+
+  /annotations:
+    post:
+      summary: Create annotation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAnnotationRequest'
+      responses:
+        '201':
+          description: Annotation created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Annotation'
+
+  /annotations/{id}:
+    put:
+      summary: Update annotation
+      parameters:
+        - $ref: '#/components/parameters/AnnotationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateAnnotationRequest'
+      responses:
+        '200':
+          description: Annotation updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Annotation'
+    delete:
+      summary: Delete annotation
+      parameters:
+        - $ref: '#/components/parameters/AnnotationId'
+      responses:
+        '204':
+          description: Annotation deleted
+
+  /books/{bookId}/translations:
+    get:
+      summary: List translations by book
+      parameters:
+        - $ref: '#/components/parameters/BookId'
+      responses:
+        '200':
+          description: Translations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Translation'
+
+  /translations:
+    post:
+      summary: Persist translation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTranslationRequest'
+      responses:
+        '201':
+          description: Translation created or updated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Translation'
+
+  /translations/auto:
+    post:
+      summary: Auto-translate text through backend provider
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AutoTranslationRequest'
+      responses:
+        '200':
+          description: Auto-translation result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AutoTranslationResponse'
+
+components:
+  parameters:
+    BookId:
+      in: path
+      name: bookId
+      required: true
+      schema:
+        type: integer
+        format: int64
+    AnnotationId:
+      in: path
+      name: id
+      required: true
+      schema:
+        type: integer
+        format: int64
+
+  schemas:
+    BookStatus:
+      type: string
+      enum: [TO_READ, READING, READ]
+    BookFormat:
+      type: string
+      enum: [PDF, EPUB]
+    Book:
+      type: object
+      required: [id, title, format, status]
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        author:
+          type: string
+          nullable: true
+        pages:
+          type: integer
+          nullable: true
+        format:
+          $ref: '#/components/schemas/BookFormat'
+        status:
+          $ref: '#/components/schemas/BookStatus'
+        coverUrl:
+          type: string
+          nullable: true
+        lastReadPage:
+          type: integer
+          nullable: true
+    BookPage:
+      type: object
+      required: [content, totalPages, totalElements, size, number, first, last, empty]
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/Book'
+        totalPages:
+          type: integer
+        totalElements:
+          type: integer
+        size:
+          type: integer
+        number:
+          type: integer
+        first:
+          type: boolean
+        last:
+          type: boolean
+        empty:
+          type: boolean
+    UpdateBookStatusRequest:
+      type: object
+      required: [bookId, status]
+      properties:
+        bookId:
+          type: integer
+        status:
+          $ref: '#/components/schemas/BookStatus'
+    UpdateProgressRequest:
+      type: object
+      required: [page]
+      properties:
+        page:
+          type: integer
+          minimum: 0
+    ReaderRect:
+      type: object
+      required: [x, y, width, height]
+      properties:
+        x:
+          type: number
+        y:
+          type: number
+        width:
+          type: number
+        height:
+          type: number
+    Annotation:
+      type: object
+      required: [id, bookId, page, rects, color, selectedText]
+      properties:
+        id:
+          type: integer
+        bookId:
+          type: integer
+        page:
+          type: integer
+        rects:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReaderRect'
+        color:
+          type: string
+        selectedText:
+          type: string
+        note:
+          type: string
+          nullable: true
+    CreateAnnotationRequest:
+      type: object
+      required: [bookId, page, rects, color, selectedText]
+      properties:
+        bookId:
+          type: integer
+        page:
+          type: integer
+        rects:
+          type: array
+          items:
+            $ref: '#/components/schemas/ReaderRect'
+        color:
+          type: string
+        selectedText:
+          type: string
+        note:
+          type: string
+          nullable: true
+    UpdateAnnotationRequest:
+      type: object
+      properties:
+        color:
+          type: string
+        note:
+          type: string
+          nullable: true
+    Translation:
+      type: object
+      required: [id, originalText, translatedText]
+      properties:
+        id:
+          type: integer
+        bookId:
+          type: integer
+          nullable: true
+        originalText:
+          type: string
+        translatedText:
+          type: string
+        contextSentence:
+          type: string
+          nullable: true
+    CreateTranslationRequest:
+      type: object
+      required: [bookId, originalText, translatedText]
+      properties:
+        bookId:
+          type: integer
+        originalText:
+          type: string
+        translatedText:
+          type: string
+        contextSentence:
+          type: string
+          nullable: true
+    AutoTranslationRequest:
+      type: object
+      required: [text, targetLanguage]
+      properties:
+        text:
+          type: string
+        targetLanguage:
+          type: string
+    AutoTranslationResponse:
+      type: object
+      required: [translatedText, detectedLanguage]
+      properties:
+        translatedText:
+          type: string
+        detectedLanguage:
+          type: string
+    BookOcrStatus:
+      type: object
+      required: [bookId, status]
+      properties:
+        bookId:
+          type: integer
+        status:
+          type: string
+          enum: [PENDING, RUNNING, DONE, FAILED]
+        score:
+          type: number
+          nullable: true
+        updatedAt:
+          type: string
+          format: date-time
+          nullable: true
+    BookTextLayerQuality:
+      type: object
+      required: [bookId, status]
+      properties:
+        bookId:
+          type: integer
+        score:
+          type: number
+          nullable: true
+        status:
+          type: string
+          enum: [PENDING, RUNNING, DONE, FAILED]
+        updatedAt:
+          type: string
+          format: date-time
+          nullable: true

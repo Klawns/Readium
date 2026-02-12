@@ -1,0 +1,106 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 98%;
+    --foreground: 215 25% 17%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 215 25% 17%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 215 25% 17%;
+
+    --primary: 217 91% 53%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 214 32% 91%;
+    --secondary-foreground: 215 25% 17%;
+
+    --muted: 210 20% 96%;
+    --muted-foreground: 215 14% 46%;
+
+    --accent: 210 20% 96%;
+    --accent-foreground: 215 25% 17%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 214 20% 92%;
+    --input: 214 20% 92%;
+    --ring: 217 91% 53%;
+
+    --radius: 0.5rem;
+
+    --highlight: 54 100% 81%;
+    --highlight-foreground: 40 50% 20%;
+
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 215 25% 17%;
+    --sidebar-primary: 217 91% 53%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 210 20% 96%;
+    --sidebar-accent-foreground: 215 25% 17%;
+    --sidebar-border: 214 20% 92%;
+    --sidebar-ring: 217 91% 53%;
+
+    --status-to-read: 45 80% 56%;
+    --status-reading: 217 91% 53%;
+    --status-read: 152 60% 40%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  }
+}
+
+/* PDF Text Layer */
+.pdf-text-layer {
+  position: absolute;
+  left: 0;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  overflow: hidden;
+  line-height: 1;
+  pointer-events: all;
+}
+
+.pdf-text-layer span {
+  color: transparent;
+  position: absolute;
+  white-space: pre;
+  cursor: text;
+}
+
+.pdf-text-layer ::selection {
+  background: hsl(var(--highlight) / 0.5);
+}
+
+/* Selection rectangle */
+.selection-rect {
+  position: absolute;
+  border: 2px dashed hsl(var(--primary));
+  background: hsl(var(--primary) / 0.1);
+  pointer-events: none;
+}
+
+/* Annotation highlight */
+.annotation-highlight {
+  position: absolute;
+  cursor: pointer;
+  transition: opacity 0.15s ease;
+}
+
+.annotation-highlight:hover {
+  opacity: 0.6 !important;
+}

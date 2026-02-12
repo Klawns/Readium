@@ -1,0 +1,46 @@
+server:
+  port: ${APP_PORT:7717}
+
+spring:
+  datasource:
+    url: ${APP_DATABASE_URL:jdbc:sqlite:data/db/library.db}
+    driver-class-name: org.sqlite.JDBC
+
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    database-platform: org.hibernate.community.dialect.SQLiteDialect
+
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 50MB
+
+  web:
+    resources:
+      static-locations: ${SPRING_RESOURCES_STATIC_LOCATIONS:classpath:/static/}
+
+app:
+  storage:
+    path: ${APP_STORAGE_PATH:data/books}
+  translation:
+    provider:
+      type: ${APP_TRANSLATION_PROVIDER:MYMEMORY}
+      mymemory-url: ${APP_TRANSLATION_MYMEMORY_URL:https://api.mymemory.translated.net/get}
+      libre-url: ${APP_TRANSLATION_LIBRE_URL:http://localhost:5000/translate}
+      libre-api-key: ${APP_TRANSLATION_LIBRE_API_KEY:}
+      timeout-ms: ${APP_TRANSLATION_TIMEOUT_MS:5000}
+    cache:
+      ttl-seconds: ${APP_TRANSLATION_CACHE_TTL_SECONDS:86400}
+      max-entries: ${APP_TRANSLATION_CACHE_MAX_ENTRIES:5000}
+    rate-limit:
+      min-interval-ms: ${APP_TRANSLATION_MIN_INTERVAL_MS:150}
+  ocr:
+    engine: ${APP_OCR_ENGINE:HEURISTIC}
+    sample-pages: ${APP_OCR_SAMPLE_PAGES:10}
+    ocrmypdf:
+      command: ${APP_OCRMYPDF_COMMAND:ocrmypdf}
+      languages: ${APP_OCRMYPDF_LANGUAGES:eng}
+      timeout-seconds: ${APP_OCRMYPDF_TIMEOUT_SECONDS:1800}

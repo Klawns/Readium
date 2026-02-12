@@ -1,0 +1,32 @@
+services:
+  readium-backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: ${READIUM_DOCKER_TARGET:-runtime-base}
+    container_name: readium-backend
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-7717}:${APP_PORT:-7717}"
+    volumes:
+      - ../data/db:/app/data/db
+      - ../data/books:/app/data/books
+    environment:
+      - SPRING_RESOURCES_STATIC_LOCATIONS=file:/app/static/
+      - JAVA_OPTS=-XX:MaxRAMPercentage=75.0
+      - APP_PORT=${APP_PORT:-7717}
+      - APP_DATABASE_URL=${APP_DATABASE_URL:-jdbc:sqlite:data/db/library.db}
+      - APP_STORAGE_PATH=${APP_STORAGE_PATH:-data/books}
+      - APP_TRANSLATION_PROVIDER=${APP_TRANSLATION_PROVIDER:-MYMEMORY}
+      - APP_TRANSLATION_MYMEMORY_URL=${APP_TRANSLATION_MYMEMORY_URL:-https://api.mymemory.translated.net/get}
+      - APP_TRANSLATION_LIBRE_URL=${APP_TRANSLATION_LIBRE_URL:-http://localhost:5000/translate}
+      - APP_TRANSLATION_LIBRE_API_KEY=${APP_TRANSLATION_LIBRE_API_KEY:-}
+      - APP_TRANSLATION_TIMEOUT_MS=${APP_TRANSLATION_TIMEOUT_MS:-5000}
+      - APP_TRANSLATION_CACHE_TTL_SECONDS=${APP_TRANSLATION_CACHE_TTL_SECONDS:-86400}
+      - APP_TRANSLATION_CACHE_MAX_ENTRIES=${APP_TRANSLATION_CACHE_MAX_ENTRIES:-5000}
+      - APP_TRANSLATION_MIN_INTERVAL_MS=${APP_TRANSLATION_MIN_INTERVAL_MS:-150}
+      - APP_OCR_ENGINE=${APP_OCR_ENGINE:-HEURISTIC}
+      - APP_OCR_SAMPLE_PAGES=${APP_OCR_SAMPLE_PAGES:-10}
+      - APP_OCRMYPDF_COMMAND=${APP_OCRMYPDF_COMMAND:-ocrmypdf}
+      - APP_OCRMYPDF_LANGUAGES=${APP_OCRMYPDF_LANGUAGES:-eng+por}
+      - APP_OCRMYPDF_TIMEOUT_SECONDS=${APP_OCRMYPDF_TIMEOUT_SECONDS:-1800}
