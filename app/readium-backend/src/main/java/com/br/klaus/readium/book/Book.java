@@ -7,11 +7,20 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 @Entity
+@Table(indexes = {
+        @Index(name = "idx_book_status", columnList = "book_status"),
+        @Index(name = "idx_book_title", columnList = "title"),
+        @Index(name = "idx_book_author", columnList = "author"),
+        @Index(name = "idx_book_ocr_status", columnList = "ocr_status")
+})
 @Data
 public class Book {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Version
+    private Long version;
 
     private String title;
     private String author;
@@ -96,5 +105,23 @@ public class Book {
     public void markOcrFailed() {
         this.ocrStatus = OcrStatus.FAILED;
         this.ocrUpdatedAt = LocalDateTime.now();
+    }
+
+    public void updateReadingProgress(int newPage) {
+        if (newPage < 0) {
+            throw new IllegalArgumentException("Pagina invalida. O valor nao pode ser negativo.");
+        }
+        if (this.pages != null && newPage > this.pages) {
+            throw new IllegalArgumentException("Pagina invalida. O livro so tem " + this.pages + " paginas.");
+        }
+
+        this.lastReadPage = newPage;
+
+        if ((this.bookStatus == null || this.bookStatus == BookStatus.TO_READ) && newPage > 0) {
+            this.bookStatus = BookStatus.READING;
+        }
+        if (this.pages != null && newPage == this.pages) {
+            this.bookStatus = BookStatus.READ;
+        }
     }
 }

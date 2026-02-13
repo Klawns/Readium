@@ -1,79 +1,33 @@
 # Readium Backend
 
-API Spring Boot (self-hosted) para biblioteca de livros, anotações, traduções e OCR.
+API da aplicacao Readium responsavel pela gestao da biblioteca, leitura, anotacoes, traducao e OCR.
 
-## O que faz
+## Escopo funcional
+- Cadastro e listagem de livros em PDF/EPUB.
+- Controle de status de leitura e progresso por pagina.
+- CRUD de anotacoes por livro e pagina.
+- Traducao persistida por contexto de livro.
+- Traducao automatica com provider configuravel.
+- OCR sob demanda com processamento assincrono.
 
-- Upload/listagem de livros (PDF/EPUB)
-- Progresso e status de leitura
-- Anotações por página
-- Tradução persistida + tradução automática (`/api/translations/auto`)
-- OCR assíncrono por livro (`/api/books/{id}/ocr`)
+## Contextos de dominio
+- `book`: upload, listagem, status, progresso, capa, arquivo e status de OCR.
+- `annotations`: criacao, atualizacao, consulta e remocao de anotacoes.
+- `translation`: traducao manual persistida e traducao automatica.
+- `event`: eventos de dominio e listeners para processamento assincrono.
 
-## Rodar local
 
-```powershell
-cd D:\Projetos\Readium\app\readium-backend
-.\mvnw spring-boot:run
-```
+## Fluxos principais
+1. Upload de livro:
+   `POST /api/books` cria entidade e publica evento de livro criado.
+2. Pos-processamento:
+   listener extrai metadados, numero de paginas e capa.
+3. OCR sob demanda:
+   `POST /api/books/{id}/ocr` enfileira processamento assincrono.
+4. Leitura:
+   arquivo via `GET /api/books/{id}/file` e progresso via `PATCH /api/books/{id}/progress`.
+5. Anotacoes e traducao:
+   APIs de anotacao e traducao atendem o leitor com persistencia por livro/pagina.
 
-API em `http://localhost:7717` (base `/api`).
-
-## Testes
-
-```powershell
-cd D:\Projetos\Readium\app\readium-backend
-.\mvnw test
-```
-
-## Variáveis de ambiente
-
-Arquivo de exemplo: `readium-backend/.env.example`.
-
-Principais:
-
-- `APP_PORT`
-- `APP_DATABASE_URL`
-- `APP_STORAGE_PATH`
-- `APP_TRANSLATION_PROVIDER` (`MYMEMORY` ou `LIBRETRANSLATE`)
-- `APP_OCR_ENGINE` (`HEURISTIC` ou `OCRMYPDF`)
-- `APP_OCRMYPDF_COMMAND`
-- `APP_OCRMYPDF_LANGUAGES`
-
-## Contrato da API
-
-- OpenAPI: `readium-backend/openapi.yaml`
-
-## Auth
-
-- Sem autenticação por padrão (self-hosted).
-
-## Docker (raiz do workspace)
-
-O Dockerfile da raiz gera duas imagens finais:
-
-- `runtime-base` (sem OCR pesado)
-- `runtime-ocr` (com OCRmyPDF + Tesseract + Ghostscript)
-
-Build:
-
-```powershell
-cd D:\Projetos\Readium\app
-docker build --target runtime-base -t readium-backend:base .
-docker build --target runtime-ocr -t readium-backend:ocr .
-```
-
-Compose:
-
-```powershell
-cd D:\Projetos\Readium\app
-docker compose up --build
-```
-
-Com OCR:
-
-```powershell
-cd D:\Projetos\Readium\app
-$env:READIUM_DOCKER_TARGET="runtime-ocr"
-docker compose up --build
-```
+## Contrato
+- OpenAPI: `openapi.yaml`

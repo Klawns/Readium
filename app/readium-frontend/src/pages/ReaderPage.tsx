@@ -74,7 +74,7 @@ export default function ReaderPage() {
 
   if (isLoading) {
     return (
-      <div className="flex h-screen items-center justify-center bg-background">
+      <div className="flex h-[100dvh] items-center justify-center bg-background">
         <span className="text-sm text-muted-foreground">Carregando livro...</span>
       </div>
     );
@@ -82,7 +82,7 @@ export default function ReaderPage() {
 
   if (error || !book) {
     return (
-      <div className="flex h-screen items-center justify-center bg-background">
+      <div className="flex h-[100dvh] items-center justify-center bg-background">
         <span className="text-sm text-destructive">Erro ao carregar livro.</span>
       </div>
     );
@@ -90,7 +90,7 @@ export default function ReaderPage() {
 
   if (book.format !== 'PDF') {
     return (
-      <div className="flex h-screen items-center justify-center bg-background">
+      <div className="flex h-[100dvh] items-center justify-center bg-background">
         <span className="text-sm text-muted-foreground">Formato nao suportado pelo leitor de PDF.</span>
       </div>
     );
@@ -100,7 +100,7 @@ export default function ReaderPage() {
   const fileVersion = ocrStatus?.updatedAt ?? null;
 
   return (
-    <div className="h-screen w-full bg-gray-100">
+    <div className="h-[100dvh] w-full overflow-hidden bg-gray-100">
       <PdfReader
         fileUrl={getBookFileUrl(bookId, fileVersion)}
         bookId={bookId}

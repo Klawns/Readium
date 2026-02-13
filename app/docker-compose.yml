@@ -9,8 +9,8 @@ services:
     ports:
       - "${APP_PORT:-7717}:${APP_PORT:-7717}"
     volumes:
-      - ../data/db:/app/data/db
-      - ../data/books:/app/data/books
+      - readium-db:/app/data/db
+      - readium-books:/app/data/books
     environment:
       - SPRING_RESOURCES_STATIC_LOCATIONS=file:/app/static/
       - JAVA_OPTS=-XX:MaxRAMPercentage=75.0
@@ -27,6 +27,13 @@ services:
       - APP_TRANSLATION_MIN_INTERVAL_MS=${APP_TRANSLATION_MIN_INTERVAL_MS:-150}
       - APP_OCR_ENGINE=${APP_OCR_ENGINE:-HEURISTIC}
       - APP_OCR_SAMPLE_PAGES=${APP_OCR_SAMPLE_PAGES:-10}
+      - APP_OCR_ASYNC_CORE_POOL_SIZE=${APP_OCR_ASYNC_CORE_POOL_SIZE:-1}
+      - APP_OCR_ASYNC_MAX_POOL_SIZE=${APP_OCR_ASYNC_MAX_POOL_SIZE:-2}
+      - APP_OCR_ASYNC_QUEUE_CAPACITY=${APP_OCR_ASYNC_QUEUE_CAPACITY:-8}
       - APP_OCRMYPDF_COMMAND=${APP_OCRMYPDF_COMMAND:-ocrmypdf}
       - APP_OCRMYPDF_LANGUAGES=${APP_OCRMYPDF_LANGUAGES:-eng+por}
       - APP_OCRMYPDF_TIMEOUT_SECONDS=${APP_OCRMYPDF_TIMEOUT_SECONDS:-1800}
+
+volumes:
+  readium-db:
+  readium-books:

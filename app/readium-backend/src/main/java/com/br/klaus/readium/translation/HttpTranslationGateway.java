@@ -16,6 +16,7 @@ import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 @Component
@@ -54,27 +55,28 @@ public class HttpTranslationGateway implements TranslationGateway {
     }
 
     private TranslationAutoResult translateWithMyMemory(String text, String targetLanguage) {
-        String encodedText = URLEncoder.encode(text, StandardCharsets.UTF_8);
-        String encodedTarget = URLEncoder.encode(targetLanguage, StandardCharsets.UTF_8);
-        String url = myMemoryUrl + "?q=" + encodedText + "&langpair=auto|" + encodedTarget;
+        MyMemoryResponse response = callMyMemoryWithSourceFallback(text, targetLanguage);
 
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(url))
-                .timeout(Duration.ofMillis(timeoutMs))
-                .GET()
-                .build();
+        if (shouldRetryWithNormalizedCase(text, response)) {
+            MyMemoryResponse retryWithEnglishSource = callMyMemory(text, "en", targetLanguage);
+            response = retryWithEnglishSource;
 
-        String body = send(request);
-        try {
-            JsonNode root = objectMapper.readTree(body);
-            String translatedText = root.path("responseData").path("translatedText").asText("");
-            if (!StringUtils.hasText(translatedText)) {
-                throw new ExternalServiceException("Translation provider returned an empty translation.");
+            if (shouldRetryWithNormalizedCase(text, retryWithEnglishSource)) {
+                String normalizedText = text.trim().toLowerCase(Locale.ROOT);
+                response = callMyMemory(normalizedText, "en", targetLanguage);
             }
-            return new TranslationAutoResult(translatedText, "unknown");
-        } catch (IOException e) {
-            throw new ExternalServiceException("Failed to parse response from translation provider.", e);
         }
+
+        if (response.statusCode() != 200) {
+            String details = StringUtils.hasText(response.details()) ? response.details() : "unknown error";
+            throw new ExternalServiceException("MyMemory translation failed: " + details);
+        }
+
+        if (!StringUtils.hasText(response.translatedText())) {
+            throw new ExternalServiceException("Translation provider returned an empty translation.");
+        }
+
+        return new TranslationAutoResult(response.translatedText(), response.detectedLanguage());
     }
 
     private TranslationAutoResult translateWithLibreTranslate(String text, String targetLanguage) {
@@ -128,5 +130,89 @@ public class HttpTranslationGateway implements TranslationGateway {
         } catch (IOException e) {
             throw new ExternalServiceException("Translation provider call failed.", e);
         }
+    }
+
+    private MyMemoryResponse callMyMemory(String text, String sourceLanguage, String targetLanguage) {
+        String encodedText = URLEncoder.encode(text, StandardCharsets.UTF_8);
+        String encodedLangPair = URLEncoder.encode(sourceLanguage + "|" + targetLanguage, StandardCharsets.UTF_8);
+        String url = myMemoryUrl + "?q=" + encodedText + "&langpair=" + encodedLangPair;
+
+        HttpRequest request = HttpRequest.newBuilder()
+                .uri(URI.create(url))
+                .timeout(Duration.ofMillis(timeoutMs))
+                .GET()
+                .build();
+
+        String body = send(request);
+        try {
+            JsonNode root = objectMapper.readTree(body);
+            int responseStatus = root.path("responseStatus").asInt(200);
+            String responseDetails = root.path("responseDetails").asText("");
+            String translatedText = root.path("responseData").path("translatedText").asText("");
+            return new MyMemoryResponse(translatedText, sourceLanguage, responseStatus, responseDetails);
+        } catch (IOException e) {
+            throw new ExternalServiceException("Failed to parse response from translation provider.", e);
+        }
+    }
+
+    private MyMemoryResponse callMyMemoryWithSourceFallback(String text, String targetLanguage) {
+        MyMemoryResponse response = callMyMemory(text, "auto", targetLanguage);
+        if (isInvalidSourceLanguage(response)) {
+            return callMyMemory(text, "en", targetLanguage);
+        }
+        return response;
+    }
+
+    private boolean shouldRetryWithNormalizedCase(String originalText, MyMemoryResponse response) {
+        if (response.statusCode() != 200) {
+            return false;
+        }
+        if (!StringUtils.hasText(originalText) || !StringUtils.hasText(response.translatedText())) {
+            return false;
+        }
+
+        String input = originalText.trim();
+        String translated = response.translatedText().trim();
+        if (!translated.equalsIgnoreCase(input)) {
+            return false;
+        }
+
+        return isMostlyUppercase(input);
+    }
+
+    private boolean isMostlyUppercase(String text) {
+        int letters = 0;
+        int uppercaseLetters = 0;
+        for (char current : text.toCharArray()) {
+            if (Character.isLetter(current)) {
+                letters++;
+                if (Character.isUpperCase(current)) {
+                    uppercaseLetters++;
+                }
+            }
+        }
+
+        if (letters < 3) {
+            return false;
+        }
+
+        return ((double) uppercaseLetters / letters) >= 0.7;
+    }
+
+    private boolean isInvalidSourceLanguage(MyMemoryResponse response) {
+        if (response.statusCode() == 200) {
+            return false;
+        }
+
+        String details = response.details() == null ? "" : response.details().toLowerCase(Locale.ROOT);
+        return details.contains("invalid source language");
+    }
+
+    private record MyMemoryResponse(
+            String translatedText,
+            String detectedLanguage,
+            int statusCode,
+            String details
+    ) {
     }
 }

@@ -1,5 +1,8 @@
 import axios, { AxiosInstance, AxiosResponse } from 'axios';
+import { createLogger } from '@/lib/logger.ts';
 import { HttpClient, HttpRequest, HttpResponse } from './types.ts';
+
+const logger = createLogger('http');
 
 export class AxiosHttpClient implements HttpClient {
   private readonly api: AxiosInstance;
@@ -17,15 +20,13 @@ export class AxiosHttpClient implements HttpClient {
     this.api.interceptors.response.use(
       (response) => response,
       (error) => {
-        if (import.meta.env.DEV) {
-          console.error('API Error:', error);
-        }
+        logger.error('API error', error);
         return Promise.reject(error);
       }
     );
   }
 
-  async request<T = unknown>(data: HttpRequest<T>): Promise<HttpResponse<T>> {
+  async request<T = unknown>(data: HttpRequest): Promise<HttpResponse<T>> {
     // Se keepalive for true, usamos fetch nativo para garantir envio no unload
     if (data.keepalive) {
       const url = `${this.baseURL}${data.url}`;
@@ -43,7 +44,7 @@ export class AxiosHttpClient implements HttpClient {
         // Fetch não lança erro em 4xx/5xx, precisamos verificar ok
         if (!response.ok) {
            // Em caso de beacon/keepalive, muitas vezes ignoramos o erro ou logamos apenas
-           console.error(`Keepalive request failed: ${response.status}`);
+           logger.warn(`Keepalive request failed: ${response.status}`);
         }
 
         // Para keepalive, geralmente não esperamos resposta JSON útil no unload,
@@ -53,7 +54,7 @@ export class AxiosHttpClient implements HttpClient {
           status: response.status,
         };
       } catch (error) {
-        console.error('Keepalive fetch error:', error);
+        logger.error('Keepalive fetch error', error);
         throw error;
       }
     }
@@ -80,23 +81,23 @@ export class AxiosHttpClient implements HttpClient {
     };
   }
 
-  async get<T = unknown>(url: string, config?: Omit<HttpRequest<T>, 'url' | 'method'>): Promise<HttpResponse<T>> {
+  async get<T = unknown>(url: string, config?: Omit<HttpRequest, 'url' | 'method'>): Promise<HttpResponse<T>> {
     return this.request<T>({ ...config, url, method: 'get' });
   }
 
-  async post<T = unknown>(url: string, body?: unknown, config?: Omit<HttpRequest<T>, 'url' | 'method' | 'body'>): Promise<HttpResponse<T>> {
+  async post<T = unknown>(url: string, body?: unknown, config?: Omit<HttpRequest, 'url' | 'method' | 'body'>): Promise<HttpResponse<T>> {
     return this.request<T>({ ...config, url, body, method: 'post' });
   }
 
-  async put<T = unknown>(url: string, body?: unknown, config?: Omit<HttpRequest<T>, 'url' | 'method' | 'body'>): Promise<HttpResponse<T>> {
+  async put<T = unknown>(url: string, body?: unknown, config?: Omit<HttpRequest, 'url' | 'method' | 'body'>): Promise<HttpResponse<T>> {
     return this.request<T>({ ...config, url, body, method: 'put' });
   }
 
-  async delete<T = unknown>(url: string, config?: Omit<HttpRequest<T>, 'url' | 'method'>): Promise<HttpResponse<T>> {
+  async delete<T = unknown>(url: string, config?: Omit<HttpRequest, 'url' | 'method'>): Promise<HttpResponse<T>> {
     return this.request<T>({ ...config, url, method: 'delete' });
   }
 
-  async patch<T = unknown>(url: string, body?: unknown, config?: Omit<HttpRequest<T>, 'url' | 'method' | 'body'>): Promise<HttpResponse<T>> {
+  async patch<T = unknown>(url: string, body?: unknown, config?: Omit<HttpRequest, 'url' | 'method' | 'body'>): Promise<HttpResponse<T>> {
     return this.request<T>({ ...config, url, body, method: 'patch' });
   }
 }

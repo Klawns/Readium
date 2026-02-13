@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Check, X } from 'lucide-react';
+import { Check, ExternalLink, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 
@@ -8,6 +8,7 @@ interface TranslationInputPopupProps {
   originalText: string;
   detectedLanguage?: string;
   initialValue?: string;
+  googleTranslateUrl?: string;
   onSave: (text: string) => void;
   onCancel: () => void;
 }
@@ -17,6 +18,7 @@ const TranslationInputPopup: React.FC<TranslationInputPopupProps> = ({
   originalText,
   detectedLanguage,
   initialValue = '',
+  googleTranslateUrl,
   onSave,
   onCancel,
 }) => {
@@ -84,6 +86,16 @@ const TranslationInputPopup: React.FC<TranslationInputPopupProps> = ({
           <X className="h-4 w-4" />
         </Button>
       </form>
+      {googleTranslateUrl ? (
+        <div className="mt-2 text-xs text-muted-foreground">
+          Traducao automatica indisponivel neste trecho.
+          <Button asChild variant="link" size="sm" className="h-auto px-1 text-xs">
+            <a href={googleTranslateUrl} target="_blank" rel="noopener noreferrer">
+              Abrir no Google Tradutor <ExternalLink className="h-3 w-3" />
+            </a>
+          </Button>
+        </div>
+      ) : null}
     </div>
   );
 };

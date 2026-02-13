@@ -21,9 +21,17 @@ export class BackendTranslationProvider implements TranslationProvider {
     });
 
     if (response.status >= 400) {
-      throw new Error(`Translation API failed (${response.status})`);
+      const details =
+        typeof response.data === 'object' && response.data !== null && 'message' in response.data
+          ? String((response.data as { message?: unknown }).message ?? '')
+          : '';
+      throw new Error(details ? `Translation API failed (${response.status}): ${details}` : `Translation API failed (${response.status})`);
     }
 
-    return AutoTranslationResponseSchema.parse(response.data);
+    const parsed = AutoTranslationResponseSchema.parse(response.data);
+    return {
+      detectedLanguage: parsed.detectedLanguage ?? 'unknown',
+      translatedText: parsed.translatedText ?? '',
+    };
   }
 }

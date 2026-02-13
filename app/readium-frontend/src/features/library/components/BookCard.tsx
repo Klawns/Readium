@@ -33,8 +33,12 @@ export default function BookCard({ book, onClick, onStatusChange }: BookCardProp
           <img
             src={book.coverUrl}
             alt={book.title}
+            width={400}
+            height={600}
+            sizes="(max-width: 640px) 45vw, (max-width: 1024px) 30vw, 20vw"
             className="h-full w-full object-cover"
             loading="lazy"
+            decoding="async"
           />
         ) : (
           <div className="flex flex-col items-center justify-center h-full w-full bg-secondary/30 text-muted-foreground/40 gap-2">

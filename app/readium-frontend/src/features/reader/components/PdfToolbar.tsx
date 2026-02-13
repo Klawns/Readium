@@ -32,7 +32,7 @@ const PdfToolbar: React.FC<PdfToolbarProps> = ({
   const isOcrBusy = isTriggeringOcr || ocrStatus === 'PENDING' || ocrStatus === 'RUNNING';
 
   return (
-    <div className="sticky top-0 z-50 border-b border-border/60 bg-background/90 px-3 py-2 backdrop-blur supports-[backdrop-filter]:bg-background/80 md:px-4">
+    <div className="fixed inset-x-0 top-0 z-50 border-b border-border/60 bg-background/90 px-3 py-2 pt-[max(env(safe-area-inset-top),0.5rem)] backdrop-blur supports-[backdrop-filter]:bg-background/80 md:px-4">
       <div className="flex items-center justify-between gap-2">
         <Button type="button" variant="outline" size="sm" asChild className="h-8 rounded-full px-3">
           <Link to="/books" className="gap-2">

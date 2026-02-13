@@ -11,6 +11,10 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
+@Table(indexes = {
+        @Index(name = "idx_annotation_book_id", columnList = "book_id"),
+        @Index(name = "idx_annotation_book_page", columnList = "book_id,page")
+})
 @Data
 public class Annotation {
 

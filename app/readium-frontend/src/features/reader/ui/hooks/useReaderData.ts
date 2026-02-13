@@ -13,6 +13,7 @@ import {
   TranslateSelectionUseCase,
 } from '../../application/use-cases/translation-use-cases';
 import type { ReaderRect } from '../../domain/models';
+import type { CreateTranslationCommand } from '../../domain/ports/TranslationRepository';
 
 const annotationRepository = new AnnotationHttpRepository();
 const translationRepository = new TranslationHttpRepository();
@@ -36,55 +37,52 @@ interface CreateReaderAnnotationInput {
 
 export const useReaderData = (bookId: number, currentPage: number) => {
   const queryClient = useQueryClient();
-  const annotationsQueryKey = ['reader', 'annotations', bookId] as const;
   const pageAnnotationsQueryKey = ['reader', 'annotations', bookId, 'page', currentPage] as const;
   const translationsQueryKey = ['reader', 'translations', bookId] as const;
-
-  const annotationsQuery = useQuery({
-    queryKey: annotationsQueryKey,
-    queryFn: () => annotationRepository.getByBook(bookId),
-    enabled: Number.isFinite(bookId) && bookId > 0,
-    staleTime: 5_000,
-    retry: 2,
-  });
 
   const pageAnnotationsQuery = useQuery({
     queryKey: pageAnnotationsQueryKey,
     queryFn: () => annotationRepository.getByBookAndPage(bookId, currentPage),
     enabled: Number.isFinite(bookId) && bookId > 0 && currentPage > 0,
-    staleTime: 2_000,
-    retry: 2,
+    staleTime: 10_000,
+    retry: 1,
   });
 
   const translationsQuery = useQuery({
     queryKey: translationsQueryKey,
     queryFn: () => translationRepository.getByBook(bookId),
     enabled: Number.isFinite(bookId) && bookId > 0,
-    staleTime: 5_000,
-    retry: 2,
+    staleTime: 20_000,
+    retry: 1,
   });
+
+  const invalidateCurrentPageAnnotations = () => {
+    queryClient.invalidateQueries({
+      predicate: ({ queryKey }) =>
+        queryKey[0] === 'reader'
+        && queryKey[1] === 'annotations'
+        && queryKey[2] === bookId,
+    });
+  };
 
   const createAnnotationMutation = useMutation({
     mutationFn: (input: CreateReaderAnnotationInput) => createAnnotationUseCase.execute(input),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: annotationsQueryKey });
-      queryClient.invalidateQueries({ queryKey: pageAnnotationsQueryKey });
+      invalidateCurrentPageAnnotations();
     },
   });
 
   const updateAnnotationMutation = useMutation({
     mutationFn: updateAnnotationUseCase.execute.bind(updateAnnotationUseCase),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: annotationsQueryKey });
-      queryClient.invalidateQueries({ queryKey: pageAnnotationsQueryKey });
+      invalidateCurrentPageAnnotations();
     },
   });
 
   const deleteAnnotationMutation = useMutation({
     mutationFn: deleteAnnotationUseCase.execute.bind(deleteAnnotationUseCase),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: annotationsQueryKey });
-      queryClient.invalidateQueries({ queryKey: pageAnnotationsQueryKey });
+      invalidateCurrentPageAnnotations();
     },
   });
 
@@ -93,12 +91,15 @@ export const useReaderData = (bookId: number, currentPage: number) => {
     retry: 1,
   });
 
-  const persistTranslationMutation = useMutation({
-    mutationFn: persistTranslationUseCase.execute.bind(persistTranslationUseCase),
+  const persistTranslationMutation = useMutation<unknown, Error, CreateTranslationCommand>({
+    mutationFn: async (input: CreateTranslationCommand) => persistTranslationUseCase.execute(input),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: translationsQueryKey });
     },
   });
+
+  const persistTranslation: (input: CreateTranslationCommand) => Promise<unknown> = (input) =>
+    persistTranslationMutation.mutateAsync(input);
 
   const translatedDictionary = useMemo(() => {
     const dictionary = new Map<string, string>();
@@ -109,17 +110,17 @@ export const useReaderData = (bookId: number, currentPage: number) => {
   }, [translationsQuery.data]);
 
   return {
-    annotations: annotationsQuery.data ?? [],
+    annotations: pageAnnotationsQuery.data ?? [],
     pageAnnotations: pageAnnotationsQuery.data ?? [],
     translations: translationsQuery.data ?? [],
     translatedDictionary,
-    isLoading: annotationsQuery.isLoading || translationsQuery.isLoading,
+    isLoading: translationsQuery.isLoading,
     isPageLoading: pageAnnotationsQuery.isLoading,
     createAnnotation: createAnnotationMutation.mutateAsync,
     updateAnnotation: updateAnnotationMutation.mutateAsync,
     deleteAnnotation: deleteAnnotationMutation.mutateAsync,
     autoTranslate: autoTranslateMutation.mutateAsync,
-    persistTranslation: persistTranslationMutation.mutateAsync,
+    persistTranslation,
     isTranslating: autoTranslateMutation.isPending || persistTranslationMutation.isPending,
   };
 };

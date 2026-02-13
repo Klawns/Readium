@@ -34,13 +34,17 @@ const toReaderAnnotation = (annotation: AnnotationDto): ReaderAnnotation => ({
 
 export class AnnotationHttpRepository implements AnnotationRepository {
   async getByBook(bookId: number): Promise<ReaderAnnotation[]> {
-    const response = await httpClient.get(`/books/${bookId}/annotations`);
+    const response = await httpClient.get(`/books/${bookId}/annotations`, {
+      params: { resultPage: 0, size: 500 },
+    });
     const parsed = AnnotationResponseSchema.parse(response.data) as AnnotationDto[];
     return parsed.map(toReaderAnnotation);
   }
 
   async getByBookAndPage(bookId: number, page: number): Promise<ReaderAnnotation[]> {
-    const response = await httpClient.get(`/annotations/book/${bookId}/page/${page}`);
+    const response = await httpClient.get(`/annotations/book/${bookId}/page/${page}`, {
+      params: { resultPage: 0, size: 500 },
+    });
     const parsed = AnnotationResponseSchema.parse(response.data) as AnnotationDto[];
     return parsed.map(toReaderAnnotation);
   }

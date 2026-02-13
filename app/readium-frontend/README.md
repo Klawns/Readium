@@ -1,35 +1,27 @@
 # Readium Frontend
 
-Frontend React + Vite para biblioteca e leitor de PDF.
+Aplicacao web do Readium para navegacao da biblioteca e experiencia de leitura no navegador.
 
-## O que faz
+## Escopo funcional
+- Biblioteca com listagem paginada, busca e filtro por status.
+- Upload de livros e atualizacao de estado de leitura.
+- Leitor PDF com navegacao por pagina e sincronizacao de progresso.
+- Destaque/anotacao de selecao de texto por pagina.
+- Exibicao e persistencia de traducoes no contexto de leitura.
+- Acionamento de OCR e exibicao de status/qualidade de camada de texto.
 
-- Lista de livros com filtros/busca
-- Upload de PDF/EPUB
-- Leitor PDF com progresso, anotações e tradução
-- Ação de OCR no reader (status e score)
+## Organizacao por camadas
+- `domain`: modelos e portas (contratos).
+- `application`: casos de uso.
+- `infrastructure`: repositorios HTTP/providers.
+- `ui`: hooks, componentes e paginas.
 
-## Rodar local
+## Modulos principais
+- `features/library`: experiencia de biblioteca, upload e filtros.
+- `features/reader`: leitor PDF, anotacoes, traducao e OCR.
+- `services/http`: cliente HTTP e integracao com API.
 
-```powershell
-cd D:\Projetos\Readium\app\readium-frontend
-npm install
-npm run dev
-```
-
-App em `http://localhost:3000` com proxy `/api` para `http://localhost:7717`.
-
-## Build
-
-```powershell
-cd D:\Projetos\Readium\app\readium-frontend
-npm run build
-```
-
-## Testes/checagem
-
-```powershell
-cd D:\Projetos\Readium\app\readium-frontend
-npm run test
-npx tsc --noEmit
-```
+## Diretrizes
+- UI desacoplada da infraestrutura via interfaces/ports.
+- Regras de negocio concentradas em use-cases e hooks de feature.
+- Componentes focados em composicao e renderizacao.

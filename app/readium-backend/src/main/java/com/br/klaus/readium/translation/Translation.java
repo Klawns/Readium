@@ -6,6 +6,11 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 @Entity
+@Table(indexes = {
+        @Index(name = "idx_translation_book_id", columnList = "book_id"),
+        @Index(name = "idx_translation_book_original", columnList = "book_id,original_text"),
+        @Index(name = "idx_translation_original_text", columnList = "original_text")
+})
 @Data
 public class Translation {
 

@@ -1,4 +1,5 @@
 import type { ReaderRect } from '../domain/models';
+import type { Translation } from '@/types';
 
 export interface PendingSelection {
   text: string;
@@ -18,4 +19,12 @@ export interface ReaderViewportActions {
   zoomIn: () => void;
   zoomOut: () => void;
   resetZoom: () => void;
+}
+
+export interface ReaderTranslationOverlay {
+  annotationId: number;
+  key: string;
+  page: number;
+  rect: ReaderRect;
+  translation: Translation;
 }

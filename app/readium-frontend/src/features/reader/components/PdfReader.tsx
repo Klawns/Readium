@@ -1,48 +1,24 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
 import { usePdfiumEngine } from '@embedpdf/engines/react';
-import type { BookStatus, OcrStatus, Translation } from '@/types';
-import { updateProgress } from '@/services/bookApi';
 import PdfToolbar from './PdfToolbar';
 import ReaderControlsDock from './ReaderControlsDock';
 import TranslationInputPopup from './TranslationInputPopup';
 import TranslationPopup from './TranslationPopup';
 import { SelectionActionPopup } from '../ui/components/SelectionActionPopup';
 import { useReaderData } from '../ui/hooks/useReaderData';
-import type { ReaderRect } from '../domain/models';
-import type { PendingSelection, ReaderViewportActions, ReaderViewportState } from './readerTypes';
 import { PdfDocumentViewport } from './PdfDocumentViewport';
-import { useTranslationOverlays } from './useTranslationOverlays';
-import { toast } from 'sonner';
+import { useTranslationOverlays } from '../ui/hooks/useTranslationOverlays';
+import { useIsMobile } from '@/hooks/use-mobile.tsx';
+import type { PdfReaderProps } from '../ui/pdfReader.types';
+import { useReaderViewportController } from '../ui/hooks/pdf-reader/useReaderViewportController';
+import { useReaderProgressSync } from '../ui/hooks/pdf-reader/useReaderProgressSync';
+import { useReaderMobileUi } from '../ui/hooks/pdf-reader/useReaderMobileUi';
+import { useReaderOcrHint } from '../ui/hooks/pdf-reader/useReaderOcrHint';
+import { useReaderTranslationFlow } from '../ui/hooks/pdf-reader/useReaderTranslationFlow';
+import { createLogger } from '@/lib/logger.ts';
 
-const DEFAULT_ZOOM_LEVEL = 1.7;
-
-interface PdfReaderProps {
-  fileUrl: string;
-  bookId: number;
-  initialPage?: number;
-  bookStatus?: BookStatus;
-  onStatusChange?: (status: BookStatus) => void;
-  totalPages?: number;
-  ocrStatus?: OcrStatus;
-  ocrScore?: number | null;
-  onTriggerOcr?: () => void;
-  isTriggeringOcr?: boolean;
-}
-
-interface TranslationInputState {
-  position: { x: number; y: number };
-  originalText: string;
-  translatedText: string;
-  detectedLanguage: string;
-  page: number;
-  rects: ReaderRect[];
-}
-
-interface ActiveTranslationState {
-  translation: Translation;
-  position: { x: number; y: number };
-}
+const logger = createLogger('reader');
 
 const PdfReader: React.FC<PdfReaderProps> = ({
   fileUrl,
@@ -56,23 +32,24 @@ const PdfReader: React.FC<PdfReaderProps> = ({
   onTriggerOcr,
   isTriggeringOcr,
 }) => {
+  const isMobile = useIsMobile();
   const { engine, isLoading: engineLoading } = usePdfiumEngine();
-  const [pendingSelection, setPendingSelection] = useState<PendingSelection | null>(null);
-  const [translationInput, setTranslationInput] = useState<TranslationInputState | null>(null);
-  const [activeTranslation, setActiveTranslation] = useState<ActiveTranslationState | null>(null);
-  const [viewportState, setViewportState] = useState<ReaderViewportState>({
-    currentPage: initialPage,
-    totalPages: totalPagesFromProps,
-    zoomLevel: DEFAULT_ZOOM_LEVEL,
+  const {
+    containerRef,
+    currentPage,
+    totalPages,
+    zoomLevel,
+    goToPage,
+    zoomIn,
+    zoomOut,
+    resetZoom,
+    handleViewportStateChange,
+    handleViewportActionsReady,
+  } = useReaderViewportController({
+    initialPage,
+    totalPagesFromProps,
+    fileUrl,
   });
-
-  const viewportActionsRef = useRef<ReaderViewportActions | null>(null);
-  const initializedViewByFileRef = useRef<Map<string, boolean>>(new Map());
-  const ocrHintShownByFileRef = useRef<Set<string>>(new Set());
-  const containerRef = useRef<HTMLDivElement | null>(null);
-  const currentPage = Math.max(1, viewportState.currentPage);
-  const totalPages = viewportState.totalPages > 0 ? viewportState.totalPages : totalPagesFromProps;
-  const zoomLevel = viewportState.zoomLevel || DEFAULT_ZOOM_LEVEL;
 
   const {
     annotations,
@@ -85,242 +62,112 @@ const PdfReader: React.FC<PdfReaderProps> = ({
   } = useReaderData(bookId, currentPage);
 
   const translationOverlays = useTranslationOverlays(annotations, translations);
+  const {
+    pendingSelection,
+    translationInput,
+    activeTranslation,
+    setPendingSelection,
+    handleCreateHighlight,
+    startTranslateFlow,
+    saveTranslation,
+    handleTranslationOverlayInteract,
+    closeTranslationInput,
+    closeActiveTranslation,
+    clearPendingSelection,
+  } = useReaderTranslationFlow({
+    bookId,
+    createAnnotation,
+    autoTranslate,
+    persistTranslation,
+  });
+
+  useReaderProgressSync({
+    bookId,
+    currentPage,
+  });
+
+  const { handleTextLayerQualityEvaluated } = useReaderOcrHint({ fileUrl });
+  const { isReaderUiVisible, readerChromeSpacingClass, handleViewportTap } = useReaderMobileUi({
+    isMobile,
+    fileUrl,
+    containerRef,
+  });
 
   useEffect(() => {
-    console.info('[EmbedPDF Reader] annotations', annotations.length, 'translations', translations.length, 'loading', readerLoading);
-  }, [annotations.length, translations.length, readerLoading]);
-
-  useEffect(() => {
-    if (engine && !engineLoading) {
-      console.info('[EmbedPDF Reader] engine initialized');
-    }
-  }, [engine, engineLoading]);
-
-  useEffect(() => {
-    setViewportState((previous) => ({
-      ...previous,
-      currentPage: initialPage,
-    }));
-
-    if (viewportActionsRef.current) {
-      viewportActionsRef.current.goToPage(initialPage);
-    }
-  }, [initialPage]);
-
-  useEffect(() => {
-    if (!currentPage) {
-      return;
-    }
-
-    const timeout = setTimeout(() => {
-      updateProgress(bookId, currentPage).catch((error: unknown) => {
-        console.error('Failed to save progress', error);
-      });
-    }, 1500);
-
-    return () => clearTimeout(timeout);
-  }, [bookId, currentPage]);
-
-  useEffect(() => {
-    const handleBeforeUnload = () => {
-      if (currentPage > 0) {
-        void updateProgress(bookId, currentPage, true);
-      }
+    logger.debug('reader mount', { bookId, fileUrl, initialPage });
+    return () => {
+      logger.debug('reader unmount', { bookId, fileUrl });
     };
-
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, [bookId, currentPage]);
-
-  const handleCreateHighlight = useCallback(
-    async (color: string) => {
-      if (!pendingSelection) {
-        return;
-      }
-
-      await createAnnotation({
-        bookId,
-        page: pendingSelection.page,
-        rects: pendingSelection.rects,
-        color,
-        selectedText: pendingSelection.text,
-      });
-      setPendingSelection(null);
-    },
-    [bookId, createAnnotation, pendingSelection],
-  );
-
-  const startTranslateFlow = useCallback(async () => {
-    if (!pendingSelection) {
-      return;
-    }
-
-    try {
-      const autoTranslation = await autoTranslate(pendingSelection.text);
-      setTranslationInput({
-        position: pendingSelection.popupPosition,
-        originalText: pendingSelection.text,
-        translatedText: autoTranslation.translatedText,
-        detectedLanguage: autoTranslation.detectedLanguage,
-        page: pendingSelection.page,
-        rects: pendingSelection.rects,
-      });
-    } catch (error: unknown) {
-      console.error('Automatic translation failed', error);
-      toast.error('Falha na traducao automatica. Voce pode preencher manualmente.');
-      setTranslationInput({
-        position: pendingSelection.popupPosition,
-        originalText: pendingSelection.text,
-        translatedText: '',
-        detectedLanguage: 'unknown',
-        page: pendingSelection.page,
-        rects: pendingSelection.rects,
-      });
-    }
-    setPendingSelection(null);
-  }, [autoTranslate, pendingSelection]);
-
-  const saveTranslation = useCallback(
-    async (translatedText: string) => {
-      if (!translationInput) {
-        return;
-      }
-
-      await persistTranslation({
-        bookId,
-        originalText: translationInput.originalText.trim().toLowerCase(),
-        translatedText,
-      });
-
-      await createAnnotation({
-        bookId,
-        page: translationInput.page,
-        rects: translationInput.rects,
-        color: '#FDE68A',
-        selectedText: translationInput.originalText,
-        note: translatedText,
-      });
-
-      setTranslationInput(null);
-    },
-    [bookId, createAnnotation, persistTranslation, translationInput],
-  );
-
-  const goToPage = useCallback((page: number) => {
-    viewportActionsRef.current?.goToPage(page);
-  }, []);
-
-  const zoomIn = useCallback(() => {
-    viewportActionsRef.current?.zoomIn();
-  }, []);
-
-  const zoomOut = useCallback(() => {
-    viewportActionsRef.current?.zoomOut();
-  }, []);
-
-  const resetZoom = useCallback(() => {
-    viewportActionsRef.current?.resetZoom();
-  }, []);
-
-  const handleViewportStateChange = useCallback((nextState: ReaderViewportState) => {
-    setViewportState((previous) => {
-      if (
-        previous.currentPage === nextState.currentPage &&
-        previous.totalPages === nextState.totalPages &&
-        previous.zoomLevel === nextState.zoomLevel
-      ) {
-        return previous;
-      }
-      return nextState;
-    });
-  }, []);
-
-  const handleViewportActionsReady = useCallback((actions: ReaderViewportActions | null) => {
-    viewportActionsRef.current = actions;
-
-    if (!actions) {
-      return;
-    }
-
-    if (initializedViewByFileRef.current.get(fileUrl)) {
-      return;
-    }
-
-    requestAnimationFrame(() => {
-      actions.goToPage(initialPage);
-      actions.resetZoom();
-      initializedViewByFileRef.current.set(fileUrl, true);
-    });
-  }, [fileUrl, initialPage]);
+  }, [bookId, fileUrl, initialPage]);
 
   useEffect(() => {
-    initializedViewByFileRef.current.delete(fileUrl);
-    ocrHintShownByFileRef.current.delete(fileUrl);
-  }, [fileUrl]);
+    logger.debug('engine state', {
+      engineLoading,
+      hasEngine: Boolean(engine),
+    });
+  }, [engineLoading, engine]);
 
-  const handleTextLayerQualityEvaluated = useCallback(
-    (lowTextLayerQuality: boolean) => {
-      if (!lowTextLayerQuality || ocrHintShownByFileRef.current.has(fileUrl)) {
-        return;
-      }
-
-      toast.warning('Este PDF parece ter OCR fraco. A selecao pode ficar imprecisa em alguns trechos.');
-      ocrHintShownByFileRef.current.add(fileUrl);
-    },
-    [fileUrl],
-  );
+  useEffect(() => {
+    logger.debug('reader data state', {
+      readerLoading,
+      currentPage,
+      annotationsCount: annotations.length,
+      translationsCount: translations.length,
+    });
+  }, [readerLoading, currentPage, annotations.length, translations.length]);
 
   if (engineLoading || !engine) {
     return (
-      <div className="flex h-screen flex-col items-center justify-center gap-2 bg-background text-muted-foreground">
+      <div className="flex h-[100dvh] flex-col items-center justify-center gap-2 bg-background text-muted-foreground">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
         <p>Inicializando leitor...</p>
       </div>
     );
   }
 
-  if (readerLoading) {
-    return (
-      <div className="flex h-screen flex-col items-center justify-center gap-2 bg-background text-muted-foreground">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <p>Carregando anotacoes...</p>
-      </div>
-    );
-  }
-
   return (
-    <div className="flex h-screen flex-col overflow-hidden bg-muted/20">
-      <PdfToolbar
-        bookStatus={bookStatus}
-        onStatusChange={onStatusChange}
-        ocrStatus={ocrStatus}
-        ocrScore={ocrScore}
-        onTriggerOcr={onTriggerOcr}
-        isTriggeringOcr={isTriggeringOcr}
-      />
+    <div className="relative flex h-[100dvh] flex-col overflow-hidden overscroll-none bg-muted/20">
+      {isReaderUiVisible && (
+        <PdfToolbar
+          bookStatus={bookStatus}
+          onStatusChange={onStatusChange}
+          ocrStatus={ocrStatus}
+          ocrScore={ocrScore}
+          onTriggerOcr={onTriggerOcr}
+          isTriggeringOcr={isTriggeringOcr}
+        />
+      )}
 
-      <div ref={containerRef} className="relative flex-1 overflow-hidden bg-gradient-to-b from-muted/30 via-muted/15 to-background">
+      <div
+        ref={containerRef}
+        className={`relative flex-1 overflow-hidden bg-gradient-to-b from-muted/30 via-muted/15 to-background ${readerChromeSpacingClass}`}
+      >
         <PdfDocumentViewport
           engine={engine}
           fileUrl={fileUrl}
           containerRef={containerRef}
           annotations={annotations}
+          translationOverlays={translationOverlays}
           initialPage={initialPage}
           onSelectionResolved={setPendingSelection}
+          onTranslationOverlayInteract={handleTranslationOverlayInteract}
           onViewportStateChange={handleViewportStateChange}
           onViewportActionsReady={handleViewportActionsReady}
           onTextLayerQualityEvaluated={handleTextLayerQualityEvaluated}
+          onViewportTap={handleViewportTap}
         />
 
-        <ReaderControlsDock
-          currentPage={currentPage}
-          totalPages={totalPages}
-          zoomLevel={zoomLevel}
-          onPageChange={goToPage}
-          onZoomIn={zoomIn}
-          onZoomOut={zoomOut}
-          onZoomReset={resetZoom}
-        />
+        {isReaderUiVisible && (
+          <ReaderControlsDock
+            currentPage={currentPage}
+            totalPages={totalPages}
+            zoomLevel={zoomLevel}
+            onPageChange={goToPage}
+            onZoomIn={zoomIn}
+            onZoomOut={zoomOut}
+            onZoomReset={resetZoom}
+          />
+        )}
 
         {pendingSelection && (
           <SelectionActionPopup
@@ -331,7 +178,7 @@ const PdfReader: React.FC<PdfReaderProps> = ({
             onTranslate={() => {
               void startTranslateFlow();
             }}
-            onClose={() => setPendingSelection(null)}
+            onClose={clearPendingSelection}
           />
         )}
 
@@ -341,10 +188,11 @@ const PdfReader: React.FC<PdfReaderProps> = ({
             originalText={translationInput.originalText}
             initialValue={translationInput.translatedText}
             detectedLanguage={translationInput.detectedLanguage}
+            googleTranslateUrl={translationInput.googleTranslateUrl}
             onSave={(value) => {
               void saveTranslation(value);
             }}
-            onCancel={() => setTranslationInput(null)}
+            onCancel={closeTranslationInput}
           />
         )}
 
@@ -352,44 +200,19 @@ const PdfReader: React.FC<PdfReaderProps> = ({
           <TranslationPopup
             translation={activeTranslation.translation}
             position={activeTranslation.position}
-            onClose={() => setActiveTranslation(null)}
+            onClose={closeActiveTranslation}
           />
         )}
-
-        <div className="pointer-events-none absolute inset-0 z-20">
-          {translationOverlays
-            .filter((overlay) => overlay.page === currentPage)
-            .map((overlay) => (
-              <button
-                key={overlay.key}
-                type="button"
-                className="pointer-events-auto absolute border-b-2 border-blue-700 bg-transparent"
-                style={{
-                  left: `${overlay.rect.x * 100}%`,
-                  top: `${overlay.rect.y * 100}%`,
-                  width: `${overlay.rect.width * 100}%`,
-                  height: `${overlay.rect.height * 100}%`,
-                }}
-                title={`${overlay.translation.originalText} -> ${overlay.translation.translatedText}`}
-                onMouseEnter={(event) => {
-                  setActiveTranslation({
-                    translation: overlay.translation,
-                    position: { x: event.clientX, y: event.clientY },
-                  });
-                }}
-                onClick={(event) => {
-                  setActiveTranslation({
-                    translation: overlay.translation,
-                    position: { x: event.clientX, y: event.clientY },
-                  });
-                }}
-              />
-            ))}
-        </div>
 
         {isTranslating && (
           <div className="absolute inset-x-0 bottom-16 z-30 flex justify-center sm:bottom-24">
             <div className="rounded-md bg-black/85 px-3 py-1 text-xs text-white">Traduzindo selecao...</div>
+          </div>
+        )}
+
+        {readerLoading && (
+          <div className="absolute right-3 top-3 z-30 rounded-md bg-black/75 px-2 py-1 text-[11px] text-white">
+            Carregando dados...
           </div>
         )}
       </div>

@@ -12,10 +12,14 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 @RequiredArgsConstructor
@@ -44,7 +48,7 @@ public class TranslationService {
 
         String normalizedText = normalize(req.originalText());
 
-        Translation translation = repository.findByBookIdAndOriginalText(req.bookId(), normalizedText)
+        Translation translation = findExistingTranslation(req.bookId(), normalizedText)
                 .orElse(new Translation());
 
         translation.setBookId(req.bookId());
@@ -58,7 +62,21 @@ public class TranslationService {
 
     @Transactional(readOnly = true)
     public List<TranslationResponseDTO> findByBookId(Long bookId) {
-        return repository.findByBookIdOrGlobal(bookId).stream()
+        List<Translation> scopedTranslations = repository.findByBookId(bookId);
+
+        Set<String> scopedOriginalTexts = new HashSet<>();
+        for (Translation translation : scopedTranslations) {
+            if (translation.getOriginalText() != null) {
+                scopedOriginalTexts.add(translation.getOriginalText());
+            }
+        }
+
+        List<Translation> globalTranslations = repository.findByBookIdIsNull().stream()
+                .filter(translation -> translation.getOriginalText() == null
+                        || !scopedOriginalTexts.contains(translation.getOriginalText()))
+                .toList();
+
+        return Stream.concat(scopedTranslations.stream(), globalTranslations.stream())
                 .map(TranslationResponseDTO::fromEntity)
                 .collect(Collectors.toList());
     }
@@ -68,12 +86,9 @@ public class TranslationService {
         if (req == null || !StringUtils.hasText(req.text())) {
             throw new IllegalArgumentException("text is required.");
         }
-        if (!StringUtils.hasText(req.targetLanguage())) {
-            throw new IllegalArgumentException("targetLanguage is required.");
-        }
 
-        String inputText = req.text().trim();
-        String targetLanguage = req.targetLanguage().trim().toLowerCase();
+        String inputText = req.text().trim().replaceAll("\\s+", " ");
+        String targetLanguage = req.resolveTargetLanguage();
         String cacheKey = targetLanguage + "::" + normalize(inputText);
 
         evictExpiredCacheEntries();
@@ -97,6 +112,13 @@ public class TranslationService {
         trimCacheIfNeeded();
 
         return response;
+    }
+
+    private Optional<Translation> findExistingTranslation(Long bookId, String normalizedText) {
+        if (bookId == null) {
+            return repository.findByBookIdIsNullAndOriginalText(normalizedText);
+        }
+        return repository.findByBookIdAndOriginalText(bookId, normalizedText);
     }
 
     private void enforceRateLimit(String cacheKey, long now) {

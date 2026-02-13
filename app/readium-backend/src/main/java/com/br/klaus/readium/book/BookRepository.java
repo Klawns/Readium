@@ -8,8 +8,6 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface BookRepository extends JpaRepository<Book, Long>, JpaSpecificationExecutor<Book> {
-    
-    // O método findByBookStatus não é mais estritamente necessário se usarmos Specifications para tudo,
-    // mas pode ser mantido para compatibilidade ou uso simples.
+
     Page<Book> findByBookStatus(Book.BookStatus status, Pageable pageable);
 }

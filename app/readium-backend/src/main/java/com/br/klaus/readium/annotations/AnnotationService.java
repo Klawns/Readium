@@ -4,12 +4,12 @@ import com.br.klaus.readium.annotations.dto.AnnotationRequestDTO;
 import com.br.klaus.readium.annotations.dto.AnnotationResponseDTO;
 import com.br.klaus.readium.annotations.dto.UpdateAnnotationRequestDTO;
 import com.br.klaus.readium.book.BookRepository;
-
 import com.br.klaus.readium.event.BookDeletedEvent;
 import com.br.klaus.readium.exception.AnnotationNotFoundException;
 import com.br.klaus.readium.exception.BookNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.event.EventListener;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -20,16 +20,18 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class AnnotationService {
 
+    private static final int DEFAULT_PAGE_SIZE = 200;
+    private static final int MAX_PAGE_SIZE = 500;
+
     private final AnnotationRepository repository;
     private final BookRepository bookRepository;
 
     @Transactional
     public AnnotationResponseDTO create(AnnotationRequestDTO req) {
         if (!bookRepository.existsById(req.bookId())) {
-            throw new BookNotFoundException("Livro com ID " + req.bookId() + " não encontrado.");
+            throw new BookNotFoundException("Livro com ID " + req.bookId() + " nao encontrado.");
         }
 
-        // Criação via Factory Method (DDD)
         Annotation annotation = Annotation.from(req);
 
         repository.save(annotation);
@@ -37,28 +39,40 @@ public class AnnotationService {
     }
 
     @Transactional(readOnly = true)
-    public List<AnnotationResponseDTO> findAll() {
-        return repository.findAll().stream()
+    public List<AnnotationResponseDTO> findAll(int resultPage, int size) {
+        return repository.findAll(PageRequest.of(Math.max(resultPage, 0), sanitizePageSize(size)))
+                .getContent()
+                .stream()
                 .map(AnnotationResponseDTO::fromEntity)
                 .collect(Collectors.toList());
     }
 
     @Transactional(readOnly = true)
-    public List<AnnotationResponseDTO> findByBookAndPage(Long bookId, int page) {
+    public List<AnnotationResponseDTO> findByBookAndPage(Long bookId, int page, int resultPage, int size) {
         if (!bookRepository.existsById(bookId)) {
-            throw new BookNotFoundException("Livro com ID " + bookId + " não encontrado.");
+            throw new BookNotFoundException("Livro com ID " + bookId + " nao encontrado.");
         }
-        return repository.findByBookIdAndPage(bookId, page).stream()
+
+        return repository.findByBookIdAndPage(
+                        bookId,
+                        page,
+                        PageRequest.of(Math.max(resultPage, 0), sanitizePageSize(size))
+                )
+                .getContent()
+                .stream()
                 .map(AnnotationResponseDTO::fromEntity)
                 .collect(Collectors.toList());
     }
-    
+
     @Transactional(readOnly = true)
-    public List<AnnotationResponseDTO> findByBookId(Long bookId) {
+    public List<AnnotationResponseDTO> findByBookId(Long bookId, int resultPage, int size) {
         if (!bookRepository.existsById(bookId)) {
-            throw new BookNotFoundException("Livro com ID " + bookId + " não encontrado.");
+            throw new BookNotFoundException("Livro com ID " + bookId + " nao encontrado.");
         }
-        return repository.findByBookId(bookId).stream()
+
+        return repository.findByBookId(bookId, PageRequest.of(Math.max(resultPage, 0), sanitizePageSize(size)))
+                .getContent()
+                .stream()
                 .map(AnnotationResponseDTO::fromEntity)
                 .collect(Collectors.toList());
     }
@@ -66,11 +80,10 @@ public class AnnotationService {
     @Transactional
     public AnnotationResponseDTO update(Long id, UpdateAnnotationRequestDTO req) {
         Annotation annotation = repository.findById(id)
-                .orElseThrow(() -> new AnnotationNotFoundException("Anotação com ID " + id + " não encontrada."));
+                .orElseThrow(() -> new AnnotationNotFoundException("Anotacao com ID " + id + " nao encontrada."));
 
-        // Atualização via Domain Method (DDD)
         annotation.merge(req);
-        
+
         repository.save(annotation);
         return AnnotationResponseDTO.fromEntity(annotation);
     }
@@ -78,7 +91,7 @@ public class AnnotationService {
     @Transactional
     public void delete(Long id) {
         if (!repository.existsById(id)) {
-            throw new AnnotationNotFoundException("Anotação com ID " + id + " não encontrada para deleção.");
+            throw new AnnotationNotFoundException("Anotacao com ID " + id + " nao encontrada para delecao.");
         }
         repository.deleteById(id);
     }
@@ -88,5 +101,12 @@ public class AnnotationService {
     public void onBookDeleted(BookDeletedEvent event) {
         List<Annotation> annotations = repository.findByBookId(event.id());
         repository.deleteAll(annotations);
+    }
+
+    private int sanitizePageSize(int requestedSize) {
+        if (requestedSize <= 0) {
+            return DEFAULT_PAGE_SIZE;
+        }
+        return Math.min(requestedSize, MAX_PAGE_SIZE);
     }
 }

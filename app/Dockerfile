@@ -1,3 +1,5 @@
+# syntax=docker/dockerfile:1.7
+
 # ========================
 # Stage 1 - Build Frontend
 # ========================
@@ -5,7 +7,7 @@ FROM node:20-alpine AS frontend-build
 WORKDIR /frontend
 
 COPY readium-frontend/package.json readium-frontend/package-lock.json ./
-RUN npm ci --no-audit --no-fund
+RUN --mount=type=cache,target=/root/.npm npm ci --no-audit --no-fund
 
 COPY readium-frontend .
 RUN npm run build
@@ -17,8 +19,9 @@ FROM maven:3.9.6-eclipse-temurin-21-alpine AS backend-build
 WORKDIR /backend
 
 COPY readium-backend/pom.xml .
+RUN --mount=type=cache,target=/root/.m2 mvn -B -DskipTests dependency:go-offline
 COPY readium-backend .
-RUN mvn clean package -DskipTests
+RUN --mount=type=cache,target=/root/.m2 mvn -B clean package -DskipTests
 
 # ========================
 # Stage 3 - Runtime Common

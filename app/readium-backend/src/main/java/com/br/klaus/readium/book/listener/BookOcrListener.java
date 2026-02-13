@@ -22,7 +22,7 @@ public class BookOcrListener {
     private final BookRepository bookRepository;
     private final OcrGateway ocrGateway;
 
-    @Async
+    @Async("ocrTaskExecutor")
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void handleBookOcrRequested(BookOcrRequestedEvent event) {

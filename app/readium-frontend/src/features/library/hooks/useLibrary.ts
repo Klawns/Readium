@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import type { BookStatus, StatusFilter } from '@/types';
 import { toast } from 'sonner';
+import { createLogger } from '@/lib/logger.ts';
 import { BookHttpRepository } from '../infrastructure/api/book-http-repository';
 import {
   FetchLibraryBooksUseCase,
@@ -9,6 +10,7 @@ import {
 } from '../application/use-cases/library-use-cases';
 
 const PAGE_SIZE = 12;
+const logger = createLogger('library');
 
 const repository = new BookHttpRepository();
 const fetchLibraryBooksUseCase = new FetchLibraryBooksUseCase(repository);
@@ -28,6 +30,7 @@ export const useLibrary = ({ page, statusFilter, searchQuery }: UseLibraryParams
     queryKey: ['books', statusFilter, page, searchQuery],
     queryFn: () => fetchLibraryBooksUseCase.execute(statusFilter, page, PAGE_SIZE, searchQuery),
     placeholderData: keepPreviousData,
+    staleTime: 15_000,
   });
 
   const uploadMutation = useMutation({
@@ -37,7 +40,7 @@ export const useLibrary = ({ page, statusFilter, searchQuery }: UseLibraryParams
       queryClient.invalidateQueries({ queryKey: ['books'] });
     },
     onError: (error) => {
-      console.error(error);
+      logger.error('upload failed', error);
       toast.error('Erro ao fazer upload do livro.');
     },
   });

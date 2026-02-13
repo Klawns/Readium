@@ -4,6 +4,7 @@ import com.br.klaus.readium.book.dto.BookFilterDTO;
 import com.br.klaus.readium.book.dto.BookOcrStatusResponseDTO;
 import com.br.klaus.readium.book.dto.BookResponseDTO;
 import com.br.klaus.readium.book.dto.BookTextLayerQualityResponseDTO;
+import com.br.klaus.readium.book.dto.PagedResponseDTO;
 import com.br.klaus.readium.book.dto.UpdateBookStatusRequestDTO;
 import com.br.klaus.readium.book.dto.UpdateProgressRequestDTO;
 import jakarta.validation.Valid;
@@ -37,7 +38,7 @@ public class BookController {
     }
 
     @GetMapping
-    public ResponseEntity<Page<BookResponseDTO>> findAll(
+    public ResponseEntity<PagedResponseDTO<BookResponseDTO>> findAll(
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String query,
             @PageableDefault(size = 12) Pageable pageable) {
@@ -48,7 +49,7 @@ public class BookController {
         Page<BookResponseDTO> result = service.findAll(filter, pageable);
         
         log.info("Livros encontrados: {}", result.getTotalElements());
-        return ResponseEntity.ok(result);
+        return ResponseEntity.ok(PagedResponseDTO.fromPage(result));
     }
 
     @GetMapping("/{id}")
