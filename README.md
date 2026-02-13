@@ -1,6 +1,6 @@
 # Readium
 
-Readium e uma aplicacao self-hosted para biblioteca digital, leitura no navegador e apoio de OCR/traducao.
+Readium é uma aplicação self-hosted para biblioteca digital, leitura no navegador e apoio de OCR/tradução.
 
 ## Funcionalidades
 - Biblioteca de livros com upload, busca, filtro e status de leitura.
