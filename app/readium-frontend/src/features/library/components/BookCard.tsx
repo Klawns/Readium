@@ -47,12 +47,12 @@ export default function BookCard({ book, onClick, onStatusChange }: BookCardProp
         )}
         
         {/* Hover Overlay - Visível apenas em desktop no hover */}
-        <div className="absolute inset-0 bg-black/0 transition-colors duration-300 md:group-hover:bg-black/5" />
+        <div className="absolute inset-0 bg-black/0 transition-colors duration-300 lg:group-hover:bg-black/5" />
         
         {/* Status Badge (Floating) */}
         {/* Em mobile (telas pequenas), mostra sempre. Em desktop, mostra no hover. */}
         <div 
-          className="absolute top-2 right-2 z-10 transition-all duration-300 opacity-100 md:opacity-0 md:group-hover:opacity-100 md:translate-y-2 md:group-hover:translate-y-0" 
+          className="absolute top-2 right-2 z-10 transition-all duration-300 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 lg:translate-y-2 lg:group-hover:translate-y-0" 
           onClick={(e) => e.stopPropagation()}
         >
            {onStatusChange ? (
@@ -101,3 +101,4 @@ export default function BookCard({ book, onClick, onStatusChange }: BookCardProp
     </div>
   );
 }
+

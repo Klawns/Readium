@@ -87,7 +87,7 @@ export default function LibraryView({
   return (
     <AppLayout onUploadClick={onOpenUpload}>
       <div className="container mx-auto max-w-7xl space-y-8 px-4 py-8 animate-fade-in">
-        <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+        <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
           <div className="space-y-1">
             <h1 className="text-3xl font-bold tracking-tight text-foreground">Biblioteca</h1>
             <p className="text-muted-foreground">Gerencie e organize sua colecao pessoal.</p>
@@ -104,14 +104,14 @@ export default function LibraryView({
               />
             </div>
             <BookFilter active={statusFilter} onChange={onFilterChange} />
-            <Button onClick={onOpenUpload} size="icon" className="shrink-0 md:hidden">
+            <Button onClick={onOpenUpload} size="icon" className="shrink-0 lg:hidden">
               <Plus className="h-5 w-5" />
             </Button>
           </div>
         </div>
 
         {isLoading ? (
-          <div className="grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+          <div className="grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
             {Array.from({ length: 12 }).map((_, index) => (
               <div key={index} className="space-y-3">
                 <div className="aspect-[2/3] animate-pulse rounded-xl bg-muted" />
@@ -144,7 +144,7 @@ export default function LibraryView({
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6">
+            <div className="grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
               {books.map((book) => (
                 <BookCard
                   key={book.id}
