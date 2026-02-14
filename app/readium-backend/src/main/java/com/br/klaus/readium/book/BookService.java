@@ -25,6 +25,7 @@ import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;
+import java.util.Locale;
 import java.util.Objects;
 
 @Service
@@ -37,15 +38,19 @@ public class BookService {
 
     @Transactional
     public BookResponseDTO save(MultipartFile file) {
-        String originalFilename = StringUtils.cleanPath(file.getOriginalFilename());
+        String originalFilename = StringUtils.cleanPath(Objects.toString(file.getOriginalFilename(), ""));
+        String extension = StringUtils.getFilenameExtension(originalFilename);
 
-        if (originalFilename.isBlank() || (!originalFilename.endsWith(".pdf") && !originalFilename.endsWith(".epub"))) {
+        if (originalFilename.isBlank() || !isSupportedExtension(extension)) {
             throw new UnsupportedFileFormatException("Formato de arquivo nao suportado. Apenas .pdf e .epub sao permitidos.");
         }
 
         String filePath = storageService.save(file);
 
         String title = StringUtils.stripFilenameExtension(originalFilename);
+        if (title == null || title.isBlank()) {
+            title = "Sem Titulo";
+        }
         Book book = Book.create(title, filePath, originalFilename);
 
         Book savedBook = repository.save(book);
@@ -53,6 +58,15 @@ public class BookService {
         eventPublisher.publishEvent(new BookCreatedEvent(savedBook.getId(), savedBook.getTitle()));
 
         return BookResponseDTO.fromEntity(savedBook);
+    }
+
+    private boolean isSupportedExtension(String extension) {
+        if (extension == null || extension.isBlank()) {
+            return false;
+        }
+
+        String normalized = extension.toLowerCase(Locale.ROOT);
+        return "pdf".equals(normalized) || "epub".equals(normalized);
     }
 
     @Transactional(readOnly = true)

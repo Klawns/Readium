@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.Data;
 
 import java.time.LocalDateTime;
+import java.util.Locale;
 
 @Entity
 @Table(indexes = {
@@ -73,9 +74,11 @@ public class Book {
 
     public static Book create(String title, String filePath, String originalFilename) {
         Book book = new Book();
+        String normalizedFilename = originalFilename == null ? "" : originalFilename.toLowerCase(Locale.ROOT);
+
         book.setTitle(title);
         book.setFilePath(filePath);
-        book.setBookFormat(originalFilename.endsWith(".pdf") ? BookFormat.PDF : BookFormat.EPUB);
+        book.setBookFormat(normalizedFilename.endsWith(".pdf") ? BookFormat.PDF : BookFormat.EPUB);
         book.setBookStatus(BookStatus.TO_READ);
         book.setLastReadPage(0);
         book.setOcrStatus(OcrStatus.PENDING);

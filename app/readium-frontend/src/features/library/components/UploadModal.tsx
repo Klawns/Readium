@@ -61,8 +61,8 @@ export default function UploadModal({ open, onClose, onUpload, isUploading = fal
           {file ? (
             <>
               <FileText className="h-8 w-8 text-primary" />
-              <div className="text-center">
-                <p className="text-sm font-medium text-foreground">{file.name}</p>
+              <div className="w-full max-w-full text-center">
+                <p className="break-all text-sm font-medium text-foreground">{file.name}</p>
                 <p className="mt-1 text-xs text-muted-foreground">
                   {(file.size / 1024 / 1024).toFixed(1)} MB
                 </p>
