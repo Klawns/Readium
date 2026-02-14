@@ -47,10 +47,7 @@ public class BookService {
 
         String filePath = storageService.save(file);
 
-        String title = StringUtils.stripFilenameExtension(originalFilename);
-        if (title == null || title.isBlank()) {
-            title = "Sem Titulo";
-        }
+        String title = BookTitleFormatter.fromFilename(originalFilename);
         Book book = Book.create(title, filePath, originalFilename);
 
         Book savedBook = repository.save(book);

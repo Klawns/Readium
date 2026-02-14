@@ -1,6 +1,7 @@
 package com.br.klaus.readium.book.dto;
 
 import com.br.klaus.readium.book.Book;
+import com.br.klaus.readium.book.BookTitleFormatter;
 
 public record BookResponseDTO(
         Long id,
@@ -21,7 +22,7 @@ public record BookResponseDTO(
 
         return new BookResponseDTO(
                 book.getId(),
-                book.getTitle() != null ? book.getTitle() : "Sem Titulo",
+                BookTitleFormatter.normalize(book.getTitle()),
                 book.getAuthor(),
                 book.getPages(),
                 book.getLastReadPage(),
