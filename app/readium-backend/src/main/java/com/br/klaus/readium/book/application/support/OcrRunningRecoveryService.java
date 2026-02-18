@@ -1,7 +1,7 @@
 package com.br.klaus.readium.book.application.support;
 
 import com.br.klaus.readium.book.Book;
-import com.br.klaus.readium.book.BookRepository;
+import com.br.klaus.readium.book.domain.port.BookRepositoryPort;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 @Slf4j
 public class OcrRunningRecoveryService {
 
-    private final BookRepository repository;
+    private final BookRepositoryPort repository;
 
     @Value("${app.ocr.running-timeout-seconds:2400}")
     private long ocrRunningTimeoutSeconds;

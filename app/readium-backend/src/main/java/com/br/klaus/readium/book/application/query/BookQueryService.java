@@ -1,20 +1,18 @@
 package com.br.klaus.readium.book.application.query;
 
 import com.br.klaus.readium.book.Book;
-import com.br.klaus.readium.book.BookRepository;
-import com.br.klaus.readium.book.BookSpecifications;
 import com.br.klaus.readium.book.application.support.OcrRunningRecoveryService;
+import com.br.klaus.readium.book.domain.port.BookRepositoryPort;
+import com.br.klaus.readium.book.domain.port.BookStoragePort;
 import com.br.klaus.readium.book.dto.BookFilterDTO;
 import com.br.klaus.readium.book.dto.BookOcrStatusResponseDTO;
 import com.br.klaus.readium.book.dto.BookResponseDTO;
 import com.br.klaus.readium.book.dto.BookTextLayerQualityResponseDTO;
 import com.br.klaus.readium.exception.BookNotFoundException;
-import com.br.klaus.readium.storage.FileStorageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,28 +20,22 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class BookQueryService {
 
-    private final BookRepository repository;
-    private final FileStorageService storageService;
+    private final BookRepositoryPort repository;
+    private final BookStoragePort storageService;
     private final OcrRunningRecoveryService ocrRunningRecoveryService;
 
     @Transactional(readOnly = true)
     public Page<BookResponseDTO> findAll(BookFilterDTO filter, Pageable pageable) {
-        Specification<Book> spec = (root, query, criteriaBuilder) -> criteriaBuilder.conjunction();
-
+        Book.BookStatus status = null;
         if (filter.status() != null && !filter.status().isBlank() && !filter.status().equals("ALL")) {
             try {
-                Book.BookStatus status = Book.BookStatus.valueOf(filter.status().toUpperCase());
-                spec = spec.and(BookSpecifications.hasStatus(status));
+                status = Book.BookStatus.valueOf(filter.status().toUpperCase());
             } catch (IllegalArgumentException e) {
                 // Ignore invalid status filter.
             }
         }
 
-        if (filter.query() != null && !filter.query().isBlank()) {
-            spec = spec.and(BookSpecifications.containsText(filter.query()));
-        }
-
-        return repository.findAll(spec, pageable).map(BookResponseDTO::fromEntity);
+        return repository.findAll(status, filter.query(), pageable).map(BookResponseDTO::fromEntity);
     }
 
     @Transactional(readOnly = true)

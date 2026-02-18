@@ -1,19 +1,18 @@
-package com.br.klaus.readium.annotations;
+package com.br.klaus.readium.annotations.infrastructure.persistence;
 
-import org.springframework.data.jpa.repository.JpaRepository;
+import com.br.klaus.readium.annotations.Annotation;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Repository;
+import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
 
-@Repository
-public interface AnnotationRepository extends JpaRepository<Annotation, Long> {
+public interface AnnotationJpaRepository extends JpaRepository<Annotation, Long> {
 
     List<Annotation> findByBookIdAndPage(Long bookId, int page);
 
     Page<Annotation> findByBookIdAndPage(Long bookId, int page, Pageable pageable);
-    
+
     List<Annotation> findByBookId(Long bookId);
 
     Page<Annotation> findByBookId(Long bookId, Pageable pageable);

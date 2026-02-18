@@ -1,7 +1,7 @@
 package com.br.klaus.readium.annotations.application.command;
 
 import com.br.klaus.readium.annotations.Annotation;
-import com.br.klaus.readium.annotations.AnnotationRepository;
+import com.br.klaus.readium.annotations.domain.port.AnnotationRepositoryPort;
 import com.br.klaus.readium.annotations.dto.AnnotationRequestDTO;
 import com.br.klaus.readium.annotations.dto.AnnotationResponseDTO;
 import com.br.klaus.readium.annotations.dto.UpdateAnnotationRequestDTO;
@@ -23,7 +23,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class AnnotationCommandService {
 
-    private final AnnotationRepository repository;
+    private final AnnotationRepositoryPort repository;
     private final BookExistenceService bookExistenceService;
 
     @Transactional

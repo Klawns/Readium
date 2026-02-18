@@ -1,7 +1,7 @@
 package com.br.klaus.readium.book.application.query;
 
-import com.br.klaus.readium.book.BookRepository;
 import com.br.klaus.readium.book.api.BookExistenceService;
+import com.br.klaus.readium.book.domain.port.BookRepositoryPort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -10,7 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class BookExistenceServiceImpl implements BookExistenceService {
 
-    private final BookRepository repository;
+    private final BookRepositoryPort repository;
 
     @Override
     @Transactional(readOnly = true)

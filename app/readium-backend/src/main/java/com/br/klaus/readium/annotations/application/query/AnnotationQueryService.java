@@ -1,7 +1,7 @@
 package com.br.klaus.readium.annotations.application.query;
 
 import com.br.klaus.readium.annotations.AnnotationResponseMapper;
-import com.br.klaus.readium.annotations.AnnotationRepository;
+import com.br.klaus.readium.annotations.domain.port.AnnotationRepositoryPort;
 import com.br.klaus.readium.annotations.dto.AnnotationResponseDTO;
 import com.br.klaus.readium.book.api.BookExistenceService;
 import com.br.klaus.readium.config.CacheNames;
@@ -21,7 +21,7 @@ public class AnnotationQueryService {
     private static final int DEFAULT_PAGE_SIZE = 200;
     private static final int MAX_PAGE_SIZE = 500;
 
-    private final AnnotationRepository repository;
+    private final AnnotationRepositoryPort repository;
     private final BookExistenceService bookExistenceService;
 
     @Transactional(readOnly = true)

@@ -1,11 +1,15 @@
-package com.br.klaus.readium.book;
+package com.br.klaus.readium.book.infrastructure.persistence;
 
+import com.br.klaus.readium.book.Book;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.util.StringUtils;
 
-public class BookSpecifications {
+final class BookJpaSpecifications {
 
-    public static Specification<Book> hasStatus(Book.BookStatus status) {
+    private BookJpaSpecifications() {
+    }
+
+    static Specification<Book> hasStatus(Book.BookStatus status) {
         return (root, query, criteriaBuilder) -> {
             if (status == null) {
                 return criteriaBuilder.conjunction();
@@ -14,13 +18,13 @@ public class BookSpecifications {
         };
     }
 
-    public static Specification<Book> containsText(String text) {
+    static Specification<Book> containsText(String text) {
         return (root, query, criteriaBuilder) -> {
             if (!StringUtils.hasText(text)) {
                 return criteriaBuilder.conjunction();
             }
             String likePattern = "%" + text.toLowerCase() + "%";
-            
+
             return criteriaBuilder.or(
                     criteriaBuilder.like(criteriaBuilder.lower(criteriaBuilder.coalesce(root.get("title"), "")), likePattern),
                     criteriaBuilder.like(criteriaBuilder.lower(criteriaBuilder.coalesce(root.get("author"), "")), likePattern)

@@ -2,7 +2,7 @@ package com.br.klaus.readium.translation.application.command;
 
 import com.br.klaus.readium.config.CacheNames;
 import com.br.klaus.readium.translation.Translation;
-import com.br.klaus.readium.translation.TranslationRepository;
+import com.br.klaus.readium.translation.domain.port.TranslationRepositoryPort;
 import com.br.klaus.readium.translation.dto.TranslationRequestDTO;
 import com.br.klaus.readium.translation.dto.TranslationResponseDTO;
 import lombok.RequiredArgsConstructor;
@@ -18,7 +18,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class TranslationCommandService {
 
-    private final TranslationRepository repository;
+    private final TranslationRepositoryPort repository;
 
     @Transactional
     @Caching(evict = {

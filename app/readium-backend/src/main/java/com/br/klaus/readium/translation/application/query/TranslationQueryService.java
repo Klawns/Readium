@@ -3,7 +3,7 @@ package com.br.klaus.readium.translation.application.query;
 import com.br.klaus.readium.config.CacheNames;
 import com.br.klaus.readium.translation.CachedAutoTranslationService;
 import com.br.klaus.readium.translation.Translation;
-import com.br.klaus.readium.translation.TranslationRepository;
+import com.br.klaus.readium.translation.domain.port.TranslationRepositoryPort;
 import com.br.klaus.readium.translation.dto.AutoTranslationRequestDTO;
 import com.br.klaus.readium.translation.dto.AutoTranslationResponseDTO;
 import com.br.klaus.readium.translation.dto.TranslationResponseDTO;
@@ -22,7 +22,7 @@ import java.util.stream.Stream;
 @RequiredArgsConstructor
 public class TranslationQueryService {
 
-    private final TranslationRepository repository;
+    private final TranslationRepositoryPort repository;
     private final CachedAutoTranslationService cachedAutoTranslationService;
 
     @Transactional(readOnly = true)

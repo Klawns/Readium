@@ -1,5 +1,8 @@
-package com.br.klaus.readium.book;
+package com.br.klaus.readium.book.infrastructure.gateway;
 
+import com.br.klaus.readium.book.Book;
+import com.br.klaus.readium.book.OcrGatewayResult;
+import com.br.klaus.readium.book.domain.port.OcrGatewayPort;
 import com.br.klaus.readium.exception.StorageException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.pdfbox.Loader;
@@ -22,7 +25,7 @@ import java.util.regex.Pattern;
 
 @Component
 @Slf4j
-public class TextLayerQualityOcrGateway implements OcrGateway {
+public class TextLayerQualityOcrAdapter implements OcrGatewayPort {
 
     @Value("${app.ocr.sample-pages:10}")
     private int samplePages;
@@ -45,7 +48,6 @@ public class TextLayerQualityOcrGateway implements OcrGateway {
     @Override
     public OcrGatewayResult process(Book book) {
         if (book.getBookFormat() == Book.BookFormat.EPUB) {
-            // EPUB normalmente ja tem texto em XHTML; OCR nao e necessario.
             return new OcrGatewayResult(null, 100.0);
         }
 

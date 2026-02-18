@@ -1,13 +1,12 @@
-package com.br.klaus.readium.translation;
+package com.br.klaus.readium.translation.infrastructure.persistence;
 
+import com.br.klaus.readium.translation.Translation;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Optional;
 
-@Repository
-public interface TranslationRepository extends JpaRepository<Translation, Long> {
+public interface TranslationJpaRepository extends JpaRepository<Translation, Long> {
 
     List<Translation> findByBookId(Long bookId);
 

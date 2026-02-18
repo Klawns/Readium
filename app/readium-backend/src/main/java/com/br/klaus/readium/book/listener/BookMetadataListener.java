@@ -1,9 +1,9 @@
 package com.br.klaus.readium.book.listener;
 
 import com.br.klaus.readium.book.Book;
-import com.br.klaus.readium.book.BookRepository;
+import com.br.klaus.readium.book.domain.port.BookRepositoryPort;
+import com.br.klaus.readium.book.domain.port.BookStoragePort;
 import com.br.klaus.readium.event.BookCreatedEvent;
-import com.br.klaus.readium.storage.FileStorageService;
 import io.documentnode.epub4j.epub.EpubReader;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,8 +31,8 @@ import java.io.IOException;
 @Slf4j
 public class BookMetadataListener {
 
-    private final BookRepository bookRepository;
-    private final FileStorageService storageService;
+    private final BookRepositoryPort bookRepository;
+    private final BookStoragePort storageService;
 
     @Async("metadataTaskExecutor")
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)

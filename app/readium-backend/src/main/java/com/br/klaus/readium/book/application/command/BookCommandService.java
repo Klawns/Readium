@@ -1,9 +1,10 @@
 package com.br.klaus.readium.book.application.command;
 
 import com.br.klaus.readium.book.Book;
-import com.br.klaus.readium.book.BookRepository;
 import com.br.klaus.readium.book.BookTitleFormatter;
 import com.br.klaus.readium.book.application.support.OcrRunningRecoveryService;
+import com.br.klaus.readium.book.domain.port.BookRepositoryPort;
+import com.br.klaus.readium.book.domain.port.BookStoragePort;
 import com.br.klaus.readium.book.dto.BookResponseDTO;
 import com.br.klaus.readium.book.dto.UpdateBookStatusRequestDTO;
 import com.br.klaus.readium.book.dto.UpdateProgressRequestDTO;
@@ -13,7 +14,6 @@ import com.br.klaus.readium.event.BookOcrRequestedEvent;
 import com.br.klaus.readium.event.BookProgressUpdatedEvent;
 import com.br.klaus.readium.exception.BookNotFoundException;
 import com.br.klaus.readium.exception.UnsupportedFileFormatException;
-import com.br.klaus.readium.storage.FileStorageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -32,9 +32,9 @@ import java.util.Objects;
 @Slf4j
 public class BookCommandService {
 
-    private final BookRepository repository;
+    private final BookRepositoryPort repository;
     private final ApplicationEventPublisher eventPublisher;
-    private final FileStorageService storageService;
+    private final BookStoragePort storageService;
     private final OcrRunningRecoveryService ocrRunningRecoveryService;
 
     @Transactional
@@ -46,7 +46,7 @@ public class BookCommandService {
             throw new UnsupportedFileFormatException("Formato de arquivo nao suportado. Apenas .pdf e .epub sao permitidos.");
         }
 
-        FileStorageService.StoredFile storedFile = storageService.saveWithChecksum(file);
+        BookStoragePort.StoredFile storedFile = storageService.saveWithChecksum(file);
         Book existingBook = repository.findByFileHash(storedFile.sha256()).orElse(null);
         if (existingBook != null) {
             storageService.delete(storedFile.path());

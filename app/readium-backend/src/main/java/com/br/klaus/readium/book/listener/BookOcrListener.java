@@ -1,9 +1,9 @@
 package com.br.klaus.readium.book.listener;
 
 import com.br.klaus.readium.book.Book;
-import com.br.klaus.readium.book.BookRepository;
-import com.br.klaus.readium.book.OcrGateway;
 import com.br.klaus.readium.book.OcrGatewayResult;
+import com.br.klaus.readium.book.domain.port.BookRepositoryPort;
+import com.br.klaus.readium.book.domain.port.OcrGatewayPort;
 import com.br.klaus.readium.event.BookOcrRequestedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -19,8 +19,8 @@ import org.springframework.transaction.event.TransactionalEventListener;
 @Slf4j
 public class BookOcrListener {
 
-    private final BookRepository bookRepository;
-    private final OcrGateway ocrGateway;
+    private final BookRepositoryPort bookRepository;
+    private final OcrGatewayPort ocrGateway;
 
     @Async("ocrTaskExecutor")
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)

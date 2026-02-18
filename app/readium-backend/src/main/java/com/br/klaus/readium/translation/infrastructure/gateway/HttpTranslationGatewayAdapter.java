@@ -1,6 +1,8 @@
-package com.br.klaus.readium.translation;
+package com.br.klaus.readium.translation.infrastructure.gateway;
 
 import com.br.klaus.readium.exception.ExternalServiceException;
+import com.br.klaus.readium.translation.TranslationAutoResult;
+import com.br.klaus.readium.translation.domain.port.TranslationGatewayPort;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,7 +22,7 @@ import java.util.Locale;
 import java.util.Map;
 
 @Component
-public class HttpTranslationGateway implements TranslationGateway {
+public class HttpTranslationGatewayAdapter implements TranslationGatewayPort {
 
     private final ObjectMapper objectMapper = new ObjectMapper();
     private final HttpClient httpClient;
@@ -40,7 +42,7 @@ public class HttpTranslationGateway implements TranslationGateway {
     @Value("${app.translation.provider.timeout-ms:5000}")
     private int timeoutMs;
 
-    public HttpTranslationGateway() {
+    public HttpTranslationGatewayAdapter() {
         this.httpClient = HttpClient.newBuilder().build();
     }
 
