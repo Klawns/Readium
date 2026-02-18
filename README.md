@@ -106,10 +106,10 @@ As variaveis abaixo sao usadas no fluxo com Docker Compose (`app/.env`).
 | `APP_OCRMYPDF_LANGUAGES` | `eng+por` | Idiomas usados pelo OCRmyPDF/Tesseract. |
 | `APP_OCRMYPDF_TIMEOUT_SECONDS` | `1800` | Timeout maximo de um job OCR. |
 
-### Troca rapida entre `base-v1` e `ocr-v1`
-- `base-v1` (padrao):
-  - `READIUM_IMAGE_TAG=base-v1`
+### Troca rapida entre `base` e `ocr`
+- `base` (padrao):
+  - `READIUM_IMAGE_TAG=base`
   - `APP_OCR_ENGINE=HEURISTIC`
-- `ocr-v1`:
-  - `READIUM_IMAGE_TAG=ocr-v1`
+- `ocr`:
+  - `READIUM_IMAGE_TAG=ocr`
   - `APP_OCR_ENGINE=OCRMYPDF`
