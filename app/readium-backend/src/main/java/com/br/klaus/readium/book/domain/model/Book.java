@@ -123,11 +123,28 @@ public class Book {
         }
 
         this.lastReadPage = newPage;
+        refreshStatusFromProgress();
+    }
 
-        if ((this.bookStatus == null || this.bookStatus == BookStatus.TO_READ) && newPage > 0) {
+    public void setPages(Integer pages) {
+        if (pages != null && pages < 0) {
+            throw new IllegalArgumentException("Quantidade de paginas invalida.");
+        }
+        this.pages = pages;
+        if (pages != null && this.lastReadPage != null && this.lastReadPage > pages) {
+            this.lastReadPage = pages;
+        }
+        refreshStatusFromProgress();
+    }
+
+    private void refreshStatusFromProgress() {
+        int currentPage = this.lastReadPage == null ? 0 : this.lastReadPage;
+
+        if ((this.bookStatus == null || this.bookStatus == BookStatus.TO_READ) && currentPage > 0) {
             this.bookStatus = BookStatus.READING;
         }
-        if (this.pages != null && newPage == this.pages) {
+        if (this.pages != null && this.pages > 0 && currentPage >= this.pages) {
+            this.lastReadPage = this.pages;
             this.bookStatus = BookStatus.READ;
         }
     }
