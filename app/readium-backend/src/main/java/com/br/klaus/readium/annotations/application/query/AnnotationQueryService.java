@@ -9,6 +9,7 @@ import com.br.klaus.readium.exception.BookNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,22 +28,20 @@ public class AnnotationQueryService {
     @Transactional(readOnly = true)
     public List<AnnotationResponseDTO> findAll(int resultPage, int size) {
         return AnnotationResponseMapper.fromPage(
-                repository.findAll(PageRequest.of(Math.max(resultPage, 0), sanitizePageSize(size)))
+                repository.findAll(buildPageRequest(resultPage, size))
         );
     }
 
     @Transactional(readOnly = true)
     @Cacheable(cacheNames = CacheNames.ANNOTATIONS_BY_BOOK_PAGE, key = "#bookId + '::' + #page + '::' + #resultPage + '::' + #size")
     public List<AnnotationResponseDTO> findByBookAndPage(Long bookId, int page, int resultPage, int size) {
-        if (!bookExistenceService.existsById(bookId)) {
-            throw new BookNotFoundException("Livro com ID " + bookId + " nao encontrado.");
-        }
+        requireBookExists(bookId);
 
         return AnnotationResponseMapper.fromPage(
                 repository.findByBookIdAndPage(
                         bookId,
                         page,
-                        PageRequest.of(Math.max(resultPage, 0), sanitizePageSize(size))
+                        buildPageRequest(resultPage, size)
                 )
         );
     }
@@ -50,13 +49,21 @@ public class AnnotationQueryService {
     @Transactional(readOnly = true)
     @Cacheable(cacheNames = CacheNames.ANNOTATIONS_BY_BOOK, key = "#bookId + '::' + #resultPage + '::' + #size")
     public List<AnnotationResponseDTO> findByBookId(Long bookId, int resultPage, int size) {
+        requireBookExists(bookId);
+
+        return AnnotationResponseMapper.fromPage(
+                repository.findByBookId(bookId, buildPageRequest(resultPage, size))
+        );
+    }
+
+    private void requireBookExists(Long bookId) {
         if (!bookExistenceService.existsById(bookId)) {
             throw new BookNotFoundException("Livro com ID " + bookId + " nao encontrado.");
         }
+    }
 
-        return AnnotationResponseMapper.fromPage(
-                repository.findByBookId(bookId, PageRequest.of(Math.max(resultPage, 0), sanitizePageSize(size)))
-        );
+    private Pageable buildPageRequest(int resultPage, int size) {
+        return PageRequest.of(Math.max(resultPage, 0), sanitizePageSize(size));
     }
 
     private int sanitizePageSize(int requestedSize) {

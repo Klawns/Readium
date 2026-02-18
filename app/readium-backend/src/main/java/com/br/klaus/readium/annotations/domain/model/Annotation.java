@@ -67,13 +67,6 @@ public class Annotation {
         }
     }
 
-    public void setAuthoringMetadata(Long bookId, int page, List<Rect> rects, String selectedText) {
-        this.bookId = bookId;
-        this.page = page;
-        this.rects = rects;
-        this.selectedText = selectedText;
-    }
-
     @PrePersist
     public void prePersist() {
         this.createdAt = LocalDateTime.now();
