@@ -44,6 +44,8 @@ export const useReaderProgressSync = ({ bookId, currentPage }: UseReaderProgress
         lastReadPage: page,
       };
     });
+
+    queryClient.invalidateQueries({ queryKey: ['books'] });
   }, [bookId, queryClient]);
 
   const flushProgress = useCallback((keepalive = false) => {
