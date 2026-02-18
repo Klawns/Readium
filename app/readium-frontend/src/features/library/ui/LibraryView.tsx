@@ -1,4 +1,4 @@
-import { Search, BookOpen, CheckCircle2, Clock, Plus } from 'lucide-react';
+import { BookOpen, CheckCircle2, Clock, Plus, Search } from 'lucide-react';
 import type { Book, BookStatus, StatusFilter } from '@/types';
 import AppLayout from '@/components/layout/AppLayout.tsx';
 import { Input } from '@/components/ui/input.tsx';
