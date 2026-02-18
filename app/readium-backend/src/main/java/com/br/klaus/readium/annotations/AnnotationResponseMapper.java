@@ -10,7 +10,19 @@ public final class AnnotationResponseMapper {
     private AnnotationResponseMapper() {
     }
 
+    public static AnnotationResponseDTO toResponse(Annotation annotation) {
+        return new AnnotationResponseDTO(
+                annotation.getId(),
+                annotation.getBookId(),
+                annotation.getPage(),
+                annotation.getRects(),
+                annotation.getColor(),
+                annotation.getSelectedText(),
+                annotation.getNote()
+        );
+    }
+
     public static List<AnnotationResponseDTO> fromPage(Page<Annotation> page) {
-        return page.getContent().stream().map(AnnotationResponseDTO::fromEntity).toList();
+        return page.getContent().stream().map(AnnotationResponseMapper::toResponse).toList();
     }
 }

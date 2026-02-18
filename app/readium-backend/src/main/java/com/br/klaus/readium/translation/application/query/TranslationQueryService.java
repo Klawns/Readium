@@ -3,6 +3,7 @@ package com.br.klaus.readium.translation.application.query;
 import com.br.klaus.readium.config.CacheNames;
 import com.br.klaus.readium.translation.CachedAutoTranslationService;
 import com.br.klaus.readium.translation.Translation;
+import com.br.klaus.readium.translation.api.TranslationResponseMapper;
 import com.br.klaus.readium.translation.domain.port.TranslationRepositoryPort;
 import com.br.klaus.readium.translation.dto.AutoTranslationRequestDTO;
 import com.br.klaus.readium.translation.dto.AutoTranslationResponseDTO;
@@ -43,7 +44,7 @@ public class TranslationQueryService {
                 .toList();
 
         return Stream.concat(scopedTranslations.stream(), globalTranslations.stream())
-                .map(TranslationResponseDTO::fromEntity)
+                .map(TranslationResponseMapper::toResponse)
                 .toList();
     }
 
@@ -55,11 +56,7 @@ public class TranslationQueryService {
 
         String inputText = req.text().trim().replaceAll("\\s+", " ");
         String targetLanguage = req.resolveTargetLanguage();
-        String normalizedText = normalize(inputText);
+        String normalizedText = Translation.normalizeOriginalText(inputText);
         return cachedAutoTranslationService.translate(normalizedText, inputText, targetLanguage);
-    }
-
-    private String normalize(String value) {
-        return value.trim().toLowerCase();
     }
 }

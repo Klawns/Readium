@@ -3,6 +3,7 @@ package com.br.klaus.readium.book.application.command;
 import com.br.klaus.readium.book.Book;
 import com.br.klaus.readium.book.BookTitleFormatter;
 import com.br.klaus.readium.book.application.support.OcrRunningRecoveryService;
+import com.br.klaus.readium.book.api.BookResponseMapper;
 import com.br.klaus.readium.book.domain.port.BookRepositoryPort;
 import com.br.klaus.readium.book.domain.port.BookStoragePort;
 import com.br.klaus.readium.book.dto.BookResponseDTO;
@@ -51,7 +52,7 @@ public class BookCommandService {
         if (existingBook != null) {
             storageService.delete(storedFile.path());
             log.info("Upload duplicado detectado para hash {}. Reutilizando livro {}.", storedFile.sha256(), existingBook.getId());
-            return BookResponseDTO.fromEntity(existingBook);
+            return BookResponseMapper.toResponse(existingBook);
         }
 
         String title = BookTitleFormatter.fromFilename(originalFilename);
@@ -66,7 +67,7 @@ public class BookCommandService {
             Book duplicatedBook = repository.findByFileHash(storedFile.sha256()).orElse(null);
             if (duplicatedBook != null) {
                 log.info("Upload concorrente duplicado para hash {}. Reutilizando livro {}.", storedFile.sha256(), duplicatedBook.getId());
-                return BookResponseDTO.fromEntity(duplicatedBook);
+                return BookResponseMapper.toResponse(duplicatedBook);
             }
             throw ex;
         } catch (RuntimeException ex) {
@@ -75,7 +76,7 @@ public class BookCommandService {
         }
 
         eventPublisher.publishEvent(new BookCreatedEvent(savedBook.getId(), savedBook.getTitle()));
-        return BookResponseDTO.fromEntity(savedBook);
+        return BookResponseMapper.toResponse(savedBook);
     }
 
     @Transactional

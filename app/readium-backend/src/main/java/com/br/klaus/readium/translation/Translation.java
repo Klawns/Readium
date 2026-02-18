@@ -1,9 +1,12 @@
 package com.br.klaus.readium.translation;
 
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.Locale;
 
 @Entity
 @Table(indexes = {
@@ -11,7 +14,8 @@ import java.time.LocalDateTime;
         @Index(name = "idx_translation_book_original", columnList = "book_id,original_text"),
         @Index(name = "idx_translation_original_text", columnList = "original_text")
 })
-@Data
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Translation {
 
     @Id
@@ -28,6 +32,39 @@ public class Translation {
     private String contextSentence;
 
     private LocalDateTime createdAt;
+
+    public static Translation create(Long bookId, String originalText, String translatedText, String contextSentence) {
+        Translation translation = new Translation();
+        translation.revise(bookId, originalText, translatedText, contextSentence);
+        return translation;
+    }
+
+    public void revise(Long bookId, String originalText, String translatedText, String contextSentence) {
+        this.bookId = bookId;
+        this.originalText = normalizeOriginalText(originalText);
+        this.translatedText = requireText(translatedText, "translatedText").trim();
+        this.contextSentence = sanitizeContext(contextSentence);
+    }
+
+    public static String normalizeOriginalText(String value) {
+        return requireText(value, "originalText").trim().toLowerCase(Locale.ROOT);
+    }
+
+    private static String requireText(String value, String fieldName) {
+        if (value == null || value.isBlank()) {
+            throw new IllegalArgumentException(fieldName + " is required.");
+        }
+        return value;
+    }
+
+    private static String sanitizeContext(String contextSentence) {
+        if (contextSentence == null) {
+            return null;
+        }
+
+        String sanitized = contextSentence.trim();
+        return sanitized.isEmpty() ? null : sanitized;
+    }
 
     @PrePersist
     public void prePersist() {

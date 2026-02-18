@@ -1,6 +1,7 @@
 package com.br.klaus.readium.annotations.application.command;
 
 import com.br.klaus.readium.annotations.Annotation;
+import com.br.klaus.readium.annotations.AnnotationResponseMapper;
 import com.br.klaus.readium.annotations.domain.port.AnnotationRepositoryPort;
 import com.br.klaus.readium.annotations.dto.AnnotationRequestDTO;
 import com.br.klaus.readium.annotations.dto.AnnotationResponseDTO;
@@ -38,7 +39,7 @@ public class AnnotationCommandService {
 
         Annotation annotation = Annotation.from(req);
         repository.save(annotation);
-        return AnnotationResponseDTO.fromEntity(annotation);
+        return AnnotationResponseMapper.toResponse(annotation);
     }
 
     @Transactional
@@ -52,7 +53,7 @@ public class AnnotationCommandService {
 
         annotation.merge(req);
         repository.save(annotation);
-        return AnnotationResponseDTO.fromEntity(annotation);
+        return AnnotationResponseMapper.toResponse(annotation);
     }
 
     @Transactional

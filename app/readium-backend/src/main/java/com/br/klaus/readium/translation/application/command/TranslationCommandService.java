@@ -2,6 +2,7 @@ package com.br.klaus.readium.translation.application.command;
 
 import com.br.klaus.readium.config.CacheNames;
 import com.br.klaus.readium.translation.Translation;
+import com.br.klaus.readium.translation.api.TranslationResponseMapper;
 import com.br.klaus.readium.translation.domain.port.TranslationRepositoryPort;
 import com.br.klaus.readium.translation.dto.TranslationRequestDTO;
 import com.br.klaus.readium.translation.dto.TranslationResponseDTO;
@@ -10,7 +11,6 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.StringUtils;
 
 import java.util.Optional;
 
@@ -26,22 +26,25 @@ public class TranslationCommandService {
             @CacheEvict(cacheNames = CacheNames.TRANSLATIONS_BY_BOOK, key = "#req.bookId()", condition = "#req != null && #req.bookId() != null")
     })
     public TranslationResponseDTO save(TranslationRequestDTO req) {
-        if (req == null || !StringUtils.hasText(req.originalText()) || !StringUtils.hasText(req.translatedText())) {
-            throw new IllegalArgumentException("originalText and translatedText are required.");
+        if (req == null) {
+            throw new IllegalArgumentException("translation request is required.");
         }
 
-        String normalizedText = normalize(req.originalText());
+        String normalizedOriginalText = Translation.normalizeOriginalText(req.originalText());
 
-        Translation translation = findExistingTranslation(req.bookId(), normalizedText)
-                .orElse(new Translation());
-
-        translation.setBookId(req.bookId());
-        translation.setOriginalText(normalizedText);
-        translation.setTranslatedText(req.translatedText().trim());
-        translation.setContextSentence(req.contextSentence());
+        Translation translation = findExistingTranslation(req.bookId(), normalizedOriginalText)
+                .orElseGet(() -> Translation.create(
+                        req.bookId(),
+                        req.originalText(),
+                        req.translatedText(),
+                        req.contextSentence()
+                ));
+        if (translation.getId() != null) {
+            translation.revise(req.bookId(), req.originalText(), req.translatedText(), req.contextSentence());
+        }
 
         repository.save(translation);
-        return TranslationResponseDTO.fromEntity(translation);
+        return TranslationResponseMapper.toResponse(translation);
     }
 
     private Optional<Translation> findExistingTranslation(Long bookId, String normalizedText) {
@@ -49,9 +52,5 @@ public class TranslationCommandService {
             return repository.findByBookIdIsNullAndOriginalText(normalizedText);
         }
         return repository.findByBookIdAndOriginalText(bookId, normalizedText);
-    }
-
-    private String normalize(String value) {
-        return value.trim().toLowerCase();
     }
 }

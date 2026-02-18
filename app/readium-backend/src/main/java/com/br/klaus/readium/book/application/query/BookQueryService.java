@@ -2,6 +2,9 @@ package com.br.klaus.readium.book.application.query;
 
 import com.br.klaus.readium.book.Book;
 import com.br.klaus.readium.book.application.support.OcrRunningRecoveryService;
+import com.br.klaus.readium.book.api.BookOcrStatusResponseMapper;
+import com.br.klaus.readium.book.api.BookResponseMapper;
+import com.br.klaus.readium.book.api.BookTextLayerQualityResponseMapper;
 import com.br.klaus.readium.book.domain.port.BookRepositoryPort;
 import com.br.klaus.readium.book.domain.port.BookStoragePort;
 import com.br.klaus.readium.book.dto.BookFilterDTO;
@@ -35,13 +38,13 @@ public class BookQueryService {
             }
         }
 
-        return repository.findAll(status, filter.query(), pageable).map(BookResponseDTO::fromEntity);
+        return repository.findAll(status, filter.query(), pageable).map(BookResponseMapper::toResponse);
     }
 
     @Transactional(readOnly = true)
     public BookResponseDTO findById(Long id) {
         return repository.findById(id)
-                .map(BookResponseDTO::fromEntity)
+                .map(BookResponseMapper::toResponse)
                 .orElseThrow(() -> new BookNotFoundException("Livro com ID " + id + " nao encontrado."));
     }
 
@@ -78,7 +81,7 @@ public class BookQueryService {
                 .orElseThrow(() -> new BookNotFoundException("Livro com ID " + bookId + " nao encontrado."));
 
         ocrRunningRecoveryService.recoverIfStale(book);
-        return BookOcrStatusResponseDTO.fromEntity(book);
+        return BookOcrStatusResponseMapper.toResponse(book);
     }
 
     @Transactional(readOnly = true)
@@ -86,6 +89,6 @@ public class BookQueryService {
         Book book = repository.findById(bookId)
                 .orElseThrow(() -> new BookNotFoundException("Livro com ID " + bookId + " nao encontrado."));
 
-        return BookTextLayerQualityResponseDTO.fromEntity(book);
+        return BookTextLayerQualityResponseMapper.toResponse(book);
     }
 }
