@@ -1,6 +1,6 @@
 package com.br.klaus.readium.translation.domain.port;
 
-import com.br.klaus.readium.translation.Translation;
+import com.br.klaus.readium.translation.domain.model.Translation;
 
 import java.util.List;
 import java.util.Optional;

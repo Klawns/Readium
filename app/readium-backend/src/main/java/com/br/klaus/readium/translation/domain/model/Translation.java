@@ -1,4 +1,4 @@
-package com.br.klaus.readium.translation;
+package com.br.klaus.readium.translation.domain.model;
 
 import jakarta.persistence.*;
 import lombok.AccessLevel;

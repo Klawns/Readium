@@ -1,7 +1,7 @@
 package com.br.klaus.readium.translation.application.command;
 
 import com.br.klaus.readium.config.CacheNames;
-import com.br.klaus.readium.translation.Translation;
+import com.br.klaus.readium.translation.domain.model.Translation;
 import com.br.klaus.readium.translation.api.TranslationResponseMapper;
 import com.br.klaus.readium.translation.domain.port.TranslationRepositoryPort;
 import com.br.klaus.readium.translation.api.dto.TranslationRequestDTO;

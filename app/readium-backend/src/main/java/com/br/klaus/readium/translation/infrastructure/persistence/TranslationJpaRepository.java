@@ -1,6 +1,6 @@
 package com.br.klaus.readium.translation.infrastructure.persistence;
 
-import com.br.klaus.readium.translation.Translation;
+import com.br.klaus.readium.translation.domain.model.Translation;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

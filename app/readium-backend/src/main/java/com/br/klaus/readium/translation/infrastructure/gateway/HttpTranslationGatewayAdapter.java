@@ -1,7 +1,7 @@
 package com.br.klaus.readium.translation.infrastructure.gateway;
 
 import com.br.klaus.readium.exception.ExternalServiceException;
-import com.br.klaus.readium.translation.TranslationAutoResult;
+import com.br.klaus.readium.translation.domain.model.TranslationAutoResult;
 import com.br.klaus.readium.translation.domain.port.TranslationGatewayPort;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;

@@ -1,4 +1,4 @@
-package com.br.klaus.readium.translation;
+package com.br.klaus.readium.translation.application.service;
 
 import com.br.klaus.readium.exception.RateLimitExceededException;
 import org.springframework.beans.factory.annotation.Value;

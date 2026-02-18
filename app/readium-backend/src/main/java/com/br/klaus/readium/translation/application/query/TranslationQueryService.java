@@ -1,8 +1,8 @@
 package com.br.klaus.readium.translation.application.query;
 
 import com.br.klaus.readium.config.CacheNames;
-import com.br.klaus.readium.translation.CachedAutoTranslationService;
-import com.br.klaus.readium.translation.Translation;
+import com.br.klaus.readium.translation.application.service.CachedAutoTranslationService;
+import com.br.klaus.readium.translation.domain.model.Translation;
 import com.br.klaus.readium.translation.api.TranslationResponseMapper;
 import com.br.klaus.readium.translation.domain.port.TranslationRepositoryPort;
 import com.br.klaus.readium.translation.api.dto.AutoTranslationRequestDTO;
