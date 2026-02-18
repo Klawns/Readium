@@ -22,6 +22,11 @@ export const useReaderProgressSync = ({ bookId, currentPage }: UseReaderProgress
     currentPageRef.current = currentPage;
   }, [currentPage]);
 
+  useEffect(() => {
+    currentPageRef.current = currentPage;
+    lastSavedPageRef.current = null;
+  }, [bookId, currentPage]);
+
   const persistProgress = useCallback(async (page: number, keepalive = false) => {
     if (page <= 0) {
       return;
