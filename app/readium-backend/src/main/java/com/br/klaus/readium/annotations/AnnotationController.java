@@ -1,5 +1,7 @@
 package com.br.klaus.readium.annotations;
 
+import com.br.klaus.readium.annotations.application.command.AnnotationCommandService;
+import com.br.klaus.readium.annotations.application.query.AnnotationQueryService;
 import com.br.klaus.readium.annotations.dto.AnnotationRequestDTO;
 import com.br.klaus.readium.annotations.dto.AnnotationResponseDTO;
 import com.br.klaus.readium.annotations.dto.UpdateAnnotationRequestDTO;
@@ -17,11 +19,12 @@ import java.util.List;
 @Slf4j
 public class AnnotationController {
 
-    private final AnnotationService service;
+    private final AnnotationCommandService commandService;
+    private final AnnotationQueryService queryService;
 
     @PostMapping("/annotations")
     public ResponseEntity<AnnotationResponseDTO> create(@RequestBody AnnotationRequestDTO req) {
-        AnnotationResponseDTO response = service.create(req);
+        AnnotationResponseDTO response = commandService.create(req);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -29,7 +32,7 @@ public class AnnotationController {
     public ResponseEntity<List<AnnotationResponseDTO>> findAll(
             @RequestParam(defaultValue = "0") int resultPage,
             @RequestParam(defaultValue = "200") int size) {
-        return ResponseEntity.ok(service.findAll(resultPage, size));
+        return ResponseEntity.ok(queryService.findAll(resultPage, size));
     }
 
     @GetMapping("/annotations/book/{bookId}/page/{page}")
@@ -38,7 +41,7 @@ public class AnnotationController {
             @PathVariable int page,
             @RequestParam(defaultValue = "0") int resultPage,
             @RequestParam(defaultValue = "200") int size) {
-        return ResponseEntity.ok(service.findByBookAndPage(bookId, page, resultPage, size));
+        return ResponseEntity.ok(queryService.findByBookAndPage(bookId, page, resultPage, size));
     }
     
     @GetMapping("/books/{bookId}/annotations")
@@ -46,7 +49,7 @@ public class AnnotationController {
             @PathVariable Long bookId,
             @RequestParam(defaultValue = "0") int resultPage,
             @RequestParam(defaultValue = "200") int size) {
-        List<AnnotationResponseDTO> response = service.findByBookId(bookId, resultPage, size);
+        List<AnnotationResponseDTO> response = queryService.findByBookId(bookId, resultPage, size);
         log.debug("Returning {} annotations for book {}", response.size(), bookId);
         return ResponseEntity.ok(response);
     }
@@ -55,12 +58,12 @@ public class AnnotationController {
     public ResponseEntity<AnnotationResponseDTO> update(
             @PathVariable Long id,
             @RequestBody UpdateAnnotationRequestDTO req) {
-        return ResponseEntity.ok(service.update(id, req));
+        return ResponseEntity.ok(commandService.update(id, req));
     }
 
     @DeleteMapping("/annotations/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
-        service.delete(id);
+        commandService.delete(id);
         return ResponseEntity.noContent().build();
     }
 }

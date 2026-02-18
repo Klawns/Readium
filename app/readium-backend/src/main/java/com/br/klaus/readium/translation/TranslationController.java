@@ -1,5 +1,7 @@
 package com.br.klaus.readium.translation;
 
+import com.br.klaus.readium.translation.application.command.TranslationCommandService;
+import com.br.klaus.readium.translation.application.query.TranslationQueryService;
 import com.br.klaus.readium.translation.dto.AutoTranslationRequestDTO;
 import com.br.klaus.readium.translation.dto.AutoTranslationResponseDTO;
 import com.br.klaus.readium.translation.dto.TranslationRequestDTO;
@@ -17,21 +19,22 @@ import java.util.List;
 @RequiredArgsConstructor
 public class TranslationController {
 
-    private final TranslationService service;
+    private final TranslationCommandService commandService;
+    private final TranslationQueryService queryService;
 
     @PostMapping("/translations")
     public ResponseEntity<TranslationResponseDTO> create(@RequestBody TranslationRequestDTO req) {
-        TranslationResponseDTO response = service.save(req);
+        TranslationResponseDTO response = commandService.save(req);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
     @PostMapping("/translations/auto")
     public ResponseEntity<AutoTranslationResponseDTO> autoTranslate(@RequestBody @Valid AutoTranslationRequestDTO req) {
-        return ResponseEntity.ok(service.autoTranslate(req));
+        return ResponseEntity.ok(queryService.autoTranslate(req));
     }
 
     @GetMapping("/books/{bookId}/translations")
     public ResponseEntity<List<TranslationResponseDTO>> findByBook(@PathVariable Long bookId) {
-        return ResponseEntity.ok(service.findByBookId(bookId));
+        return ResponseEntity.ok(queryService.findByBookId(bookId));
     }
 }

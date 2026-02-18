@@ -1,31 +1,27 @@
-package com.br.klaus.readium.annotations;
+package com.br.klaus.readium.annotations.application.command;
 
+import com.br.klaus.readium.annotations.Annotation;
+import com.br.klaus.readium.annotations.AnnotationRepository;
 import com.br.klaus.readium.annotations.dto.AnnotationRequestDTO;
 import com.br.klaus.readium.annotations.dto.AnnotationResponseDTO;
 import com.br.klaus.readium.annotations.dto.UpdateAnnotationRequestDTO;
-import com.br.klaus.readium.config.CacheNames;
 import com.br.klaus.readium.book.BookRepository;
+import com.br.klaus.readium.config.CacheNames;
 import com.br.klaus.readium.event.BookDeletedEvent;
 import com.br.klaus.readium.exception.AnnotationNotFoundException;
 import com.br.klaus.readium.exception.BookNotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.springframework.context.event.EventListener;
 import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
-import org.springframework.data.domain.PageRequest;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
-public class AnnotationService {
-
-    private static final int DEFAULT_PAGE_SIZE = 200;
-    private static final int MAX_PAGE_SIZE = 500;
+public class AnnotationCommandService {
 
     private final AnnotationRepository repository;
     private final BookRepository bookRepository;
@@ -41,50 +37,8 @@ public class AnnotationService {
         }
 
         Annotation annotation = Annotation.from(req);
-
         repository.save(annotation);
         return AnnotationResponseDTO.fromEntity(annotation);
-    }
-
-    @Transactional(readOnly = true)
-    public List<AnnotationResponseDTO> findAll(int resultPage, int size) {
-        return repository.findAll(PageRequest.of(Math.max(resultPage, 0), sanitizePageSize(size)))
-                .getContent()
-                .stream()
-                .map(AnnotationResponseDTO::fromEntity)
-                .collect(Collectors.toList());
-    }
-
-    @Transactional(readOnly = true)
-    @Cacheable(cacheNames = CacheNames.ANNOTATIONS_BY_BOOK_PAGE, key = "#bookId + '::' + #page + '::' + #resultPage + '::' + #size")
-    public List<AnnotationResponseDTO> findByBookAndPage(Long bookId, int page, int resultPage, int size) {
-        if (!bookRepository.existsById(bookId)) {
-            throw new BookNotFoundException("Livro com ID " + bookId + " nao encontrado.");
-        }
-
-        return repository.findByBookIdAndPage(
-                        bookId,
-                        page,
-                        PageRequest.of(Math.max(resultPage, 0), sanitizePageSize(size))
-                )
-                .getContent()
-                .stream()
-                .map(AnnotationResponseDTO::fromEntity)
-                .collect(Collectors.toList());
-    }
-
-    @Transactional(readOnly = true)
-    @Cacheable(cacheNames = CacheNames.ANNOTATIONS_BY_BOOK, key = "#bookId + '::' + #resultPage + '::' + #size")
-    public List<AnnotationResponseDTO> findByBookId(Long bookId, int resultPage, int size) {
-        if (!bookRepository.existsById(bookId)) {
-            throw new BookNotFoundException("Livro com ID " + bookId + " nao encontrado.");
-        }
-
-        return repository.findByBookId(bookId, PageRequest.of(Math.max(resultPage, 0), sanitizePageSize(size)))
-                .getContent()
-                .stream()
-                .map(AnnotationResponseDTO::fromEntity)
-                .collect(Collectors.toList());
     }
 
     @Transactional
@@ -97,7 +51,6 @@ public class AnnotationService {
                 .orElseThrow(() -> new AnnotationNotFoundException("Anotacao com ID " + id + " nao encontrada."));
 
         annotation.merge(req);
-
         repository.save(annotation);
         return AnnotationResponseDTO.fromEntity(annotation);
     }
@@ -122,12 +75,5 @@ public class AnnotationService {
     public void onBookDeleted(BookDeletedEvent event) {
         List<Annotation> annotations = repository.findByBookId(event.id());
         repository.deleteAll(annotations);
-    }
-
-    private int sanitizePageSize(int requestedSize) {
-        if (requestedSize <= 0) {
-            return DEFAULT_PAGE_SIZE;
-        }
-        return Math.min(requestedSize, MAX_PAGE_SIZE);
     }
 }
