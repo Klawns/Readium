@@ -3,7 +3,7 @@ package com.br.klaus.readium.annotations.application.query;
 import com.br.klaus.readium.annotations.AnnotationResponseMapper;
 import com.br.klaus.readium.annotations.AnnotationRepository;
 import com.br.klaus.readium.annotations.dto.AnnotationResponseDTO;
-import com.br.klaus.readium.book.BookRepository;
+import com.br.klaus.readium.book.api.BookExistenceService;
 import com.br.klaus.readium.config.CacheNames;
 import com.br.klaus.readium.exception.BookNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +22,7 @@ public class AnnotationQueryService {
     private static final int MAX_PAGE_SIZE = 500;
 
     private final AnnotationRepository repository;
-    private final BookRepository bookRepository;
+    private final BookExistenceService bookExistenceService;
 
     @Transactional(readOnly = true)
     public List<AnnotationResponseDTO> findAll(int resultPage, int size) {
@@ -34,7 +34,7 @@ public class AnnotationQueryService {
     @Transactional(readOnly = true)
     @Cacheable(cacheNames = CacheNames.ANNOTATIONS_BY_BOOK_PAGE, key = "#bookId + '::' + #page + '::' + #resultPage + '::' + #size")
     public List<AnnotationResponseDTO> findByBookAndPage(Long bookId, int page, int resultPage, int size) {
-        if (!bookRepository.existsById(bookId)) {
+        if (!bookExistenceService.existsById(bookId)) {
             throw new BookNotFoundException("Livro com ID " + bookId + " nao encontrado.");
         }
 
@@ -50,7 +50,7 @@ public class AnnotationQueryService {
     @Transactional(readOnly = true)
     @Cacheable(cacheNames = CacheNames.ANNOTATIONS_BY_BOOK, key = "#bookId + '::' + #resultPage + '::' + #size")
     public List<AnnotationResponseDTO> findByBookId(Long bookId, int resultPage, int size) {
-        if (!bookRepository.existsById(bookId)) {
+        if (!bookExistenceService.existsById(bookId)) {
             throw new BookNotFoundException("Livro com ID " + bookId + " nao encontrado.");
         }
 

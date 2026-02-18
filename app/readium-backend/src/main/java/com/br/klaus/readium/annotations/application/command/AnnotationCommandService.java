@@ -5,7 +5,7 @@ import com.br.klaus.readium.annotations.AnnotationRepository;
 import com.br.klaus.readium.annotations.dto.AnnotationRequestDTO;
 import com.br.klaus.readium.annotations.dto.AnnotationResponseDTO;
 import com.br.klaus.readium.annotations.dto.UpdateAnnotationRequestDTO;
-import com.br.klaus.readium.book.BookRepository;
+import com.br.klaus.readium.book.api.BookExistenceService;
 import com.br.klaus.readium.config.CacheNames;
 import com.br.klaus.readium.event.BookDeletedEvent;
 import com.br.klaus.readium.exception.AnnotationNotFoundException;
@@ -24,7 +24,7 @@ import java.util.List;
 public class AnnotationCommandService {
 
     private final AnnotationRepository repository;
-    private final BookRepository bookRepository;
+    private final BookExistenceService bookExistenceService;
 
     @Transactional
     @Caching(evict = {
@@ -32,7 +32,7 @@ public class AnnotationCommandService {
             @CacheEvict(cacheNames = CacheNames.ANNOTATIONS_BY_BOOK_PAGE, allEntries = true)
     })
     public AnnotationResponseDTO create(AnnotationRequestDTO req) {
-        if (!bookRepository.existsById(req.bookId())) {
+        if (!bookExistenceService.existsById(req.bookId())) {
             throw new BookNotFoundException("Livro com ID " + req.bookId() + " nao encontrado.");
         }
 
