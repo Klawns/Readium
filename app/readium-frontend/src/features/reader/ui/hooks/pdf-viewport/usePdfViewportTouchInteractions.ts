@@ -47,6 +47,7 @@ export const usePdfViewportTouchInteractions = ({
   const longPressTimerRef = useRef<number | null>(null);
   const lastPointerTypeRef = useRef<string | null>(null);
   const lastTouchSelectionAllowedRef = useRef(false);
+  const registeredInteractionCapabilitiesRef = useRef<WeakSet<object>>(new WeakSet());
 
   const clearLongPressTimer = useCallback(() => {
     if (longPressTimerRef.current == null) {
@@ -180,16 +181,32 @@ export const usePdfViewportTouchInteractions = ({
       wantsRawTouch: false,
     };
 
-    interactionCapability.registerMode(touchScrollMode);
+    if (!registeredInteractionCapabilitiesRef.current.has(interactionCapability as object)) {
+      interactionCapability.registerMode(touchScrollMode);
+      registeredInteractionCapabilitiesRef.current.add(interactionCapability as object);
+    }
 
-    selectionCapability.enableForMode(TOUCH_SCROLL_MODE_ID, { showRects: true }, activeDocumentId);
+    if (!selectionCapability.isEnabledForMode(TOUCH_SCROLL_MODE_ID, activeDocumentId)) {
+      selectionCapability.enableForMode(TOUCH_SCROLL_MODE_ID, { showRects: true }, activeDocumentId);
+    }
 
     const scope = interactionCapability.forDocument(activeDocumentId);
     if (scope.getActiveMode() !== TOUCH_SCROLL_MODE_ID) {
       scope.activate(TOUCH_SCROLL_MODE_ID);
       logger.debug('activated touch scroll mode');
     }
-  }, [activeDocumentId, interactionCapability, selectionCapability]);
+
+    return () => {
+      clearLongPressTimer();
+      lastTouchSelectionAllowedRef.current = false;
+      touchGestureRef.current = createTouchGestureState();
+
+      const activeScope = interactionCapability.forDocument(activeDocumentId);
+      if (activeScope.getActiveMode() === TOUCH_SCROLL_MODE_ID) {
+        activeScope.activateDefaultMode();
+      }
+    };
+  }, [activeDocumentId, interactionCapability, selectionCapability, clearLongPressTimer]);
 
   useEffect(() => () => clearLongPressTimer(), [clearLongPressTimer]);
 
