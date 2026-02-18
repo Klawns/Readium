@@ -12,6 +12,11 @@ export interface TranslationOverlayInteractPayload {
   position: { x: number; y: number };
 }
 
+export interface AnnotationOverlayInteractPayload {
+  annotation: ReaderAnnotation;
+  position: { x: number; y: number };
+}
+
 export interface PdfDocumentViewportProps {
   engine: PdfEngine;
   fileUrl: string;
@@ -21,6 +26,7 @@ export interface PdfDocumentViewportProps {
   initialPage: number;
   onSelectionResolved: (selection: PendingSelection | null) => void;
   onTranslationOverlayInteract?: (payload: TranslationOverlayInteractPayload) => void;
+  onAnnotationOverlayInteract?: (payload: AnnotationOverlayInteractPayload) => void;
   onViewportStateChange?: (state: ReaderViewportState) => void;
   onViewportActionsReady?: (actions: ReaderViewportActions | null) => void;
   onTextLayerQualityEvaluated?: (lowTextLayerQuality: boolean) => void;

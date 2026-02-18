@@ -35,6 +35,7 @@ const PdfDocumentViewportContent: React.FC<PdfDocumentViewportProps> = ({
   initialPage,
   onSelectionResolved,
   onTranslationOverlayInteract,
+  onAnnotationOverlayInteract,
   onViewportStateChange,
   onViewportActionsReady,
   onTextLayerQualityEvaluated,
@@ -58,6 +59,19 @@ const PdfDocumentViewportContent: React.FC<PdfDocumentViewportProps> = ({
     }
     return byPage;
   }, [translationOverlays]);
+
+  const annotationsByPage = useMemo(() => {
+    const byPage = new Map<number, typeof annotations>();
+    for (const annotation of annotations) {
+      const pageItems = byPage.get(annotation.page);
+      if (pageItems) {
+        pageItems.push(annotation);
+      } else {
+        byPage.set(annotation.page, [annotation]);
+      }
+    }
+    return byPage;
+  }, [annotations]);
 
   const annotationIdsWithTranslation = useMemo(
     () => new Set(translationOverlays.map((overlay) => overlay.annotationId)),
@@ -202,8 +216,10 @@ const PdfDocumentViewportContent: React.FC<PdfDocumentViewportProps> = ({
                           pageIndex={pageIndex}
                           width={rotatedWidth}
                           height={rotatedHeight}
+                          pageAnnotations={annotationsByPage.get(pageIndex + 1) ?? []}
                           pageOverlays={translationOverlaysByPage.get(pageIndex + 1) ?? []}
                           onTranslationOverlayInteract={onTranslationOverlayInteract}
+                          onAnnotationOverlayInteract={onAnnotationOverlayInteract}
                           preventNativeDrag={touchInteractions.preventNativeDrag}
                           preventMobileContextMenu={touchInteractions.preventMobileContextMenu}
                         />

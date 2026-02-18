@@ -5,6 +5,7 @@ import PdfToolbar from './PdfToolbar';
 import ReaderControlsDock from './ReaderControlsDock';
 import TranslationInputPopup from './TranslationInputPopup';
 import TranslationPopup from './TranslationPopup';
+import AnnotationNotePopup from './AnnotationNotePopup';
 import { SelectionActionPopup } from '../ui/components/SelectionActionPopup';
 import { useReaderData } from '../ui/hooks/useReaderData';
 import { PdfDocumentViewport } from './PdfDocumentViewport';
@@ -16,6 +17,7 @@ import { useReaderProgressSync } from '../ui/hooks/pdf-reader/useReaderProgressS
 import { useReaderMobileUi } from '../ui/hooks/pdf-reader/useReaderMobileUi';
 import { useReaderOcrHint } from '../ui/hooks/pdf-reader/useReaderOcrHint';
 import { useReaderTranslationFlow } from '../ui/hooks/pdf-reader/useReaderTranslationFlow';
+import { useReaderAnnotationNotes } from '../ui/hooks/pdf-reader/useReaderAnnotationNotes';
 import { createLogger } from '@/lib/logger.ts';
 
 const logger = createLogger('reader');
@@ -56,6 +58,7 @@ const PdfReader: React.FC<PdfReaderProps> = ({
     translations,
     isLoading: readerLoading,
     createAnnotation,
+    updateAnnotation,
     autoTranslate,
     persistTranslation,
     isTranslating,
@@ -79,6 +82,15 @@ const PdfReader: React.FC<PdfReaderProps> = ({
     createAnnotation,
     autoTranslate,
     persistTranslation,
+  });
+  const {
+    activeAnnotationNote,
+    isSavingNote,
+    openAnnotationNote,
+    closeAnnotationNote,
+    saveAnnotationNote,
+  } = useReaderAnnotationNotes({
+    updateAnnotation,
   });
 
   useReaderProgressSync({
@@ -151,6 +163,7 @@ const PdfReader: React.FC<PdfReaderProps> = ({
           initialPage={initialPage}
           onSelectionResolved={setPendingSelection}
           onTranslationOverlayInteract={handleTranslationOverlayInteract}
+          onAnnotationOverlayInteract={openAnnotationNote}
           onViewportStateChange={handleViewportStateChange}
           onViewportActionsReady={handleViewportActionsReady}
           onTextLayerQualityEvaluated={handleTextLayerQualityEvaluated}
@@ -201,6 +214,18 @@ const PdfReader: React.FC<PdfReaderProps> = ({
             translation={activeTranslation.translation}
             position={activeTranslation.position}
             onClose={closeActiveTranslation}
+          />
+        )}
+
+        {activeAnnotationNote && (
+          <AnnotationNotePopup
+            annotation={activeAnnotationNote.annotation}
+            position={activeAnnotationNote.position}
+            isSaving={isSavingNote}
+            onSave={(note) => {
+              void saveAnnotationNote(note);
+            }}
+            onCancel={closeAnnotationNote}
           />
         )}
 
