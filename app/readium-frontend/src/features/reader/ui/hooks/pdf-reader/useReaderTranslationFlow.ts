@@ -6,33 +6,12 @@ import type { TranslationOverlayInteractPayload } from '../pdf-viewport/PdfDocum
 import type { ActiveTranslationState, TranslationInputState } from '../../pdfReader.types';
 import { createLogger } from '@/lib/logger.ts';
 import { GOOGLE_TRANSLATE_TARGET_LANGUAGE } from './pdfReader.constants';
+import { copyTextToClipboard } from './readerClipboard';
 
 const logger = createLogger('reader');
 
 const buildGoogleTranslateUrl = (text: string) =>
   `https://translate.google.com/?sl=auto&tl=${GOOGLE_TRANSLATE_TARGET_LANGUAGE}&text=${encodeURIComponent(text)}&op=translate`;
-
-const copyToClipboard = async (text: string): Promise<boolean> => {
-  if (!text.trim()) {
-    return false;
-  }
-
-  if (navigator.clipboard?.writeText) {
-    await navigator.clipboard.writeText(text);
-    return true;
-  }
-
-  const textarea = document.createElement('textarea');
-  textarea.value = text;
-  textarea.setAttribute('readonly', '');
-  textarea.style.position = 'fixed';
-  textarea.style.opacity = '0';
-  document.body.appendChild(textarea);
-  textarea.select();
-  const copied = document.execCommand('copy');
-  document.body.removeChild(textarea);
-  return copied;
-};
 
 interface CreateReaderAnnotationInput {
   bookId: number;
@@ -174,7 +153,7 @@ export const useReaderTranslationFlow = ({
     }
 
     try {
-      const copied = await copyToClipboard(pendingSelection.text);
+      const copied = await copyTextToClipboard(pendingSelection.text);
       if (copied) {
         toast.success('Texto copiado.');
         setPendingSelection(null);

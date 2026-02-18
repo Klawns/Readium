@@ -19,6 +19,7 @@ import { useReaderMobileUi } from '../ui/hooks/pdf-reader/useReaderMobileUi';
 import { useReaderOcrHint } from '../ui/hooks/pdf-reader/useReaderOcrHint';
 import { useReaderTranslationFlow } from '../ui/hooks/pdf-reader/useReaderTranslationFlow';
 import { useReaderAnnotationNotes } from '../ui/hooks/pdf-reader/useReaderAnnotationNotes';
+import { useReaderCopyShortcut } from '../ui/hooks/pdf-reader/useReaderCopyShortcut';
 import { createLogger } from '@/lib/logger.ts';
 
 const logger = createLogger('reader');
@@ -103,6 +104,11 @@ const PdfReader: React.FC<PdfReaderProps> = ({
   useReaderProgressSync({
     bookId,
     currentPage,
+  });
+  useReaderCopyShortcut({
+    containerRef,
+    pendingSelectionText: pendingSelection?.text,
+    onCopyPendingSelection: copyPendingSelection,
   });
 
   const { handleTextLayerQualityEvaluated } = useReaderOcrHint({ fileUrl });
