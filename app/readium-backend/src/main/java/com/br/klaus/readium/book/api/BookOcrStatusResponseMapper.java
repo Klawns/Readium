@@ -11,7 +11,7 @@ public final class BookOcrStatusResponseMapper {
     public static BookOcrStatusResponseDTO toResponse(Book book) {
         return new BookOcrStatusResponseDTO(
                 book.getId(),
-                book.getOcrStatus() != null ? book.getOcrStatus().name() : Book.OcrStatus.PENDING.name(),
+                BookOcrMapperSupport.resolveStatus(book),
                 book.getOcrScore(),
                 book.getOcrUpdatedAt()
         );

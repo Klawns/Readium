@@ -12,7 +12,7 @@ public final class BookTextLayerQualityResponseMapper {
         return new BookTextLayerQualityResponseDTO(
                 book.getId(),
                 book.getOcrScore(),
-                book.getOcrStatus() != null ? book.getOcrStatus().name() : Book.OcrStatus.PENDING.name(),
+                BookOcrMapperSupport.resolveStatus(book),
                 book.getOcrUpdatedAt()
         );
     }
