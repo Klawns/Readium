@@ -22,9 +22,3 @@ export interface ReaderTranslation {
   translatedText: string;
   contextSentence?: string;
 }
-
-export interface SelectionRange {
-  page: number;
-  rects: ReaderRect[];
-  text: string;
-}

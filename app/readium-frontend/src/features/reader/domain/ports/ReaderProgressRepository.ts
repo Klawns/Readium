@@ -6,5 +6,4 @@ export interface SaveReaderProgressCommand {
 
 export interface ReaderProgressRepository {
   saveProgress(command: SaveReaderProgressCommand): Promise<void>;
-  getLastReadPage(bookId: number): Promise<number | null>;
 }

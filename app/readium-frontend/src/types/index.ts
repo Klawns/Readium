@@ -36,20 +36,4 @@ export interface Page<T> {
   empty: boolean;
 }
 
-export interface CreateAnnotationPayload {
-  bookId: number;
-  page: number;
-  rects: Rect[];
-  color: string;
-  selectedText: string;
-  note?: string;
-}
-
-export interface CreateTranslationPayload {
-  bookId?: number;
-  originalText: string;
-  translatedText: string;
-  contextSentence?: string;
-}
-
 export type StatusFilter = 'ALL' | BookStatus;

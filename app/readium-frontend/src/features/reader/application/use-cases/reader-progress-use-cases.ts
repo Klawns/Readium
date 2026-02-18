@@ -10,11 +10,3 @@ export class SaveReaderProgressUseCase {
     return this.repository.saveProgress(command);
   }
 }
-
-export class GetLastReadPageUseCase {
-  constructor(private readonly repository: ReaderProgressRepository) {}
-
-  execute(bookId: number) {
-    return this.repository.getLastReadPage(bookId);
-  }
-}
