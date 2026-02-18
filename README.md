@@ -6,6 +6,10 @@ Readium é uma aplicação self-hosted para biblioteca digital, leitura no naveg
 - Biblioteca de livros com upload, busca, filtro e status de leitura.
 - Leitor PDF no navegador com sincronizacao de progresso por pagina.
 - Anotacoes por selecao de texto e pagina.
+- Edicao de anotacao ao clicar no highlight e remocao de highlight no popup.
+- Preload de highlights da pagina atual, anterior e proxima.
+- Navegacao por links/referencias internos do PDF.
+- Copia de texto selecionado no leitor.
 - Traducao automatica e traducao persistida por livro.
 - OCR sob demanda para melhorar a camada de texto em PDFs.
 
@@ -28,7 +32,8 @@ Readium é uma aplicação self-hosted para biblioteca digital, leitura no naveg
 
 ```bash
 cd app
-docker compose up -d --build
+docker compose pull
+docker compose up -d
 ```
 
 Acesso:
@@ -75,7 +80,8 @@ As variaveis abaixo sao usadas no fluxo com Docker Compose (`app/.env`).
 
 | Variavel | Padrao | Descricao |
 |---|---|---|
-| `READIUM_DOCKER_TARGET` | `runtime-base` | Target da imagem Docker (`runtime-base` ou `runtime-ocr`). |
+| `READIUM_IMAGE_REPOSITORY` | `klawns/readium` | Repositorio Docker Hub da imagem do Readium. |
+| `READIUM_IMAGE_TAG` | `base-v1` | Tag da imagem (`base-v1` ou `ocr-v1`). |
 | `APP_PORT` | `7717` | Porta HTTP da aplicacao. |
 | `APP_DATABASE_URL` | `jdbc:sqlite:data/db/library.db` | URL de conexao SQLite. |
 | `APP_STORAGE_PATH` | `data/books` | Diretorio de armazenamento de livros e artefatos. |
@@ -87,6 +93,10 @@ As variaveis abaixo sao usadas no fluxo com Docker Compose (`app/.env`).
 | `APP_TRANSLATION_CACHE_TTL_SECONDS` | `86400` | TTL do cache de traducao automatica. |
 | `APP_TRANSLATION_CACHE_MAX_ENTRIES` | `5000` | Limite de entradas no cache de traducao. |
 | `APP_TRANSLATION_MIN_INTERVAL_MS` | `150` | Rate limit minimo por chave de texto. |
+| `APP_TRANSLATION_LIST_CACHE_TTL_SECONDS` | `300` | TTL do cache de listagem de traducoes por livro. |
+| `APP_TRANSLATION_LIST_CACHE_MAX_ENTRIES` | `2000` | Limite de entradas do cache de listagem de traducoes. |
+| `APP_ANNOTATIONS_CACHE_TTL_SECONDS` | `120` | TTL do cache de consultas de anotacoes. |
+| `APP_ANNOTATIONS_CACHE_MAX_ENTRIES` | `5000` | Limite de entradas do cache de anotacoes. |
 | `APP_OCR_ENGINE` | `HEURISTIC` | Engine de OCR (`HEURISTIC` ou `OCRMYPDF`). |
 | `APP_OCR_SAMPLE_PAGES` | `10` | Numero de paginas amostradas no modo heuristico. |
 | `APP_OCR_ASYNC_CORE_POOL_SIZE` | `1` | Threads base do executor de OCR. |
@@ -95,3 +105,11 @@ As variaveis abaixo sao usadas no fluxo com Docker Compose (`app/.env`).
 | `APP_OCRMYPDF_COMMAND` | `ocrmypdf` | Comando executavel do OCRmyPDF. |
 | `APP_OCRMYPDF_LANGUAGES` | `eng+por` | Idiomas usados pelo OCRmyPDF/Tesseract. |
 | `APP_OCRMYPDF_TIMEOUT_SECONDS` | `1800` | Timeout maximo de um job OCR. |
+
+### Troca rapida entre `base-v1` e `ocr-v1`
+- `base-v1` (padrao):
+  - `READIUM_IMAGE_TAG=base-v1`
+  - `APP_OCR_ENGINE=HEURISTIC`
+- `ocr-v1`:
+  - `READIUM_IMAGE_TAG=ocr-v1`
+  - `APP_OCR_ENGINE=OCRMYPDF`
