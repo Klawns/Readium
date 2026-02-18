@@ -1,7 +1,7 @@
 import type { QueryClient } from '@tanstack/react-query';
 import type { Book, BookPage, StatusFilter } from '@/types';
-
-const PAGE_SIZE = 12;
+import { queryKeys } from '@/lib/query-keys';
+import { LIBRARY_PAGE_SIZE } from '../../domain/library.constants';
 
 const normalizeText = (value: string | null | undefined): string => (value ?? '').trim().toLowerCase();
 
@@ -25,7 +25,7 @@ const insertBookIntoPage = (page: BookPage, book: Book): BookPage => {
     return page;
   }
 
-  const pageSize = page.size > 0 ? page.size : PAGE_SIZE;
+  const pageSize = page.size > 0 ? page.size : LIBRARY_PAGE_SIZE;
   const nextTotalElements = page.totalElements + 1;
   const nextTotalPages = Math.max(1, Math.ceil(nextTotalElements / pageSize));
   const shouldInsertIntoContent = page.number === 0;
@@ -46,7 +46,7 @@ export const updateLibraryCachesAfterUpload = (
   queryClient: QueryClient,
   createdBook: Book,
 ): void => {
-  const bookQueries = queryClient.getQueryCache().findAll({ queryKey: ['books'] });
+  const bookQueries = queryClient.getQueryCache().findAll({ queryKey: queryKeys.booksRoot() });
   for (const query of bookQueries) {
     const queryKey = query.queryKey;
     if (!Array.isArray(queryKey) || queryKey.length < 4) {
@@ -71,4 +71,3 @@ export const updateLibraryCachesAfterUpload = (
     });
   }
 };
-

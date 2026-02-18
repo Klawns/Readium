@@ -4,6 +4,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { useLibrary } from '@/features/library/hooks/useLibrary.ts';
 import { useLibrarySearchParams } from '@/features/library/hooks/useLibrarySearchParams.ts';
 import LibraryView from '@/features/library/ui/LibraryView.tsx';
+import { queryKeys } from '@/lib/query-keys';
 
 export default function LibraryPage() {
   const navigate = useNavigate();
@@ -62,7 +63,7 @@ export default function LibraryPage() {
       onCloseUpload={() => setUploadOpen(false)}
       onUpload={handleUpload}
       onFilterChange={(nextFilter) => updateParams({ status: nextFilter, page: 0 })}
-      onRetry={() => queryClient.invalidateQueries({ queryKey: ['books'] })}
+      onRetry={() => queryClient.invalidateQueries({ queryKey: queryKeys.booksRoot() })}
       onBookClick={(bookId) => navigate(`/books/${bookId}`)}
       onBookStatusChange={(bookId, status) => updateStatus(bookId, status)}
       onPageChange={(nextPage) => updateParams({ page: nextPage })}

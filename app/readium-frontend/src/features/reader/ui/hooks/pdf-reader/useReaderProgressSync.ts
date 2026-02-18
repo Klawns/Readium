@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { createLogger } from '@/lib/logger.ts';
 import type { Book } from '@/types';
+import { queryKeys } from '@/lib/query-keys';
 import { saveReaderProgressUseCase } from '../../../application/use-cases/reader-progress-use-case-factory';
 import { PROGRESS_SAVE_DEBOUNCE_MS } from './pdfReader.constants';
 
@@ -35,7 +36,7 @@ export const useReaderProgressSync = ({ bookId, currentPage }: UseReaderProgress
     await saveReaderProgressUseCase.execute({ bookId, page, keepalive });
     lastSavedPageRef.current = page;
 
-    queryClient.setQueryData<Book | undefined>(['book', bookId], (cachedBook) => {
+    queryClient.setQueryData<Book | undefined>(queryKeys.book(bookId), (cachedBook) => {
       if (!cachedBook) {
         return cachedBook;
       }
@@ -45,7 +46,7 @@ export const useReaderProgressSync = ({ bookId, currentPage }: UseReaderProgress
       };
     });
 
-    queryClient.invalidateQueries({ queryKey: ['books'] });
+    queryClient.invalidateQueries({ queryKey: queryKeys.booksRoot() });
   }, [bookId, queryClient]);
 
   const flushProgress = useCallback((keepalive = false) => {

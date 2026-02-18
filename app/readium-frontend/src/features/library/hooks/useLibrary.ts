@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient, keepPreviousData } from '@tansta
 import type { BookStatus, StatusFilter } from '@/types';
 import { toast } from 'sonner';
 import { createLogger } from '@/lib/logger.ts';
+import { queryKeys } from '@/lib/query-keys';
 import { BookHttpRepository } from '../infrastructure/api/book-http-repository';
 import {
   FetchLibraryBooksUseCase,
@@ -10,8 +11,8 @@ import {
   UploadLibraryBookUseCase,
 } from '../application/use-cases/library-use-cases';
 import { updateLibraryCachesAfterUpload } from '../application/services/library-cache-updater';
+import { LIBRARY_PAGE_SIZE } from '../domain/library.constants';
 
-const PAGE_SIZE = 12;
 const logger = createLogger('library');
 
 const repository = new BookHttpRepository();
@@ -30,8 +31,8 @@ export const useLibrary = ({ page, statusFilter, searchQuery }: UseLibraryParams
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
 
   const booksQuery = useQuery({
-    queryKey: ['books', statusFilter, page, searchQuery],
-    queryFn: () => fetchLibraryBooksUseCase.execute(statusFilter, page, PAGE_SIZE, searchQuery),
+    queryKey: queryKeys.books(statusFilter, page, searchQuery),
+    queryFn: () => fetchLibraryBooksUseCase.execute(statusFilter, page, LIBRARY_PAGE_SIZE, searchQuery),
     placeholderData: keepPreviousData,
     staleTime: 15_000,
   });
@@ -51,7 +52,7 @@ export const useLibrary = ({ page, statusFilter, searchQuery }: UseLibraryParams
       window.setTimeout(() => {
         setUploadProgress(null);
       }, 450);
-      queryClient.invalidateQueries({ queryKey: ['books'], refetchType: 'inactive' });
+      queryClient.invalidateQueries({ queryKey: queryKeys.booksRoot(), refetchType: 'inactive' });
     },
     onError: (error) => {
       setUploadProgress(null);
@@ -65,7 +66,7 @@ export const useLibrary = ({ page, statusFilter, searchQuery }: UseLibraryParams
       updateLibraryBookStatusUseCase.execute(id, status),
     onSuccess: () => {
       toast.success('Status atualizado!');
-      queryClient.invalidateQueries({ queryKey: ['books'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.booksRoot() });
     },
     onError: () => {
       toast.error('Erro ao atualizar status.');

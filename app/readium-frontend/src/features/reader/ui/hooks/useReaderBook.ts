@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import type { BookStatus } from '@/types';
+import { queryKeys } from '@/lib/query-keys';
 import {
   getReaderBookFileUrlUseCase,
   getReaderBookUseCase,
@@ -17,13 +18,13 @@ export const useReaderBook = (bookId: number) => {
   const isValidBookId = Number.isFinite(bookId) && bookId > 0;
 
   const bookQuery = useQuery({
-    queryKey: ['book', bookId],
+    queryKey: queryKeys.book(bookId),
     queryFn: () => getReaderBookUseCase.execute(bookId),
     enabled: isValidBookId,
   });
 
   const ocrStatusQuery = useQuery({
-    queryKey: ['book', bookId, 'ocr-status'],
+    queryKey: queryKeys.bookOcrStatus(bookId),
     queryFn: () => getReaderOcrStatusUseCase.execute(bookId),
     enabled: isValidBookId,
     retry: 1,
@@ -37,7 +38,7 @@ export const useReaderBook = (bookId: number) => {
   });
 
   const textLayerQualityQuery = useQuery({
-    queryKey: ['book', bookId, 'text-layer-quality'],
+    queryKey: queryKeys.bookTextLayerQuality(bookId),
     queryFn: () => getReaderTextLayerQualityUseCase.execute(bookId),
     enabled: isValidBookId && Boolean(ocrStatusQuery.data),
     retry: 1,
@@ -50,8 +51,8 @@ export const useReaderBook = (bookId: number) => {
   const updateStatusMutation = useMutation({
     mutationFn: (status: BookStatus) => updateReaderBookStatusUseCase.execute(bookId, status),
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['book', bookId] });
-      queryClient.invalidateQueries({ queryKey: ['books'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.book(bookId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.booksRoot() });
       toast.success('Status atualizado!');
     },
     onError: () => {
@@ -63,8 +64,8 @@ export const useReaderBook = (bookId: number) => {
     mutationFn: () => triggerReaderOcrUseCase.execute(bookId),
     onSuccess: () => {
       toast.success('OCR iniciado.');
-      queryClient.invalidateQueries({ queryKey: ['book', bookId, 'ocr-status'] });
-      queryClient.invalidateQueries({ queryKey: ['book', bookId, 'text-layer-quality'] });
+      queryClient.invalidateQueries({ queryKey: queryKeys.bookOcrStatus(bookId) });
+      queryClient.invalidateQueries({ queryKey: queryKeys.bookTextLayerQuality(bookId) });
     },
     onError: () => {
       toast.error('Erro ao iniciar OCR.');

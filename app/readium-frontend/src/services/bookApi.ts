@@ -98,7 +98,6 @@ export const bookApi = {
     }
     return `${base}?v=${encodeURIComponent(version)}`;
   },
-  getBookCoverUrl: (bookId: number): string => apiUrl(`/books/${bookId}/cover`),
 };
 
 export const getBooks = bookApi.getBooks;
@@ -110,4 +109,3 @@ export const triggerOcr = bookApi.triggerOcr;
 export const getOcrStatus = bookApi.getOcrStatus;
 export const getTextLayerQuality = bookApi.getTextLayerQuality;
 export const getBookFileUrl = bookApi.getBookFileUrl;
-export const getBookCoverUrl = bookApi.getBookCoverUrl;

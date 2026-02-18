@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { queryKeys } from '@/lib/query-keys';
 import type { CreateTranslationCommand } from '../../domain/ports/TranslationRepository';
 import { TranslationHttpRepository } from '../../infrastructure/api/translation-http-repository';
 import { BackendTranslationProvider } from '../../infrastructure/translation/backend-translation-provider';
@@ -15,7 +16,7 @@ const persistTranslationUseCase = new PersistTranslationUseCase(translationRepos
 
 export const useReaderTranslationsData = (bookId: number) => {
   const queryClient = useQueryClient();
-  const translationsQueryKey = ['reader', 'translations', bookId] as const;
+  const translationsQueryKey = queryKeys.readerTranslations(bookId);
 
   const translationsQuery = useQuery({
     queryKey: translationsQueryKey,
@@ -57,4 +58,3 @@ export const useReaderTranslationsData = (bookId: number) => {
     isTranslating: autoTranslateMutation.isPending || persistTranslationMutation.isPending,
   };
 };
-

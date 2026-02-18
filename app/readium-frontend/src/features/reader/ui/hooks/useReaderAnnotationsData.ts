@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
+import { queryKeys } from '@/lib/query-keys';
 import type { ReaderRect } from '../../domain/models';
 import { AnnotationHttpRepository } from '../../infrastructure/api/annotation-http-repository';
 import {
@@ -26,7 +27,7 @@ export interface CreateReaderAnnotationInput {
 export const useReaderAnnotationsData = (bookId: number, currentPage: number) => {
   const queryClient = useQueryClient();
   const annotationPages = useMemo(() => buildAnnotationPageWindow(currentPage), [currentPage]);
-  const allAnnotationsQueryKey = ['reader', 'annotations', bookId, 'all'] as const;
+  const allAnnotationsQueryKey = queryKeys.readerAnnotationsAll(bookId);
 
   const allAnnotationsQuery = useQuery({
     queryKey: allAnnotationsQueryKey,
@@ -38,7 +39,7 @@ export const useReaderAnnotationsData = (bookId: number, currentPage: number) =>
 
   const pageAnnotationsQueries = useQueries({
     queries: annotationPages.map((page) => ({
-      queryKey: ['reader', 'annotations', bookId, 'page', page] as const,
+      queryKey: queryKeys.readerAnnotationsPage(bookId, page),
       queryFn: () => annotationRepository.getByBookAndPage(bookId, page),
       enabled: Number.isFinite(bookId) && bookId > 0 && page > 0,
       staleTime: 10_000,
@@ -47,12 +48,7 @@ export const useReaderAnnotationsData = (bookId: number, currentPage: number) =>
   });
 
   const invalidateBookAnnotations = () => {
-    queryClient.invalidateQueries({
-      predicate: ({ queryKey }) =>
-        queryKey[0] === 'reader'
-        && queryKey[1] === 'annotations'
-        && queryKey[2] === bookId,
-    });
+    queryClient.invalidateQueries({ queryKey: queryKeys.readerAnnotationsRoot(bookId) });
   };
 
   const createAnnotationMutation = useMutation({
@@ -93,4 +89,3 @@ export const useReaderAnnotationsData = (bookId: number, currentPage: number) =>
     deleteAnnotation: deleteAnnotationMutation.mutateAsync,
   };
 };
-
