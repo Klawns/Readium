@@ -5,6 +5,7 @@ export interface HttpRequest {
   headers?: Record<string, string>;
   params?: Record<string, string | number | boolean>;
   keepalive?: boolean;
+  onUploadProgress?: (progressPercent: number) => void;
 }
 
 export interface HttpResponse<T = unknown> {

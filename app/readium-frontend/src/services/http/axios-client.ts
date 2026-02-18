@@ -67,6 +67,16 @@ export class AxiosHttpClient implements HttpClient {
         data: data.body,
         headers: data.headers,
         params: data.params,
+        onUploadProgress: data.onUploadProgress
+          ? (event) => {
+              const total = event.total ?? 0;
+              if (total <= 0) {
+                return;
+              }
+              const progressPercent = Math.min(100, Math.max(0, Math.round((event.loaded * 100) / total)));
+              data.onUploadProgress?.(progressPercent);
+            }
+          : undefined,
       });
     } catch (error: unknown) {
       if (axios.isAxiosError(error) && error.response) {

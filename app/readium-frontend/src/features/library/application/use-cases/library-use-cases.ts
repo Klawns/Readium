@@ -1,5 +1,5 @@
 import type { Book, BookPage, BookStatus, StatusFilter } from '@/types';
-import type { BookRepository } from '../../domain/ports/BookRepository';
+import type { BookRepository, UploadBookOptions } from '../../domain/ports/BookRepository';
 
 export class FetchLibraryBooksUseCase {
   constructor(private readonly repository: BookRepository) {}
@@ -12,8 +12,8 @@ export class FetchLibraryBooksUseCase {
 export class UploadLibraryBookUseCase {
   constructor(private readonly repository: BookRepository) {}
 
-  execute(file: File): Promise<Book> {
-    return this.repository.upload(file);
+  execute(file: File, options?: UploadBookOptions): Promise<Book> {
+    return this.repository.upload(file, options);
   }
 }
 

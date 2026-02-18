@@ -8,9 +8,16 @@ interface UploadModalProps {
   onClose: () => void;
   onUpload: (file: File) => Promise<void> | void;
   isUploading?: boolean;
+  uploadProgress?: number | null;
 }
 
-export default function UploadModal({ open, onClose, onUpload, isUploading = false }: UploadModalProps) {
+export default function UploadModal({
+  open,
+  onClose,
+  onUpload,
+  isUploading = false,
+  uploadProgress = null,
+}: UploadModalProps) {
   const [file, setFile] = useState<File | null>(null);
   const [dragOver, setDragOver] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -105,9 +112,21 @@ export default function UploadModal({ open, onClose, onUpload, isUploading = fal
             Cancelar
           </Button>
           <Button onClick={() => { void handleSubmit(); }} disabled={!file || isUploading}>
-            {isUploading ? 'Enviando...' : 'Enviar'}
+            {isUploading ? `Enviando${uploadProgress !== null ? ` (${uploadProgress}%)` : '...'}` : 'Enviar'}
           </Button>
         </div>
+
+        {isUploading && uploadProgress !== null ? (
+          <div className="space-y-1">
+            <div className="h-2 overflow-hidden rounded bg-muted">
+              <div
+                className="h-full rounded bg-primary transition-all duration-150"
+                style={{ width: `${Math.max(0, Math.min(100, uploadProgress))}%` }}
+              />
+            </div>
+            <p className="text-right text-[11px] text-muted-foreground">{uploadProgress}% enviado</p>
+          </div>
+        ) : null}
       </DialogContent>
     </Dialog>
   );

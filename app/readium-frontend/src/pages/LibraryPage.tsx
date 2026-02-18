@@ -18,6 +18,7 @@ export default function LibraryPage() {
     uploadBook,
     updateStatus,
     isUploading,
+    uploadProgress,
   } = useLibrary({ page, statusFilter, searchQuery });
 
   const [uploadOpen, setUploadOpen] = useState(false);
@@ -55,6 +56,7 @@ export default function LibraryPage() {
       localSearch={localSearch}
       uploadOpen={uploadOpen}
       isUploading={isUploading}
+      uploadProgress={uploadProgress}
       onSearchChange={setLocalSearch}
       onOpenUpload={() => setUploadOpen(true)}
       onCloseUpload={() => setUploadOpen(false)}

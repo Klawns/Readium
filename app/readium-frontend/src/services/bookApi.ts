@@ -16,6 +16,10 @@ import {
 
 const apiUrl = (path: string) => `/api${path}`;
 
+interface UploadBookOptions {
+  onProgress?: (progressPercent: number) => void;
+}
+
 export const bookApi = {
   getBooks: async (status?: StatusFilter, page = 0, size = 12, query?: string): Promise<BookPage> => {
     const params: Record<string, string> = {
@@ -46,7 +50,7 @@ export const bookApi = {
     return BookSchema.parse(response.data);
   },
 
-  uploadBook: async (file: File): Promise<Book> => {
+  uploadBook: async (file: File, options?: UploadBookOptions): Promise<Book> => {
     const formData = new FormData();
     formData.append('file', file);
 
@@ -54,6 +58,7 @@ export const bookApi = {
       headers: {
         'Content-Type': 'multipart/form-data',
       },
+      onUploadProgress: options?.onProgress,
     });
     if (response.status >= 400) throw new Error(`Erro ao fazer upload: ${response.status}`);
     return BookSchema.parse(response.data);

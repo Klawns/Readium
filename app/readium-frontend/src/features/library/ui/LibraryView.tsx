@@ -18,6 +18,7 @@ interface LibraryViewProps {
   localSearch: string;
   uploadOpen: boolean;
   isUploading: boolean;
+  uploadProgress: number | null;
   onSearchChange: (value: string) => void;
   onOpenUpload: () => void;
   onCloseUpload: () => void;
@@ -72,6 +73,7 @@ export default function LibraryView({
   localSearch,
   uploadOpen,
   isUploading,
+  uploadProgress,
   onSearchChange,
   onOpenUpload,
   onCloseUpload,
@@ -181,6 +183,7 @@ export default function LibraryView({
         onClose={onCloseUpload}
         onUpload={onUpload}
         isUploading={isUploading}
+        uploadProgress={uploadProgress}
       />
     </AppLayout>
   );
