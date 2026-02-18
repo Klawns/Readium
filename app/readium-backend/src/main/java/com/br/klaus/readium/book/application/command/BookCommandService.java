@@ -1,7 +1,7 @@
 package com.br.klaus.readium.book.application.command;
 
-import com.br.klaus.readium.book.Book;
-import com.br.klaus.readium.book.BookTitleFormatter;
+import com.br.klaus.readium.book.domain.model.Book;
+import com.br.klaus.readium.book.domain.service.BookTitleFormatter;
 import com.br.klaus.readium.book.application.support.OcrRunningRecoveryService;
 import com.br.klaus.readium.book.api.BookResponseMapper;
 import com.br.klaus.readium.book.domain.port.BookRepositoryPort;
@@ -156,3 +156,4 @@ public class BookCommandService {
         return "pdf".equals(normalized) || "epub".equals(normalized);
     }
 }
+

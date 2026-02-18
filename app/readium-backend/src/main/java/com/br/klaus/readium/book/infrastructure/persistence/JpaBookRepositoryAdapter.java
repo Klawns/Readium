@@ -1,6 +1,6 @@
 package com.br.klaus.readium.book.infrastructure.persistence;
 
-import com.br.klaus.readium.book.Book;
+import com.br.klaus.readium.book.domain.model.Book;
 import com.br.klaus.readium.book.domain.port.BookRepositoryPort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;

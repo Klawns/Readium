@@ -1,6 +1,6 @@
 package com.br.klaus.readium.book.application.query;
 
-import com.br.klaus.readium.book.Book;
+import com.br.klaus.readium.book.domain.model.Book;
 import com.br.klaus.readium.book.application.support.OcrRunningRecoveryService;
 import com.br.klaus.readium.book.api.BookOcrStatusResponseMapper;
 import com.br.klaus.readium.book.api.BookResponseMapper;
@@ -92,3 +92,4 @@ public class BookQueryService {
         return BookTextLayerQualityResponseMapper.toResponse(book);
     }
 }
+

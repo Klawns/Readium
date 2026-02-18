@@ -1,4 +1,4 @@
-package com.br.klaus.readium.book;
+package com.br.klaus.readium.book.domain.service;
 
 public final class BookTitleFormatter {
 

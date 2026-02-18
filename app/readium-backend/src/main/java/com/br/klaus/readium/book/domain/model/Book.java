@@ -1,4 +1,4 @@
-package com.br.klaus.readium.book;
+package com.br.klaus.readium.book.domain.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;

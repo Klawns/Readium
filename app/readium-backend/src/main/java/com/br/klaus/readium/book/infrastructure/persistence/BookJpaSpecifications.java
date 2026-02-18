@@ -1,6 +1,6 @@
 package com.br.klaus.readium.book.infrastructure.persistence;
 
-import com.br.klaus.readium.book.Book;
+import com.br.klaus.readium.book.domain.model.Book;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.util.StringUtils;
 

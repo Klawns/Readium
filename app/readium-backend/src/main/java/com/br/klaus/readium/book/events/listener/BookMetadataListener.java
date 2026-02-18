@@ -1,6 +1,6 @@
 package com.br.klaus.readium.book.events.listener;
 
-import com.br.klaus.readium.book.Book;
+import com.br.klaus.readium.book.domain.model.Book;
 import com.br.klaus.readium.book.domain.port.BookRepositoryPort;
 import com.br.klaus.readium.book.domain.port.BookStoragePort;
 import com.br.klaus.readium.book.events.BookCreatedEvent;
@@ -108,3 +108,4 @@ public class BookMetadataListener {
         book.setPages(epub.getSpine().size());
     }
 }
+

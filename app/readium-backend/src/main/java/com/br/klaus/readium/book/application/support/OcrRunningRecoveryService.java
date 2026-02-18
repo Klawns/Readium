@@ -1,6 +1,6 @@
 package com.br.klaus.readium.book.application.support;
 
-import com.br.klaus.readium.book.Book;
+import com.br.klaus.readium.book.domain.model.Book;
 import com.br.klaus.readium.book.domain.port.BookRepositoryPort;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -48,3 +48,4 @@ public class OcrRunningRecoveryService {
         return book.getOcrUpdatedAt().isBefore(staleThreshold);
     }
 }
+

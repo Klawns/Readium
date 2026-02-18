@@ -1,7 +1,7 @@
 package com.br.klaus.readium.book.api;
 
-import com.br.klaus.readium.book.Book;
-import com.br.klaus.readium.book.BookTitleFormatter;
+import com.br.klaus.readium.book.domain.model.Book;
+import com.br.klaus.readium.book.domain.service.BookTitleFormatter;
 import com.br.klaus.readium.book.api.dto.BookResponseDTO;
 
 public final class BookResponseMapper {
@@ -28,3 +28,4 @@ public final class BookResponseMapper {
         );
     }
 }
+

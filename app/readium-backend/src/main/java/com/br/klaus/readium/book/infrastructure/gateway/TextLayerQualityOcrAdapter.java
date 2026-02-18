@@ -1,7 +1,7 @@
 package com.br.klaus.readium.book.infrastructure.gateway;
 
-import com.br.klaus.readium.book.Book;
-import com.br.klaus.readium.book.OcrGatewayResult;
+import com.br.klaus.readium.book.domain.model.Book;
+import com.br.klaus.readium.book.domain.model.OcrGatewayResult;
 import com.br.klaus.readium.book.domain.port.OcrGatewayPort;
 import com.br.klaus.readium.exception.StorageException;
 import lombok.extern.slf4j.Slf4j;
