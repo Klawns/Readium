@@ -6,6 +6,7 @@ import { RenderPluginPackage } from '@embedpdf/plugin-render/react';
 import { InteractionManagerPluginPackage } from '@embedpdf/plugin-interaction-manager/react';
 import { SelectionPluginPackage } from '@embedpdf/plugin-selection/react';
 import { AnnotationPluginPackage } from '@embedpdf/plugin-annotation/react';
+import { HistoryPluginPackage } from '@embedpdf/plugin-history/react';
 import { ZoomMode, ZoomPluginPackage } from '@embedpdf/plugin-zoom/react';
 
 export const pdfViewportPluginRegistrations = [
@@ -15,6 +16,7 @@ export const pdfViewportPluginRegistrations = [
   createPluginRegistration(RenderPluginPackage),
   createPluginRegistration(InteractionManagerPluginPackage),
   createPluginRegistration(SelectionPluginPackage),
+  createPluginRegistration(HistoryPluginPackage),
   createPluginRegistration(AnnotationPluginPackage, { autoCommit: false }),
   createPluginRegistration(ZoomPluginPackage, { defaultZoomLevel: ZoomMode.Automatic }),
 ];
