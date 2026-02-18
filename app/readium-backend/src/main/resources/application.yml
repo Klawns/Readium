@@ -12,6 +12,10 @@ spring:
       ddl-auto: update
     show-sql: false
     database-platform: org.hibernate.community.dialect.SQLiteDialect
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    baseline-version: 0
 
   servlet:
     multipart:
