@@ -1,9 +1,7 @@
 services:
   readium-backend:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: ${READIUM_DOCKER_TARGET:-runtime-base}
+    image: ${READIUM_IMAGE_REPOSITORY:-klawns/readium}:${READIUM_IMAGE_TAG:-base}
+    pull_policy: always
     container_name: readium-backend
     restart: unless-stopped
     ports:
