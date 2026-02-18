@@ -59,6 +59,7 @@ const PdfReader: React.FC<PdfReaderProps> = ({
     isLoading: readerLoading,
     createAnnotation,
     updateAnnotation,
+    deleteAnnotation,
     autoTranslate,
     persistTranslation,
     isTranslating,
@@ -86,11 +87,14 @@ const PdfReader: React.FC<PdfReaderProps> = ({
   const {
     activeAnnotationNote,
     isSavingNote,
+    isDeletingNote,
     openAnnotationNote,
     closeAnnotationNote,
     saveAnnotationNote,
+    deleteAnnotationNote,
   } = useReaderAnnotationNotes({
     updateAnnotation,
+    deleteAnnotation,
   });
 
   useReaderProgressSync({
@@ -222,8 +226,12 @@ const PdfReader: React.FC<PdfReaderProps> = ({
             annotation={activeAnnotationNote.annotation}
             position={activeAnnotationNote.position}
             isSaving={isSavingNote}
+            isDeleting={isDeletingNote}
             onSave={(note) => {
               void saveAnnotationNote(note);
+            }}
+            onDelete={() => {
+              void deleteAnnotationNote();
             }}
             onCancel={closeAnnotationNote}
           />

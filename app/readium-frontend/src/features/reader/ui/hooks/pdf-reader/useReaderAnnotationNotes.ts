@@ -16,13 +16,16 @@ interface ActiveAnnotationNoteState {
 
 interface UseReaderAnnotationNotesParams {
   updateAnnotation: (input: UpdateAnnotationInput) => Promise<unknown>;
+  deleteAnnotation: (annotationId: number) => Promise<unknown>;
 }
 
 export const useReaderAnnotationNotes = ({
   updateAnnotation,
+  deleteAnnotation,
 }: UseReaderAnnotationNotesParams) => {
   const [activeAnnotationNote, setActiveAnnotationNote] = useState<ActiveAnnotationNoteState | null>(null);
   const [isSavingNote, setIsSavingNote] = useState(false);
+  const [isDeletingNote, setIsDeletingNote] = useState(false);
 
   const openAnnotationNote = useCallback((payload: AnnotationOverlayInteractPayload) => {
     setActiveAnnotationNote({
@@ -57,11 +60,29 @@ export const useReaderAnnotationNotes = ({
     [activeAnnotationNote, updateAnnotation],
   );
 
+  const deleteAnnotationNote = useCallback(async () => {
+    if (!activeAnnotationNote) {
+      return;
+    }
+
+    setIsDeletingNote(true);
+    try {
+      await deleteAnnotation(activeAnnotationNote.annotation.id);
+      setActiveAnnotationNote(null);
+    } catch {
+      toast.error('Falha ao remover highlight.');
+    } finally {
+      setIsDeletingNote(false);
+    }
+  }, [activeAnnotationNote, deleteAnnotation]);
+
   return {
     activeAnnotationNote,
     isSavingNote,
+    isDeletingNote,
     openAnnotationNote,
     closeAnnotationNote,
     saveAnnotationNote,
+    deleteAnnotationNote,
   };
 };
