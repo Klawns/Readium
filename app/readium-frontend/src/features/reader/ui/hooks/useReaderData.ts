@@ -39,7 +39,16 @@ interface CreateReaderAnnotationInput {
 export const useReaderData = (bookId: number, currentPage: number) => {
   const queryClient = useQueryClient();
   const annotationPages = useMemo(() => buildAnnotationPageWindow(currentPage), [currentPage]);
+  const allAnnotationsQueryKey = ['reader', 'annotations', bookId, 'all'] as const;
   const translationsQueryKey = ['reader', 'translations', bookId] as const;
+
+  const allAnnotationsQuery = useQuery({
+    queryKey: allAnnotationsQueryKey,
+    queryFn: () => annotationRepository.getByBook(bookId),
+    enabled: Number.isFinite(bookId) && bookId > 0,
+    staleTime: 20_000,
+    retry: 1,
+  });
 
   const pageAnnotationsQueries = useQueries({
     queries: annotationPages.map((page) => ({
@@ -128,6 +137,7 @@ export const useReaderData = (bookId: number, currentPage: number) => {
   }, [translationsQuery.data]);
 
   return {
+    allAnnotations: allAnnotationsQuery.data ?? [],
     annotations,
     pageAnnotations,
     translations: translationsQuery.data ?? [],

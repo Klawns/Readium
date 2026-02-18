@@ -3,6 +3,7 @@ import { Loader2 } from 'lucide-react';
 import { usePdfiumEngine } from '@embedpdf/engines/react';
 import PdfToolbar from './PdfToolbar';
 import ReaderControlsDock from './ReaderControlsDock';
+import ReaderAnnotationsSidebar from './ReaderAnnotationsSidebar';
 import TranslationInputPopup from './TranslationInputPopup';
 import TranslationPopup from './TranslationPopup';
 import AnnotationNotePopup from './AnnotationNotePopup';
@@ -54,6 +55,7 @@ const PdfReader: React.FC<PdfReaderProps> = ({
   });
 
   const {
+    allAnnotations,
     annotations,
     translations,
     isLoading: readerLoading,
@@ -186,6 +188,12 @@ const PdfReader: React.FC<PdfReaderProps> = ({
             onZoomReset={resetZoom}
           />
         )}
+
+        <ReaderAnnotationsSidebar
+          annotations={allAnnotations}
+          currentPage={currentPage}
+          onGoToPage={goToPage}
+        />
 
         {pendingSelection && (
           <SelectionActionPopup
