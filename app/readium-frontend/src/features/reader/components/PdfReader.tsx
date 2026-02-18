@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { usePdfiumEngine } from '@embedpdf/engines/react';
 import PdfToolbar from './PdfToolbar';
@@ -37,6 +37,7 @@ const PdfReader: React.FC<PdfReaderProps> = ({
   isTriggeringOcr,
 }) => {
   const isMobile = useIsMobile();
+  const [isAnnotationsSidebarOpen, setIsAnnotationsSidebarOpen] = useState(false);
   const { engine, isLoading: engineLoading } = usePdfiumEngine();
   const {
     containerRef,
@@ -118,12 +119,33 @@ const PdfReader: React.FC<PdfReaderProps> = ({
     containerRef,
   });
 
+  const handleReaderViewportTap = useCallback(
+    (payload: { x: number; y: number }) => {
+      handleViewportTap(payload);
+    },
+    [handleViewportTap],
+  );
+
+  const handleGoToAnnotationPage = useCallback(
+    (page: number) => {
+      goToPage(page);
+      if (isMobile) {
+        setIsAnnotationsSidebarOpen(false);
+      }
+    },
+    [goToPage, isMobile],
+  );
+
   useEffect(() => {
     logger.debug('reader mount', { bookId, fileUrl, initialPage });
     return () => {
       logger.debug('reader unmount', { bookId, fileUrl });
     };
   }, [bookId, fileUrl, initialPage]);
+
+  useEffect(() => {
+    setIsAnnotationsSidebarOpen(false);
+  }, [fileUrl]);
 
   useEffect(() => {
     logger.debug('engine state', {
@@ -180,7 +202,7 @@ const PdfReader: React.FC<PdfReaderProps> = ({
           onViewportStateChange={handleViewportStateChange}
           onViewportActionsReady={handleViewportActionsReady}
           onTextLayerQualityEvaluated={handleTextLayerQualityEvaluated}
-          onViewportTap={handleViewportTap}
+          onViewportTap={handleReaderViewportTap}
         />
 
         {isReaderUiVisible && (
@@ -198,7 +220,10 @@ const PdfReader: React.FC<PdfReaderProps> = ({
         <ReaderAnnotationsSidebar
           annotations={allAnnotations}
           currentPage={currentPage}
-          onGoToPage={goToPage}
+          isOpen={isAnnotationsSidebarOpen}
+          isVisible={!isMobile || isReaderUiVisible}
+          onOpenChange={setIsAnnotationsSidebarOpen}
+          onGoToPage={handleGoToAnnotationPage}
         />
 
         {pendingSelection && (
