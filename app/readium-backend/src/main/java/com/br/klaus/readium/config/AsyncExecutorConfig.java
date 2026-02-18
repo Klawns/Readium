@@ -17,8 +17,26 @@ public class AsyncExecutorConfig {
             @Value("${app.ocr.async.max-pool-size:2}") int maxPoolSize,
             @Value("${app.ocr.async.queue-capacity:8}") int queueCapacity
     ) {
+        return buildExecutor("ocr-worker-", corePoolSize, maxPoolSize, queueCapacity);
+    }
+
+    @Bean(name = "metadataTaskExecutor")
+    public Executor metadataTaskExecutor(
+            @Value("${app.metadata.async.core-pool-size:1}") int corePoolSize,
+            @Value("${app.metadata.async.max-pool-size:2}") int maxPoolSize,
+            @Value("${app.metadata.async.queue-capacity:16}") int queueCapacity
+    ) {
+        return buildExecutor("metadata-worker-", corePoolSize, maxPoolSize, queueCapacity);
+    }
+
+    private Executor buildExecutor(
+            String threadNamePrefix,
+            int corePoolSize,
+            int maxPoolSize,
+            int queueCapacity
+    ) {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setThreadNamePrefix("ocr-worker-");
+        executor.setThreadNamePrefix(threadNamePrefix);
         executor.setCorePoolSize(Math.max(1, corePoolSize));
         executor.setMaxPoolSize(Math.max(1, maxPoolSize));
         executor.setQueueCapacity(Math.max(0, queueCapacity));

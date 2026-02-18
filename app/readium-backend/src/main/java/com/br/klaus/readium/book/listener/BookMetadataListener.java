@@ -1,7 +1,6 @@
 package com.br.klaus.readium.book.listener;
 
 import com.br.klaus.readium.book.Book;
-
 import com.br.klaus.readium.book.BookRepository;
 import com.br.klaus.readium.event.BookCreatedEvent;
 import com.br.klaus.readium.storage.FileStorageService;
@@ -35,40 +34,22 @@ public class BookMetadataListener {
     private final BookRepository bookRepository;
     private final FileStorageService storageService;
 
-    @Async
+    @Async("metadataTaskExecutor")
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void handleBookCreated(BookCreatedEvent event) {
         log.info("Iniciando processamento de metadados para o livro ID: {}", event.id());
 
-        Book book = null;
-        int attempts = 0;
-        int maxAttempts = 5;
-
-        while (book == null && attempts < maxAttempts) {
-            book = bookRepository.findById(event.id()).orElse(null);
-            
-            if (book == null) {
-                attempts++;
-                log.warn("Tentativa {}/{} falhou. Livro ID {} não encontrado. Aguardando...", attempts, maxAttempts, event.id());
-                try {
-                    Thread.sleep(1000);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    return;
-                }
-            }
-        }
-
+        Book book = bookRepository.findById(event.id()).orElse(null);
         if (book == null) {
-            log.error("DESISTINDO: Livro ID {} não encontrado após {} tentativas.", event.id(), maxAttempts);
+            log.warn("Livro {} nao encontrado para processamento de metadados.", event.id());
             return;
         }
 
         try {
             File file = new File(book.getFilePath());
             if (!file.exists()) {
-                log.error("Arquivo físico não encontrado: {}", book.getFilePath());
+                log.error("Arquivo fisico nao encontrado: {}", book.getFilePath());
                 return;
             }
 
@@ -79,10 +60,9 @@ public class BookMetadataListener {
             }
 
             bookRepository.save(book);
-            log.info("Metadados processados com sucesso para o livro: {}", book.getTitle());
-
+            log.info("Metadados processados com sucesso para o livro {}", book.getId());
         } catch (Exception e) {
-            log.error("Erro ao processar metadados do livro ID {}", event.id(), e);
+            log.error("Erro ao processar metadados do livro {}", event.id(), e);
         }
     }
 
@@ -96,7 +76,7 @@ public class BookMetadataListener {
 
             PDFRenderer renderer = new PDFRenderer(document);
             BufferedImage image = renderer.renderImage(0, 1.0f, ImageType.RGB);
-            
+
             try (ByteArrayOutputStream baos = new ByteArrayOutputStream()) {
                 ImageIO.write(image, "jpg", baos);
                 String coverPath = storageService.saveCover(baos.toByteArray(), "jpg");
@@ -108,16 +88,19 @@ public class BookMetadataListener {
 
     private void processEpub(Book book, File file) throws IOException {
         EpubReader epubReader = new EpubReader();
-        io.documentnode.epub4j.domain.Book epub = epubReader.readEpub(new FileInputStream(file));
+        io.documentnode.epub4j.domain.Book epub;
+        try (FileInputStream stream = new FileInputStream(file)) {
+            epub = epubReader.readEpub(stream);
+        }
 
         if (!epub.getMetadata().getAuthors().isEmpty()) {
-            String authorName = epub.getMetadata().getAuthors().get(0).getFirstname() + " " + 
-                                epub.getMetadata().getAuthors().get(0).getLastname();
+            String authorName = epub.getMetadata().getAuthors().get(0).getFirstname() + " "
+                    + epub.getMetadata().getAuthors().get(0).getLastname();
             book.setAuthor(authorName.trim());
         }
 
         if (epub.getCoverImage() != null) {
-            String coverPath = storageService.saveCover(epub.getCoverImage().getData(), "jpg"); // Assumindo jpg/png
+            String coverPath = storageService.saveCover(epub.getCoverImage().getData(), "jpg");
             book.setCoverPath(coverPath);
             book.setHasCover(true);
         }
