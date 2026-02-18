@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 import { AnnotationHttpRepository } from '../../infrastructure/api/annotation-http-repository';
 import { TranslationHttpRepository } from '../../infrastructure/api/translation-http-repository';
 import { BackendTranslationProvider } from '../../infrastructure/translation/backend-translation-provider';
@@ -14,6 +14,7 @@ import {
 } from '../../application/use-cases/translation-use-cases';
 import type { ReaderRect } from '../../domain/models';
 import type { CreateTranslationCommand } from '../../domain/ports/TranslationRepository';
+import { buildAnnotationPageWindow, mergePageAnnotations } from './useReaderAnnotationPages';
 
 const annotationRepository = new AnnotationHttpRepository();
 const translationRepository = new TranslationHttpRepository();
@@ -37,15 +38,17 @@ interface CreateReaderAnnotationInput {
 
 export const useReaderData = (bookId: number, currentPage: number) => {
   const queryClient = useQueryClient();
-  const pageAnnotationsQueryKey = ['reader', 'annotations', bookId, 'page', currentPage] as const;
+  const annotationPages = useMemo(() => buildAnnotationPageWindow(currentPage), [currentPage]);
   const translationsQueryKey = ['reader', 'translations', bookId] as const;
 
-  const pageAnnotationsQuery = useQuery({
-    queryKey: pageAnnotationsQueryKey,
-    queryFn: () => annotationRepository.getByBookAndPage(bookId, currentPage),
-    enabled: Number.isFinite(bookId) && bookId > 0 && currentPage > 0,
-    staleTime: 10_000,
-    retry: 1,
+  const pageAnnotationsQueries = useQueries({
+    queries: annotationPages.map((page) => ({
+      queryKey: ['reader', 'annotations', bookId, 'page', page] as const,
+      queryFn: () => annotationRepository.getByBookAndPage(bookId, page),
+      enabled: Number.isFinite(bookId) && bookId > 0 && page > 0,
+      staleTime: 10_000,
+      retry: 1,
+    })),
   });
 
   const translationsQuery = useQuery({
@@ -98,6 +101,21 @@ export const useReaderData = (bookId: number, currentPage: number) => {
     },
   });
 
+  const pageAnnotations = useMemo(() => {
+    const currentPageIndex = annotationPages.findIndex((page) => page === currentPage);
+    if (currentPageIndex < 0) {
+      return [];
+    }
+    return pageAnnotationsQueries[currentPageIndex]?.data ?? [];
+  }, [annotationPages, pageAnnotationsQueries, currentPage]);
+
+  const annotations = useMemo(
+    () => mergePageAnnotations(pageAnnotationsQueries.map((query) => query.data)),
+    [pageAnnotationsQueries],
+  );
+
+  const isPageLoading = pageAnnotationsQueries.some((query) => query.isLoading);
+
   const persistTranslation: (input: CreateTranslationCommand) => Promise<unknown> = (input) =>
     persistTranslationMutation.mutateAsync(input);
 
@@ -110,12 +128,12 @@ export const useReaderData = (bookId: number, currentPage: number) => {
   }, [translationsQuery.data]);
 
   return {
-    annotations: pageAnnotationsQuery.data ?? [],
-    pageAnnotations: pageAnnotationsQuery.data ?? [],
+    annotations,
+    pageAnnotations,
     translations: translationsQuery.data ?? [],
     translatedDictionary,
     isLoading: translationsQuery.isLoading,
-    isPageLoading: pageAnnotationsQuery.isLoading,
+    isPageLoading,
     createAnnotation: createAnnotationMutation.mutateAsync,
     updateAnnotation: updateAnnotationMutation.mutateAsync,
     deleteAnnotation: deleteAnnotationMutation.mutateAsync,
