@@ -74,6 +74,7 @@ const PdfReader: React.FC<PdfReaderProps> = ({
     handleCreateHighlight,
     startTranslateFlow,
     saveTranslation,
+    copyPendingSelection,
     handleTranslationOverlayInteract,
     closeTranslationInput,
     closeActiveTranslation,
@@ -191,6 +192,9 @@ const PdfReader: React.FC<PdfReaderProps> = ({
             position={pendingSelection.popupPosition}
             onSelectColor={(color) => {
               void handleCreateHighlight(color);
+            }}
+            onCopy={() => {
+              void copyPendingSelection();
             }}
             onTranslate={() => {
               void startTranslateFlow();

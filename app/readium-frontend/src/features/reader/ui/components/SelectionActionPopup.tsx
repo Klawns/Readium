@@ -5,6 +5,7 @@ const HIGHLIGHT_COLORS = ['#FFF59D', '#A5D6A7', '#90CAF9', '#F48FB1', '#FFCC80']
 interface SelectionActionPopupProps {
   position: { x: number; y: number };
   onSelectColor: (color: string) => void;
+  onCopy: () => void;
   onTranslate: () => void;
   onClose: () => void;
 }
@@ -12,6 +13,7 @@ interface SelectionActionPopupProps {
 export function SelectionActionPopup({
   position,
   onSelectColor,
+  onCopy,
   onTranslate,
   onClose,
 }: SelectionActionPopupProps) {
@@ -35,6 +37,15 @@ export function SelectionActionPopup({
             aria-label={`Selecionar cor ${color}`}
           />
         ))}
+        <Button
+          type="button"
+          size="sm"
+          variant="secondary"
+          onClick={onCopy}
+          className="h-7 text-xs"
+        >
+          Copiar
+        </Button>
         <Button
           type="button"
           size="sm"

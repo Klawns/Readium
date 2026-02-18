@@ -12,6 +12,28 @@ const logger = createLogger('reader');
 const buildGoogleTranslateUrl = (text: string) =>
   `https://translate.google.com/?sl=auto&tl=${GOOGLE_TRANSLATE_TARGET_LANGUAGE}&text=${encodeURIComponent(text)}&op=translate`;
 
+const copyToClipboard = async (text: string): Promise<boolean> => {
+  if (!text.trim()) {
+    return false;
+  }
+
+  if (navigator.clipboard?.writeText) {
+    await navigator.clipboard.writeText(text);
+    return true;
+  }
+
+  const textarea = document.createElement('textarea');
+  textarea.value = text;
+  textarea.setAttribute('readonly', '');
+  textarea.style.position = 'fixed';
+  textarea.style.opacity = '0';
+  document.body.appendChild(textarea);
+  textarea.select();
+  const copied = document.execCommand('copy');
+  document.body.removeChild(textarea);
+  return copied;
+};
+
 interface CreateReaderAnnotationInput {
   bookId: number;
   page: number;
@@ -146,6 +168,25 @@ export const useReaderTranslationFlow = ({
     [bookId, createAnnotation, persistTranslation, translationInput],
   );
 
+  const copyPendingSelection = useCallback(async () => {
+    if (!pendingSelection) {
+      return;
+    }
+
+    try {
+      const copied = await copyToClipboard(pendingSelection.text);
+      if (copied) {
+        toast.success('Texto copiado.');
+        setPendingSelection(null);
+        return;
+      }
+    } catch {
+      // Fallback message below.
+    }
+
+    toast.error('Nao foi possivel copiar o texto selecionado.');
+  }, [pendingSelection]);
+
   const handleTranslationOverlayInteract = useCallback((payload: TranslationOverlayInteractPayload) => {
     setActiveTranslation({
       translation: payload.translation,
@@ -173,6 +214,7 @@ export const useReaderTranslationFlow = ({
     handleCreateHighlight,
     startTranslateFlow,
     saveTranslation,
+    copyPendingSelection,
     handleTranslationOverlayInteract,
     closeTranslationInput,
     closeActiveTranslation,
