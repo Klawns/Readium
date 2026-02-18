@@ -11,17 +11,18 @@ interface ReaderAnnotationsSidebarProps {
   onGoToPage: (page: number) => void;
 }
 
-const MAX_TEXT_PREVIEW = 96;
+const MAX_HIGHLIGHT_PREVIEW = 160;
+const MAX_NOTE_PREVIEW = 120;
 
-const toPreview = (text: string | null | undefined): string => {
+const toPreview = (text: string | null | undefined, maxLength: number): string => {
   const normalized = (text ?? '').trim().replaceAll(/\s+/g, ' ');
   if (!normalized) {
     return '';
   }
-  if (normalized.length <= MAX_TEXT_PREVIEW) {
+  if (normalized.length <= maxLength) {
     return normalized;
   }
-  return `${normalized.slice(0, MAX_TEXT_PREVIEW)}...`;
+  return `${normalized.slice(0, maxLength)}...`;
 };
 
 const sortAnnotations = (annotations: ReaderAnnotation[]): ReaderAnnotation[] =>
@@ -89,7 +90,8 @@ const ReaderAnnotationsSidebar: React.FC<ReaderAnnotationsSidebarProps> = ({
             ) : (
               <div className="space-y-2">
                 {sortedAnnotations.map((annotation) => {
-                  const preview = toPreview(annotation.note) || toPreview(annotation.selectedText) || 'Sem texto';
+                  const highlightPreview = toPreview(annotation.selectedText, MAX_HIGHLIGHT_PREVIEW) || 'Sem trecho marcado';
+                  const notePreview = toPreview(annotation.note, MAX_NOTE_PREVIEW);
                   const isCurrentPage = annotation.page === currentPage;
 
                   return (
@@ -111,7 +113,20 @@ const ReaderAnnotationsSidebar: React.FC<ReaderAnnotationsSidebarProps> = ({
                           <span className="text-[10px] font-medium text-primary">Atual</span>
                         ) : null}
                       </div>
-                      <p className="text-xs text-foreground">{preview}</p>
+                      <div className="space-y-2">
+                        <div
+                          className="rounded-md border-l-2 bg-amber-100/70 px-2 py-1.5 text-xs text-foreground"
+                          style={{ borderLeftColor: annotation.color }}
+                        >
+                          {highlightPreview}
+                        </div>
+                        <div className="rounded-md border border-border/60 bg-background/60 px-2 py-1.5">
+                          <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                            Comentario
+                          </p>
+                          <p className="mt-0.5 text-xs text-foreground/90">{notePreview || 'Sem comentario'}</p>
+                        </div>
+                      </div>
                     </button>
                   );
                 })}
