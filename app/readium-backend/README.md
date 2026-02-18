@@ -9,6 +9,7 @@ API da aplicacao Readium responsavel pela gestao da biblioteca, leitura, anotaco
 - Traducao persistida por contexto de livro.
 - Traducao automatica com provider configuravel.
 - OCR sob demanda com processamento assincrono.
+- Cache com Spring Cache + Caffeine para consultas e traducao automatica.
 
 ## Contextos de dominio
 - `book`: upload, listagem, status, progresso, capa, arquivo e status de OCR.
@@ -31,3 +32,10 @@ API da aplicacao Readium responsavel pela gestao da biblioteca, leitura, anotaco
 
 ## Contrato
 - OpenAPI: `openapi.yaml`
+
+## Cache
+- Implementacao via `Spring Cache` com provider `Caffeine`.
+- Cache de traducao automatica (antes manual, agora por `@Cacheable`).
+- Cache de listagem de traducoes por livro.
+- Cache de consultas de anotacoes por livro e por pagina.
+- Invalidacao de cache nas operacoes de create/update/delete para manter consistencia.
