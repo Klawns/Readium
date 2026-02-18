@@ -2,6 +2,7 @@ package com.br.klaus.readium.book.application.command;
 
 import com.br.klaus.readium.book.domain.model.Book;
 import com.br.klaus.readium.book.domain.service.BookTitleFormatter;
+import com.br.klaus.readium.book.application.support.BookLookupService;
 import com.br.klaus.readium.book.application.support.OcrRunningRecoveryService;
 import com.br.klaus.readium.book.api.BookResponseMapper;
 import com.br.klaus.readium.book.domain.port.BookRepositoryPort;
@@ -13,7 +14,6 @@ import com.br.klaus.readium.book.events.BookCreatedEvent;
 import com.br.klaus.readium.book.events.BookDeletedEvent;
 import com.br.klaus.readium.book.events.BookOcrRequestedEvent;
 import com.br.klaus.readium.book.events.BookProgressUpdatedEvent;
-import com.br.klaus.readium.exception.BookNotFoundException;
 import com.br.klaus.readium.exception.UnsupportedFileFormatException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -36,6 +36,7 @@ public class BookCommandService {
     private final BookRepositoryPort repository;
     private final ApplicationEventPublisher eventPublisher;
     private final BookStoragePort storageService;
+    private final BookLookupService bookLookupService;
     private final OcrRunningRecoveryService ocrRunningRecoveryService;
 
     @Transactional
@@ -81,8 +82,7 @@ public class BookCommandService {
 
     @Transactional
     public void deleteById(Long id) {
-        Book book = repository.findById(id)
-                .orElseThrow(() -> new BookNotFoundException("Livro com ID " + id + " nao encontrado para delecao."));
+        Book book = bookLookupService.loadOrThrow(id);
 
         storageService.delete(book.getFilePath());
         if (book.getCoverPath() != null) {
@@ -98,8 +98,7 @@ public class BookCommandService {
 
     @Transactional
     public void changeBookStatus(UpdateBookStatusRequestDTO req) {
-        Book book = repository.findById(req.bookId())
-                .orElseThrow(() -> new BookNotFoundException("Livro com ID " + req.bookId() + " nao encontrado."));
+        Book book = bookLookupService.loadOrThrow(req.bookId());
 
         try {
             Book.BookStatus newStatus = Book.BookStatus.valueOf(req.status());
@@ -112,8 +111,7 @@ public class BookCommandService {
 
     @Transactional
     public void updateProgress(Long bookId, UpdateProgressRequestDTO req) {
-        Book book = repository.findById(bookId)
-                .orElseThrow(() -> new BookNotFoundException("Livro com ID " + bookId + " nao encontrado."));
+        Book book = bookLookupService.loadOrThrow(bookId);
 
         Integer previousPage = book.getLastReadPage();
         Book.BookStatus previousStatus = book.getBookStatus();
@@ -133,8 +131,7 @@ public class BookCommandService {
 
     @Transactional
     public void queueOcr(Long bookId) {
-        Book book = repository.findById(bookId)
-                .orElseThrow(() -> new BookNotFoundException("Livro com ID " + bookId + " nao encontrado."));
+        Book book = bookLookupService.loadOrThrow(bookId);
 
         ocrRunningRecoveryService.recoverIfStale(book);
 

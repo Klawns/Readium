@@ -1,6 +1,7 @@
 package com.br.klaus.readium.book.application.query;
 
 import com.br.klaus.readium.book.domain.model.Book;
+import com.br.klaus.readium.book.application.support.BookLookupService;
 import com.br.klaus.readium.book.application.support.OcrRunningRecoveryService;
 import com.br.klaus.readium.book.api.BookOcrStatusResponseMapper;
 import com.br.klaus.readium.book.api.BookResponseMapper;
@@ -25,6 +26,7 @@ public class BookQueryService {
 
     private final BookRepositoryPort repository;
     private final BookStoragePort storageService;
+    private final BookLookupService bookLookupService;
     private final OcrRunningRecoveryService ocrRunningRecoveryService;
 
     @Transactional(readOnly = true)
@@ -43,15 +45,12 @@ public class BookQueryService {
 
     @Transactional(readOnly = true)
     public BookResponseDTO findById(Long id) {
-        return repository.findById(id)
-                .map(BookResponseMapper::toResponse)
-                .orElseThrow(() -> new BookNotFoundException("Livro com ID " + id + " nao encontrado."));
+        return BookResponseMapper.toResponse(bookLookupService.loadOrThrow(id));
     }
 
     @Transactional(readOnly = true)
     public Resource getBookFile(Long id) {
-        Book book = repository.findById(id)
-                .orElseThrow(() -> new BookNotFoundException("Livro com ID " + id + " nao encontrado."));
+        Book book = bookLookupService.loadOrThrow(id);
 
         String filePath = book.getFilePath();
         if (book.getOcrStatus() == Book.OcrStatus.DONE
@@ -65,8 +64,7 @@ public class BookQueryService {
 
     @Transactional(readOnly = true)
     public Resource getBookCover(Long id) {
-        Book book = repository.findById(id)
-                .orElseThrow(() -> new BookNotFoundException("Livro com ID " + id + " nao encontrado."));
+        Book book = bookLookupService.loadOrThrow(id);
 
         if (!book.isHasCover() || book.getCoverPath() == null) {
             throw new BookNotFoundException("Capa nao encontrada para o livro com ID " + id);
@@ -77,8 +75,7 @@ public class BookQueryService {
 
     @Transactional
     public BookOcrStatusResponseDTO getOcrStatus(Long bookId) {
-        Book book = repository.findById(bookId)
-                .orElseThrow(() -> new BookNotFoundException("Livro com ID " + bookId + " nao encontrado."));
+        Book book = bookLookupService.loadOrThrow(bookId);
 
         ocrRunningRecoveryService.recoverIfStale(book);
         return BookOcrStatusResponseMapper.toResponse(book);
@@ -86,8 +83,7 @@ public class BookQueryService {
 
     @Transactional(readOnly = true)
     public BookTextLayerQualityResponseDTO getTextLayerQuality(Long bookId) {
-        Book book = repository.findById(bookId)
-                .orElseThrow(() -> new BookNotFoundException("Livro com ID " + bookId + " nao encontrado."));
+        Book book = bookLookupService.loadOrThrow(bookId);
 
         return BookTextLayerQualityResponseMapper.toResponse(book);
     }
