@@ -1,6 +1,6 @@
 package com.br.klaus.readium.annotations.infrastructure.persistence;
 
-import com.br.klaus.readium.annotations.Annotation;
+import com.br.klaus.readium.annotations.domain.model.Annotation;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;

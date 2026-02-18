@@ -1,7 +1,7 @@
 package com.br.klaus.readium.annotations.api;
 
-import com.br.klaus.readium.annotations.Annotation;
-import com.br.klaus.readium.annotations.Rect;
+import com.br.klaus.readium.annotations.domain.model.Annotation;
+import com.br.klaus.readium.annotations.domain.model.Rect;
 import com.br.klaus.readium.annotations.api.dto.AnnotationResponseDTO;
 import com.br.klaus.readium.annotations.api.dto.RectDTO;
 import org.springframework.data.domain.Page;

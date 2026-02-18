@@ -1,6 +1,6 @@
 package com.br.klaus.readium.annotations.infrastructure.persistence;
 
-import com.br.klaus.readium.annotations.Annotation;
+import com.br.klaus.readium.annotations.domain.model.Annotation;
 import com.br.klaus.readium.annotations.domain.port.AnnotationRepositoryPort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;

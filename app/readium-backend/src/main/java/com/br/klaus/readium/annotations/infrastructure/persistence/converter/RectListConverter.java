@@ -1,6 +1,6 @@
-package com.br.klaus.readium.annotations.converter;
+package com.br.klaus.readium.annotations.infrastructure.persistence.converter;
 
-import com.br.klaus.readium.annotations.Rect;
+import com.br.klaus.readium.annotations.domain.model.Rect;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
 

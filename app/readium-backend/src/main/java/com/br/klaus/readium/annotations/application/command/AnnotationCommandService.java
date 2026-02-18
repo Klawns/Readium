@@ -1,7 +1,7 @@
 package com.br.klaus.readium.annotations.application.command;
 
-import com.br.klaus.readium.annotations.Annotation;
-import com.br.klaus.readium.annotations.Rect;
+import com.br.klaus.readium.annotations.domain.model.Annotation;
+import com.br.klaus.readium.annotations.domain.model.Rect;
 import com.br.klaus.readium.annotations.api.AnnotationResponseMapper;
 import com.br.klaus.readium.annotations.api.dto.AnnotationRequestDTO;
 import com.br.klaus.readium.annotations.api.dto.AnnotationResponseDTO;

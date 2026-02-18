@@ -1,6 +1,6 @@
-package com.br.klaus.readium.annotations;
+package com.br.klaus.readium.annotations.domain.model;
 
-import com.br.klaus.readium.annotations.converter.RectListConverter;
+import com.br.klaus.readium.annotations.infrastructure.persistence.converter.RectListConverter;
 import jakarta.persistence.*;
 import lombok.AccessLevel;
 import lombok.Getter;
