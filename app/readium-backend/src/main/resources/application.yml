@@ -23,6 +23,13 @@ spring:
       static-locations: ${SPRING_RESOURCES_STATIC_LOCATIONS:classpath:/static/}
 
 app:
+  cache:
+    translation-list:
+      ttl-seconds: ${APP_TRANSLATION_LIST_CACHE_TTL_SECONDS:300}
+      max-entries: ${APP_TRANSLATION_LIST_CACHE_MAX_ENTRIES:2000}
+    annotations:
+      ttl-seconds: ${APP_ANNOTATIONS_CACHE_TTL_SECONDS:120}
+      max-entries: ${APP_ANNOTATIONS_CACHE_MAX_ENTRIES:5000}
   storage:
     path: ${APP_STORAGE_PATH:data/books}
   translation:

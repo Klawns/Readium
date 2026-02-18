@@ -1,0 +1,26 @@
+package com.br.klaus.readium.translation;
+
+import com.br.klaus.readium.config.CacheNames;
+import com.br.klaus.readium.translation.dto.AutoTranslationResponseDTO;
+import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.stereotype.Service;
+
+@Service
+@RequiredArgsConstructor
+public class CachedAutoTranslationService {
+
+    private final TranslationGateway translationGateway;
+    private final TranslationRateLimiter translationRateLimiter;
+
+    @Cacheable(cacheNames = CacheNames.AUTO_TRANSLATION, key = "#targetLanguage + '::' + #normalizedText")
+    public AutoTranslationResponseDTO translate(String normalizedText, String inputText, String targetLanguage) {
+        translationRateLimiter.enforce(targetLanguage + "::" + normalizedText);
+
+        TranslationAutoResult result = translationGateway.translate(inputText, targetLanguage);
+        return new AutoTranslationResponseDTO(
+                result.translatedText(),
+                result.detectedLanguage()
+        );
+    }
+}
