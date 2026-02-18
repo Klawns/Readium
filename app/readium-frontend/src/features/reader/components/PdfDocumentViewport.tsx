@@ -7,7 +7,7 @@ import {
   useDocumentManagerCapability,
 } from '@embedpdf/plugin-document-manager/react';
 import { Viewport } from '@embedpdf/plugin-viewport/react';
-import { Scroller } from '@embedpdf/plugin-scroll/react';
+import { Scroller, useScrollCapability } from '@embedpdf/plugin-scroll/react';
 import { GlobalPointerProvider, useInteractionManagerCapability } from '@embedpdf/plugin-interaction-manager/react';
 import { ZoomGestureWrapper } from '@embedpdf/plugin-zoom/react';
 import { useSelectionCapability } from '@embedpdf/plugin-selection/react';
@@ -21,6 +21,7 @@ import { usePdfViewportSelection } from '../ui/hooks/pdf-viewport/usePdfViewport
 import { usePdfViewportTextLayerQuality } from '../ui/hooks/pdf-viewport/usePdfViewportTextLayerQuality';
 import { usePdfViewportAnnotationSync } from '../ui/hooks/pdf-viewport/usePdfViewportAnnotationSync';
 import { usePdfViewportDocumentLoader } from '../ui/hooks/pdf-viewport/usePdfViewportDocumentLoader';
+import { usePdfViewportLinkNavigation } from '../ui/hooks/pdf-viewport/usePdfViewportLinkNavigation';
 import { VIEWPORT_TOUCH_ACTION } from '../ui/hooks/pdf-viewport/pdfViewport.constants';
 import { pdfViewportPluginRegistrations } from '../ui/hooks/pdf-viewport/pdfViewport.plugins';
 
@@ -45,6 +46,7 @@ const PdfDocumentViewportContent: React.FC<PdfDocumentViewportProps> = ({
   const { activeDocumentId, activeDocument } = useActiveDocument();
   const { provides: selectionCapability } = useSelectionCapability();
   const { provides: annotationCapability } = useAnnotationCapability();
+  const { provides: scrollCapability } = useScrollCapability();
   const { provides: interactionCapability } = useInteractionManagerCapability();
 
   const translationOverlaysByPage = useMemo(() => {
@@ -132,6 +134,12 @@ const PdfDocumentViewportContent: React.FC<PdfDocumentViewportProps> = ({
     activeDocument: activeDocument ?? null,
     annotations,
     annotationIdsWithTranslation,
+  });
+
+  usePdfViewportLinkNavigation({
+    annotationCapability: annotationCapability ?? null,
+    scrollCapability: scrollCapability ?? null,
+    activeDocumentId,
   });
 
   if (!activeDocumentId) {
