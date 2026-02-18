@@ -14,6 +14,8 @@ import com.br.klaus.readium.exception.BookNotFoundException;
 import com.br.klaus.readium.exception.UnsupportedFileFormatException;
 import com.br.klaus.readium.storage.FileStorageService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.io.Resource;
 import org.springframework.data.domain.Page;
@@ -30,11 +32,15 @@ import java.util.Objects;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class BookService {
 
     private final BookRepository repository;
     private final ApplicationEventPublisher eventPublisher;
     private final FileStorageService storageService;
+
+    @Value("${app.ocr.running-timeout-seconds:2400}")
+    private long ocrRunningTimeoutSeconds;
 
     @Transactional
     public BookResponseDTO save(MultipartFile file) {
@@ -179,6 +185,8 @@ public class BookService {
         Book book = repository.findById(bookId)
                 .orElseThrow(() -> new BookNotFoundException("Livro com ID " + bookId + " nao encontrado."));
 
+        recoverStaleRunningOcr(book);
+
         if (book.getOcrStatus() == Book.OcrStatus.RUNNING) {
             return;
         }
@@ -189,11 +197,12 @@ public class BookService {
         eventPublisher.publishEvent(new BookOcrRequestedEvent(bookId));
     }
 
-    @Transactional(readOnly = true)
+    @Transactional
     public BookOcrStatusResponseDTO getOcrStatus(Long bookId) {
         Book book = repository.findById(bookId)
                 .orElseThrow(() -> new BookNotFoundException("Livro com ID " + bookId + " nao encontrado."));
 
+        recoverStaleRunningOcr(book);
         return BookOcrStatusResponseDTO.fromEntity(book);
     }
 
@@ -203,5 +212,34 @@ public class BookService {
                 .orElseThrow(() -> new BookNotFoundException("Livro com ID " + bookId + " nao encontrado."));
 
         return BookTextLayerQualityResponseDTO.fromEntity(book);
+    }
+
+    private void recoverStaleRunningOcr(Book book) {
+        if (!isOcrRunningStale(book)) {
+            return;
+        }
+
+        log.warn(
+                "OCR em estado RUNNING estagnado para livro {} (updatedAt={}). Marcando como FAILED para permitir novo processamento.",
+                book.getId(),
+                book.getOcrUpdatedAt()
+        );
+
+        book.markOcrFailed();
+        repository.save(book);
+    }
+
+    private boolean isOcrRunningStale(Book book) {
+        if (book.getOcrStatus() != Book.OcrStatus.RUNNING) {
+            return false;
+        }
+
+        if (book.getOcrUpdatedAt() == null) {
+            return true;
+        }
+
+        long timeoutSeconds = Math.max(ocrRunningTimeoutSeconds, 60);
+        LocalDateTime staleThreshold = LocalDateTime.now().minusSeconds(timeoutSeconds);
+        return book.getOcrUpdatedAt().isBefore(staleThreshold);
     }
 }

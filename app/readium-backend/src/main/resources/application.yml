@@ -47,6 +47,7 @@ app:
   ocr:
     engine: ${APP_OCR_ENGINE:HEURISTIC}
     sample-pages: ${APP_OCR_SAMPLE_PAGES:10}
+    running-timeout-seconds: ${APP_OCR_RUNNING_TIMEOUT_SECONDS:2400}
     async:
       core-pool-size: ${APP_OCR_ASYNC_CORE_POOL_SIZE:1}
       max-pool-size: ${APP_OCR_ASYNC_MAX_POOL_SIZE:2}
