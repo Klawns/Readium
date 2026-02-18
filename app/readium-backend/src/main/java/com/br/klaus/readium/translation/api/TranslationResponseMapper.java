@@ -1,7 +1,7 @@
 package com.br.klaus.readium.translation.api;
 
 import com.br.klaus.readium.translation.Translation;
-import com.br.klaus.readium.translation.dto.TranslationResponseDTO;
+import com.br.klaus.readium.translation.api.dto.TranslationResponseDTO;
 
 public final class TranslationResponseMapper {
 

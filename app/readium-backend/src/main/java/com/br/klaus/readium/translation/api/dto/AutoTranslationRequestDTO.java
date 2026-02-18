@@ -1,4 +1,4 @@
-package com.br.klaus.readium.translation.dto;
+package com.br.klaus.readium.translation.api.dto;
 
 import com.fasterxml.jackson.annotation.JsonAlias;
 import jakarta.validation.constraints.NotBlank;

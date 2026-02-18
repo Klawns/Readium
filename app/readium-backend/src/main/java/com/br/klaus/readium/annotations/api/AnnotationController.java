@@ -1,10 +1,10 @@
-package com.br.klaus.readium.annotations;
+package com.br.klaus.readium.annotations.api;
 
 import com.br.klaus.readium.annotations.application.command.AnnotationCommandService;
 import com.br.klaus.readium.annotations.application.query.AnnotationQueryService;
-import com.br.klaus.readium.annotations.dto.AnnotationRequestDTO;
-import com.br.klaus.readium.annotations.dto.AnnotationResponseDTO;
-import com.br.klaus.readium.annotations.dto.UpdateAnnotationRequestDTO;
+import com.br.klaus.readium.annotations.api.dto.AnnotationRequestDTO;
+import com.br.klaus.readium.annotations.api.dto.AnnotationResponseDTO;
+import com.br.klaus.readium.annotations.api.dto.UpdateAnnotationRequestDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;

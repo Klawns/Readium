@@ -2,7 +2,7 @@ package com.br.klaus.readium.translation;
 
 import com.br.klaus.readium.config.CacheNames;
 import com.br.klaus.readium.translation.domain.port.TranslationGatewayPort;
-import com.br.klaus.readium.translation.dto.AutoTranslationResponseDTO;
+import com.br.klaus.readium.translation.api.dto.AutoTranslationResponseDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;

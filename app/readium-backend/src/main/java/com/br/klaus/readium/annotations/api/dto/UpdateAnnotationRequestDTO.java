@@ -1,4 +1,4 @@
-package com.br.klaus.readium.annotations.dto;
+package com.br.klaus.readium.annotations.api.dto;
 
 public record UpdateAnnotationRequestDTO(
         String color,

@@ -1,8 +1,8 @@
 package com.br.klaus.readium.annotations.application.query;
 
-import com.br.klaus.readium.annotations.AnnotationResponseMapper;
+import com.br.klaus.readium.annotations.api.AnnotationResponseMapper;
+import com.br.klaus.readium.annotations.api.dto.AnnotationResponseDTO;
 import com.br.klaus.readium.annotations.domain.port.AnnotationRepositoryPort;
-import com.br.klaus.readium.annotations.dto.AnnotationResponseDTO;
 import com.br.klaus.readium.book.api.BookExistenceService;
 import com.br.klaus.readium.config.CacheNames;
 import com.br.klaus.readium.exception.BookNotFoundException;

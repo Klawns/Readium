@@ -1,11 +1,10 @@
 package com.br.klaus.readium.annotations;
 
 import com.br.klaus.readium.annotations.converter.RectListConverter;
-import com.br.klaus.readium.annotations.dto.AnnotationRequestDTO;
-import com.br.klaus.readium.annotations.dto.RectDTO;
-import com.br.klaus.readium.annotations.dto.UpdateAnnotationRequestDTO;
 import jakarta.persistence.*;
-import lombok.Data;
+import lombok.AccessLevel;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -15,7 +14,8 @@ import java.util.List;
         @Index(name = "idx_annotation_book_id", columnList = "book_id"),
         @Index(name = "idx_annotation_book_page", columnList = "book_id,page")
 })
-@Data
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Annotation {
 
     @Id
@@ -27,39 +27,55 @@ public class Annotation {
     private int page;
 
     @Convert(converter = RectListConverter.class)
-    @Column(columnDefinition = "TEXT") // SQLite usa TEXT para strings longas/JSON
-    private List<RectDTO> rects;
+    @Column(columnDefinition = "TEXT")
+    private List<Rect> rects;
 
     private String color;
 
     @Column(length = 1000)
     private String selectedText;
-    
+
     @Column(length = 1000)
     private String note;
 
     private LocalDateTime createdAt;
 
-    @PrePersist
-    public void prePersist() {
-        this.createdAt = LocalDateTime.now();
-    }
-
-    // Factory Method atualizado
-    public static Annotation from(AnnotationRequestDTO req) {
+    public static Annotation create(
+            Long bookId,
+            int page,
+            List<Rect> rects,
+            String color,
+            String selectedText,
+            String note
+    ) {
         Annotation annotation = new Annotation();
-        annotation.setBookId(req.bookId());
-        annotation.setPage(req.page());
-        annotation.setRects(req.rects());
-        annotation.setColor(req.color());
-        annotation.setSelectedText(req.selectedText());
-        annotation.setNote(req.note());
+        annotation.bookId = bookId;
+        annotation.page = page;
+        annotation.rects = rects;
+        annotation.color = color;
+        annotation.selectedText = selectedText;
+        annotation.note = note;
         return annotation;
     }
 
-    public void merge(UpdateAnnotationRequestDTO req) {
-        if (req.color() != null) this.color = req.color();
-        if (req.note() != null) this.note = req.note();
-        // Geralmente não atualizamos rects ou selectedText, mas se precisar, adicione aqui
+    public void update(String color, String note) {
+        if (color != null) {
+            this.color = color;
+        }
+        if (note != null) {
+            this.note = note;
+        }
+    }
+
+    public void setAuthoringMetadata(Long bookId, int page, List<Rect> rects, String selectedText) {
+        this.bookId = bookId;
+        this.page = page;
+        this.rects = rects;
+        this.selectedText = selectedText;
+    }
+
+    @PrePersist
+    public void prePersist() {
+        this.createdAt = LocalDateTime.now();
     }
 }

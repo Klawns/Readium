@@ -1,11 +1,11 @@
-package com.br.klaus.readium.translation;
+package com.br.klaus.readium.translation.api;
 
 import com.br.klaus.readium.translation.application.command.TranslationCommandService;
 import com.br.klaus.readium.translation.application.query.TranslationQueryService;
-import com.br.klaus.readium.translation.dto.AutoTranslationRequestDTO;
-import com.br.klaus.readium.translation.dto.AutoTranslationResponseDTO;
-import com.br.klaus.readium.translation.dto.TranslationRequestDTO;
-import com.br.klaus.readium.translation.dto.TranslationResponseDTO;
+import com.br.klaus.readium.translation.api.dto.AutoTranslationRequestDTO;
+import com.br.klaus.readium.translation.api.dto.AutoTranslationResponseDTO;
+import com.br.klaus.readium.translation.api.dto.TranslationRequestDTO;
+import com.br.klaus.readium.translation.api.dto.TranslationResponseDTO;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
