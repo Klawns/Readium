@@ -7,6 +7,10 @@ Aplicacao web do Readium para navegacao da biblioteca e experiencia de leitura n
 - Upload de livros e atualizacao de estado de leitura.
 - Leitor PDF com navegacao por pagina e sincronizacao de progresso.
 - Destaque/anotacao de selecao de texto por pagina.
+- Edicao de anotacao ao clicar no highlight e remocao no popup.
+- Preload de highlights da pagina atual, anterior e proxima.
+- Navegacao por links/referencias internas do PDF.
+- Copia de texto selecionado no leitor.
 - Exibicao e persistencia de traducoes no contexto de leitura.
 - Acionamento de OCR e exibicao de status/qualidade de camada de texto.
 
