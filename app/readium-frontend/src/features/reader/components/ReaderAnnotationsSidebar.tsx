@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { ChevronLeft, X, StickyNote } from 'lucide-react';
+import { ChevronLeft, ChevronRight, X, StickyNote } from 'lucide-react';
 import type { ReaderAnnotation } from '../domain/models';
 
 interface ReaderAnnotationsSidebarProps {
@@ -66,6 +66,17 @@ const ReaderAnnotationsSidebar: React.FC<ReaderAnnotationsSidebarProps> = ({
         }`}
         aria-hidden={!isPanelVisible}
       >
+        {isPanelVisible ? (
+          <button
+            type="button"
+            onClick={() => onOpenChange(false)}
+            className="absolute left-0 top-1/2 z-40 flex -translate-x-full -translate-y-1/2 items-center rounded-l-xl border border-r-0 border-border/70 bg-background/95 px-2 py-2 text-foreground shadow-md transition hover:bg-muted"
+            aria-label="Fechar painel de anotacoes"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </button>
+        ) : null}
+
         <div className="flex h-full flex-col">
           <div className="flex items-start justify-between gap-3 border-b border-border/70 px-4 py-3">
             <div>
