@@ -12,6 +12,7 @@ import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentInformation;
 import org.apache.pdfbox.rendering.ImageType;
 import org.apache.pdfbox.rendering.PDFRenderer;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
@@ -30,6 +31,7 @@ import java.io.IOException;
 @RequiredArgsConstructor
 @Slf4j
 public class BookMetadataListener {
+    private static final int METADATA_SAVE_MAX_ATTEMPTS = 2;
 
     private final BookRepositoryPort bookRepository;
     private final BookStoragePort storageService;
@@ -59,11 +61,44 @@ public class BookMetadataListener {
                 processEpub(book, file);
             }
 
-            bookRepository.save(book);
+            saveProcessedMetadata(book);
             log.info("Metadados processados com sucesso para o livro {}", book.getId());
+        } catch (OptimisticLockingFailureException e) {
+            log.error("Conflito de versao ao salvar metadados do livro {} apos tentativas de retry.", event.id(), e);
         } catch (Exception e) {
             log.error("Erro ao processar metadados do livro {}", event.id(), e);
         }
+    }
+
+    private void saveProcessedMetadata(Book processedBook) {
+        Book candidate = processedBook;
+        for (int attempt = 1; attempt <= METADATA_SAVE_MAX_ATTEMPTS; attempt++) {
+            try {
+                bookRepository.save(candidate);
+                return;
+            } catch (OptimisticLockingFailureException ex) {
+                if (attempt >= METADATA_SAVE_MAX_ATTEMPTS) {
+                    throw ex;
+                }
+
+                log.warn("Conflito otimista ao salvar metadados do livro {}. Recarregando entidade para retry.",
+                        processedBook.getId());
+                Book latest = bookRepository.findById(processedBook.getId()).orElse(null);
+                if (latest == null) {
+                    log.warn("Livro {} nao encontrado durante retry de metadados.", processedBook.getId());
+                    return;
+                }
+                applyProcessedMetadata(processedBook, latest);
+                candidate = latest;
+            }
+        }
+    }
+
+    private void applyProcessedMetadata(Book source, Book target) {
+        target.setAuthor(source.getAuthor());
+        target.setPages(source.getPages());
+        target.setCoverPath(source.getCoverPath());
+        target.setHasCover(source.isHasCover());
     }
 
     private void processPdf(Book book, File file) throws IOException {
