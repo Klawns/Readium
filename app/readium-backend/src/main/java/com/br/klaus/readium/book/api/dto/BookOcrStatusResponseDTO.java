@@ -1,11 +1,11 @@
-package com.br.klaus.readium.book.dto;
+package com.br.klaus.readium.book.api.dto;
 
 import java.time.LocalDateTime;
 
-public record BookTextLayerQualityResponseDTO(
+public record BookOcrStatusResponseDTO(
         Long bookId,
-        Double score,
         String status,
+        Double score,
         LocalDateTime updatedAt
 ) {
 }

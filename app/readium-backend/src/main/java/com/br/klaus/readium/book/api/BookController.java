@@ -1,14 +1,14 @@
-package com.br.klaus.readium.book;
+package com.br.klaus.readium.book.api;
 
 import com.br.klaus.readium.book.application.command.BookCommandService;
 import com.br.klaus.readium.book.application.query.BookQueryService;
-import com.br.klaus.readium.book.dto.BookFilterDTO;
-import com.br.klaus.readium.book.dto.BookOcrStatusResponseDTO;
-import com.br.klaus.readium.book.dto.BookResponseDTO;
-import com.br.klaus.readium.book.dto.BookTextLayerQualityResponseDTO;
-import com.br.klaus.readium.book.dto.PagedResponseDTO;
-import com.br.klaus.readium.book.dto.UpdateBookStatusRequestDTO;
-import com.br.klaus.readium.book.dto.UpdateProgressRequestDTO;
+import com.br.klaus.readium.book.api.dto.BookFilterDTO;
+import com.br.klaus.readium.book.api.dto.BookOcrStatusResponseDTO;
+import com.br.klaus.readium.book.api.dto.BookResponseDTO;
+import com.br.klaus.readium.book.api.dto.BookTextLayerQualityResponseDTO;
+import com.br.klaus.readium.book.api.dto.PagedResponseDTO;
+import com.br.klaus.readium.book.api.dto.UpdateBookStatusRequestDTO;
+import com.br.klaus.readium.book.api.dto.UpdateProgressRequestDTO;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

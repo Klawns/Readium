@@ -1,4 +1,4 @@
-package com.br.klaus.readium.book.dto;
+package com.br.klaus.readium.book.api.dto;
 
 public record BookFilterDTO(
         String status,

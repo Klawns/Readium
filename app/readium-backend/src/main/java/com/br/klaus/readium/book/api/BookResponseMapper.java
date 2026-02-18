@@ -2,7 +2,7 @@ package com.br.klaus.readium.book.api;
 
 import com.br.klaus.readium.book.Book;
 import com.br.klaus.readium.book.BookTitleFormatter;
-import com.br.klaus.readium.book.dto.BookResponseDTO;
+import com.br.klaus.readium.book.api.dto.BookResponseDTO;
 
 public final class BookResponseMapper {
 

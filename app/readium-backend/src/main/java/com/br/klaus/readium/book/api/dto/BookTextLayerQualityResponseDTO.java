@@ -1,10 +1,10 @@
-package com.br.klaus.readium.event;
+package com.br.klaus.readium.book.api.dto;
 
 import java.time.LocalDateTime;
 
-public record BookProgressUpdatedEvent(
+public record BookTextLayerQualityResponseDTO(
         Long bookId,
-        Integer lastReadPage,
+        Double score,
         String status,
         LocalDateTime updatedAt
 ) {

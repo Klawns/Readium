@@ -1,11 +1,11 @@
-package com.br.klaus.readium.book.dto;
+package com.br.klaus.readium.book.events;
 
 import java.time.LocalDateTime;
 
-public record BookOcrStatusResponseDTO(
+public record BookProgressUpdatedEvent(
         Long bookId,
+        Integer lastReadPage,
         String status,
-        Double score,
         LocalDateTime updatedAt
 ) {
 }

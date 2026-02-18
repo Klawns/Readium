@@ -1,4 +1,4 @@
-package com.br.klaus.readium.event;
+package com.br.klaus.readium.book.events;
 
 public record BookOcrRequestedEvent(Long bookId) {
 }

@@ -1,4 +1,4 @@
-package com.br.klaus.readium.book.dto;
+package com.br.klaus.readium.book.api.dto;
 
 import org.springframework.data.domain.Page;
 

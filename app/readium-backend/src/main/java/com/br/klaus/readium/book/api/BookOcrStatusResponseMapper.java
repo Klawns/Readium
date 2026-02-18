@@ -1,7 +1,7 @@
 package com.br.klaus.readium.book.api;
 
 import com.br.klaus.readium.book.Book;
-import com.br.klaus.readium.book.dto.BookOcrStatusResponseDTO;
+import com.br.klaus.readium.book.api.dto.BookOcrStatusResponseDTO;
 
 public final class BookOcrStatusResponseMapper {
 

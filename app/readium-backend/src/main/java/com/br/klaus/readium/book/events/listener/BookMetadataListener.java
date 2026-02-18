@@ -1,9 +1,9 @@
-package com.br.klaus.readium.book.listener;
+package com.br.klaus.readium.book.events.listener;
 
 import com.br.klaus.readium.book.Book;
 import com.br.klaus.readium.book.domain.port.BookRepositoryPort;
 import com.br.klaus.readium.book.domain.port.BookStoragePort;
-import com.br.klaus.readium.event.BookCreatedEvent;
+import com.br.klaus.readium.book.events.BookCreatedEvent;
 import io.documentnode.epub4j.epub.EpubReader;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

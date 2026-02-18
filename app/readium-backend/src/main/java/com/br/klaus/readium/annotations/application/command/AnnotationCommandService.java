@@ -8,7 +8,7 @@ import com.br.klaus.readium.annotations.dto.AnnotationResponseDTO;
 import com.br.klaus.readium.annotations.dto.UpdateAnnotationRequestDTO;
 import com.br.klaus.readium.book.api.BookExistenceService;
 import com.br.klaus.readium.config.CacheNames;
-import com.br.klaus.readium.event.BookDeletedEvent;
+import com.br.klaus.readium.book.events.BookDeletedEvent;
 import com.br.klaus.readium.exception.AnnotationNotFoundException;
 import com.br.klaus.readium.exception.BookNotFoundException;
 import lombok.RequiredArgsConstructor;

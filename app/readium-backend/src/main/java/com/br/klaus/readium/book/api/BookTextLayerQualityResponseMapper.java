@@ -1,7 +1,7 @@
 package com.br.klaus.readium.book.api;
 
 import com.br.klaus.readium.book.Book;
-import com.br.klaus.readium.book.dto.BookTextLayerQualityResponseDTO;
+import com.br.klaus.readium.book.api.dto.BookTextLayerQualityResponseDTO;
 
 public final class BookTextLayerQualityResponseMapper {
 

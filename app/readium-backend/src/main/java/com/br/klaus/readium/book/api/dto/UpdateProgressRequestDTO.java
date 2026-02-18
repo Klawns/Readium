@@ -1,4 +1,4 @@
-package com.br.klaus.readium.book.dto;
+package com.br.klaus.readium.book.api.dto;
 
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;

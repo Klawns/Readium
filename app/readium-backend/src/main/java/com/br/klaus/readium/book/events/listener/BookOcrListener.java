@@ -1,10 +1,10 @@
-package com.br.klaus.readium.book.listener;
+package com.br.klaus.readium.book.events.listener;
 
 import com.br.klaus.readium.book.Book;
 import com.br.klaus.readium.book.OcrGatewayResult;
 import com.br.klaus.readium.book.domain.port.BookRepositoryPort;
 import com.br.klaus.readium.book.domain.port.OcrGatewayPort;
-import com.br.klaus.readium.event.BookOcrRequestedEvent;
+import com.br.klaus.readium.book.events.BookOcrRequestedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
