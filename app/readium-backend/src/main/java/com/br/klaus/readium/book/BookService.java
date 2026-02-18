@@ -18,6 +18,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.io.Resource;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -51,12 +52,33 @@ public class BookService {
             throw new UnsupportedFileFormatException("Formato de arquivo nao suportado. Apenas .pdf e .epub sao permitidos.");
         }
 
-        String filePath = storageService.save(file);
+        FileStorageService.StoredFile storedFile = storageService.saveWithChecksum(file);
+        Book existingBook = repository.findByFileHash(storedFile.sha256()).orElse(null);
+        if (existingBook != null) {
+            storageService.delete(storedFile.path());
+            log.info("Upload duplicado detectado para hash {}. Reutilizando livro {}.", storedFile.sha256(), existingBook.getId());
+            return BookResponseDTO.fromEntity(existingBook);
+        }
 
         String title = BookTitleFormatter.fromFilename(originalFilename);
-        Book book = Book.create(title, filePath, originalFilename);
+        Book book = Book.create(title, storedFile.path(), originalFilename);
+        book.setFileHash(storedFile.sha256());
 
-        Book savedBook = repository.save(book);
+        Book savedBook;
+        try {
+            savedBook = repository.save(book);
+        } catch (DataIntegrityViolationException ex) {
+            storageService.delete(storedFile.path());
+            Book duplicatedBook = repository.findByFileHash(storedFile.sha256()).orElse(null);
+            if (duplicatedBook != null) {
+                log.info("Upload concorrente duplicado para hash {}. Reutilizando livro {}.", storedFile.sha256(), duplicatedBook.getId());
+                return BookResponseDTO.fromEntity(duplicatedBook);
+            }
+            throw ex;
+        } catch (RuntimeException ex) {
+            storageService.delete(storedFile.path());
+            throw ex;
+        }
 
         eventPublisher.publishEvent(new BookCreatedEvent(savedBook.getId(), savedBook.getTitle()));
 

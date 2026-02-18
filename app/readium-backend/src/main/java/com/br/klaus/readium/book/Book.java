@@ -12,7 +12,8 @@ import java.util.Locale;
         @Index(name = "idx_book_status", columnList = "book_status"),
         @Index(name = "idx_book_title", columnList = "title"),
         @Index(name = "idx_book_author", columnList = "author"),
-        @Index(name = "idx_book_ocr_status", columnList = "ocr_status")
+        @Index(name = "idx_book_ocr_status", columnList = "ocr_status"),
+        @Index(name = "idx_book_file_hash", columnList = "file_hash", unique = true)
 })
 @Data
 public class Book {
@@ -37,6 +38,10 @@ public class Book {
 
     @JsonIgnore
     private String filePath;
+
+    @JsonIgnore
+    @Column(length = 64)
+    private String fileHash;
 
     @JsonIgnore
     private String ocrFilePath;
