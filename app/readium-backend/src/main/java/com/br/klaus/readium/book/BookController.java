@@ -1,5 +1,7 @@
 package com.br.klaus.readium.book;
 
+import com.br.klaus.readium.book.application.command.BookCommandService;
+import com.br.klaus.readium.book.application.query.BookQueryService;
 import com.br.klaus.readium.book.dto.BookFilterDTO;
 import com.br.klaus.readium.book.dto.BookOcrStatusResponseDTO;
 import com.br.klaus.readium.book.dto.BookResponseDTO;
@@ -28,12 +30,13 @@ import java.io.IOException;
 @Slf4j
 public class BookController {
 
-    private final BookService service;
+    private final BookCommandService commandService;
+    private final BookQueryService queryService;
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<BookResponseDTO> uploadBook(@RequestParam("file") MultipartFile file) throws IOException {
         log.info("Recebendo upload de arquivo: {}", file.getOriginalFilename());
-        BookResponseDTO response = service.save(file);
+        BookResponseDTO response = commandService.upload(file);
         return ResponseEntity.ok(response);
     }
 
@@ -46,7 +49,7 @@ public class BookController {
         log.info("Listando livros. Status: {}, Query: {}, Page: {}", status, query, pageable.getPageNumber());
         
         BookFilterDTO filter = new BookFilterDTO(status, query);
-        Page<BookResponseDTO> result = service.findAll(filter, pageable);
+        Page<BookResponseDTO> result = queryService.findAll(filter, pageable);
         
         log.info("Livros encontrados: {}", result.getTotalElements());
         return ResponseEntity.ok(PagedResponseDTO.fromPage(result));
@@ -54,18 +57,18 @@ public class BookController {
 
     @GetMapping("/{id}")
     public ResponseEntity<BookResponseDTO> findById(@PathVariable Long id) {
-        return ResponseEntity.ok(service.findById(id));
+        return ResponseEntity.ok(queryService.findById(id));
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteById(@PathVariable Long id) {
-        service.deleteById(id);
+        commandService.deleteById(id);
         return ResponseEntity.noContent().build();
     }
 
     @PatchMapping("/status")
     public ResponseEntity<Void> updateStatus(@RequestBody UpdateBookStatusRequestDTO req) {
-        service.changeBookStatus(req);
+        commandService.changeBookStatus(req);
         return ResponseEntity.noContent().build();
     }
     
@@ -73,13 +76,13 @@ public class BookController {
     public ResponseEntity<Void> updateProgress(
             @PathVariable Long id,
             @RequestBody @Valid UpdateProgressRequestDTO req) {
-        service.updateProgress(id, req);
+        commandService.updateProgress(id, req);
         return ResponseEntity.noContent().build();
     }
 
     @GetMapping("/{id}/file")
     public ResponseEntity<Resource> downloadFile(@PathVariable Long id) {
-        Resource resource = service.getBookFile(id);
+        Resource resource = queryService.getBookFile(id);
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + resource.getFilename() + "\"")
                 .body(resource);
@@ -87,23 +90,23 @@ public class BookController {
 
     @GetMapping(value = "/{id}/cover", produces = MediaType.IMAGE_JPEG_VALUE)
     public ResponseEntity<Resource> getCover(@PathVariable Long id) {
-        Resource cover = service.getBookCover(id);
+        Resource cover = queryService.getBookCover(id);
         return ResponseEntity.ok(cover);
     }
 
     @PostMapping("/{id}/ocr")
     public ResponseEntity<Void> queueOcr(@PathVariable Long id) {
-        service.queueOcr(id);
+        commandService.queueOcr(id);
         return ResponseEntity.accepted().build();
     }
 
     @GetMapping("/{id}/ocr-status")
     public ResponseEntity<BookOcrStatusResponseDTO> getOcrStatus(@PathVariable Long id) {
-        return ResponseEntity.ok(service.getOcrStatus(id));
+        return ResponseEntity.ok(queryService.getOcrStatus(id));
     }
 
     @GetMapping("/{id}/text-layer-quality")
     public ResponseEntity<BookTextLayerQualityResponseDTO> getTextLayerQuality(@PathVariable Long id) {
-        return ResponseEntity.ok(service.getTextLayerQuality(id));
+        return ResponseEntity.ok(queryService.getTextLayerQuality(id));
     }
 }

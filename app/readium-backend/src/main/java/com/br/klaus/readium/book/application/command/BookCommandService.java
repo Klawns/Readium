@@ -1,9 +1,10 @@
-package com.br.klaus.readium.book;
+package com.br.klaus.readium.book.application.command;
 
-import com.br.klaus.readium.book.dto.BookFilterDTO;
-import com.br.klaus.readium.book.dto.BookOcrStatusResponseDTO;
+import com.br.klaus.readium.book.Book;
+import com.br.klaus.readium.book.BookRepository;
+import com.br.klaus.readium.book.BookTitleFormatter;
+import com.br.klaus.readium.book.application.support.OcrRunningRecoveryService;
 import com.br.klaus.readium.book.dto.BookResponseDTO;
-import com.br.klaus.readium.book.dto.BookTextLayerQualityResponseDTO;
 import com.br.klaus.readium.book.dto.UpdateBookStatusRequestDTO;
 import com.br.klaus.readium.book.dto.UpdateProgressRequestDTO;
 import com.br.klaus.readium.event.BookCreatedEvent;
@@ -15,13 +16,8 @@ import com.br.klaus.readium.exception.UnsupportedFileFormatException;
 import com.br.klaus.readium.storage.FileStorageService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.core.io.Resource;
 import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -34,17 +30,15 @@ import java.util.Objects;
 @Service
 @RequiredArgsConstructor
 @Slf4j
-public class BookService {
+public class BookCommandService {
 
     private final BookRepository repository;
     private final ApplicationEventPublisher eventPublisher;
     private final FileStorageService storageService;
-
-    @Value("${app.ocr.running-timeout-seconds:2400}")
-    private long ocrRunningTimeoutSeconds;
+    private final OcrRunningRecoveryService ocrRunningRecoveryService;
 
     @Transactional
-    public BookResponseDTO save(MultipartFile file) {
+    public BookResponseDTO upload(MultipartFile file) {
         String originalFilename = StringUtils.cleanPath(Objects.toString(file.getOriginalFilename(), ""));
         String extension = StringUtils.getFilenameExtension(originalFilename);
 
@@ -81,45 +75,7 @@ public class BookService {
         }
 
         eventPublisher.publishEvent(new BookCreatedEvent(savedBook.getId(), savedBook.getTitle()));
-
         return BookResponseDTO.fromEntity(savedBook);
-    }
-
-    private boolean isSupportedExtension(String extension) {
-        if (extension == null || extension.isBlank()) {
-            return false;
-        }
-
-        String normalized = extension.toLowerCase(Locale.ROOT);
-        return "pdf".equals(normalized) || "epub".equals(normalized);
-    }
-
-    @Transactional(readOnly = true)
-    public Page<BookResponseDTO> findAll(BookFilterDTO filter, Pageable pageable) {
-        Specification<Book> spec = (root, query, criteriaBuilder) -> criteriaBuilder.conjunction();
-
-        if (filter.status() != null && !filter.status().isBlank() && !filter.status().equals("ALL")) {
-            try {
-                Book.BookStatus status = Book.BookStatus.valueOf(filter.status().toUpperCase());
-                spec = spec.and(BookSpecifications.hasStatus(status));
-            } catch (IllegalArgumentException e) {
-                // Ignore invalid status filter.
-            }
-        }
-
-        if (filter.query() != null && !filter.query().isBlank()) {
-            spec = spec.and(BookSpecifications.containsText(filter.query()));
-        }
-
-        return repository.findAll(spec, pageable)
-                .map(BookResponseDTO::fromEntity);
-    }
-
-    @Transactional(readOnly = true)
-    public BookResponseDTO findById(Long id) {
-        return repository.findById(id)
-                .map(BookResponseDTO::fromEntity)
-                .orElseThrow(() -> new BookNotFoundException("Livro com ID " + id + " nao encontrado."));
     }
 
     @Transactional
@@ -136,7 +92,6 @@ public class BookService {
         }
 
         repository.deleteById(id);
-
         eventPublisher.publishEvent(new BookDeletedEvent(id));
     }
 
@@ -175,39 +130,12 @@ public class BookService {
         }
     }
 
-    @Transactional(readOnly = true)
-    public Resource getBookFile(Long id) {
-        Book book = repository.findById(id)
-                .orElseThrow(() -> new BookNotFoundException("Livro com ID " + id + " nao encontrado."));
-
-        String filePath = book.getFilePath();
-        if (book.getOcrStatus() == Book.OcrStatus.DONE
-                && book.getOcrFilePath() != null
-                && !book.getOcrFilePath().isBlank()) {
-            filePath = book.getOcrFilePath();
-        }
-
-        return storageService.load(filePath);
-    }
-
-    @Transactional(readOnly = true)
-    public Resource getBookCover(Long id) {
-        Book book = repository.findById(id)
-                .orElseThrow(() -> new BookNotFoundException("Livro com ID " + id + " nao encontrado."));
-
-        if (!book.isHasCover() || book.getCoverPath() == null) {
-            throw new BookNotFoundException("Capa nao encontrada para o livro com ID " + id);
-        }
-
-        return storageService.load(book.getCoverPath());
-    }
-
     @Transactional
     public void queueOcr(Long bookId) {
         Book book = repository.findById(bookId)
                 .orElseThrow(() -> new BookNotFoundException("Livro com ID " + bookId + " nao encontrado."));
 
-        recoverStaleRunningOcr(book);
+        ocrRunningRecoveryService.recoverIfStale(book);
 
         if (book.getOcrStatus() == Book.OcrStatus.RUNNING) {
             return;
@@ -215,53 +143,15 @@ public class BookService {
 
         book.markOcrQueued();
         repository.save(book);
-
         eventPublisher.publishEvent(new BookOcrRequestedEvent(bookId));
     }
 
-    @Transactional
-    public BookOcrStatusResponseDTO getOcrStatus(Long bookId) {
-        Book book = repository.findById(bookId)
-                .orElseThrow(() -> new BookNotFoundException("Livro com ID " + bookId + " nao encontrado."));
-
-        recoverStaleRunningOcr(book);
-        return BookOcrStatusResponseDTO.fromEntity(book);
-    }
-
-    @Transactional(readOnly = true)
-    public BookTextLayerQualityResponseDTO getTextLayerQuality(Long bookId) {
-        Book book = repository.findById(bookId)
-                .orElseThrow(() -> new BookNotFoundException("Livro com ID " + bookId + " nao encontrado."));
-
-        return BookTextLayerQualityResponseDTO.fromEntity(book);
-    }
-
-    private void recoverStaleRunningOcr(Book book) {
-        if (!isOcrRunningStale(book)) {
-            return;
-        }
-
-        log.warn(
-                "OCR em estado RUNNING estagnado para livro {} (updatedAt={}). Marcando como FAILED para permitir novo processamento.",
-                book.getId(),
-                book.getOcrUpdatedAt()
-        );
-
-        book.markOcrFailed();
-        repository.save(book);
-    }
-
-    private boolean isOcrRunningStale(Book book) {
-        if (book.getOcrStatus() != Book.OcrStatus.RUNNING) {
+    private boolean isSupportedExtension(String extension) {
+        if (extension == null || extension.isBlank()) {
             return false;
         }
 
-        if (book.getOcrUpdatedAt() == null) {
-            return true;
-        }
-
-        long timeoutSeconds = Math.max(ocrRunningTimeoutSeconds, 60);
-        LocalDateTime staleThreshold = LocalDateTime.now().minusSeconds(timeoutSeconds);
-        return book.getOcrUpdatedAt().isBefore(staleThreshold);
+        String normalized = extension.toLowerCase(Locale.ROOT);
+        return "pdf".equals(normalized) || "epub".equals(normalized);
     }
 }

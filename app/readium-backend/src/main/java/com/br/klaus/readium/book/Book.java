@@ -27,8 +27,7 @@ public class Book {
     private String title;
     private String author;
     private Integer pages;
-    
-    // Novo campo para progresso de leitura
+
     private Integer lastReadPage = 0;
 
     @JsonIgnore
