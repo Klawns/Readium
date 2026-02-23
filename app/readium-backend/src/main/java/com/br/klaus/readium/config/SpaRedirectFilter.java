@@ -15,16 +15,20 @@ public class SpaRedirectFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
             throws ServletException, IOException {
-        
         String path = request.getRequestURI();
-        
-        // Se não for API e não tiver extensão (arquivo estático), redireciona para index.html
-        // Isso permite que o React Router controle as rotas no frontend (ex: /books/1)
-        if (!path.startsWith("/api") && !path.contains(".")) {
+        boolean isApiPath = path.startsWith("/api");
+        boolean isStaticFile = path.contains(".");
+        boolean isSwaggerPath = path.startsWith("/v3/api-docs")
+                || path.startsWith("/swagger-ui")
+                || path.startsWith("/swagger-ui.html");
+
+        // Delegate SPA routes to index.html, but keep API/static docs routes untouched.
+        if (!isApiPath && !isStaticFile && !isSwaggerPath) {
             request.getRequestDispatcher("/index.html").forward(request, response);
             return;
         }
-        
+
         filterChain.doFilter(request, response);
     }
 }
+

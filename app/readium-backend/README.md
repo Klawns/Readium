@@ -31,7 +31,8 @@ API da aplicacao Readium responsavel pela gestao da biblioteca, leitura, anotaco
    APIs de anotacao e traducao atendem o leitor com persistencia por livro/pagina.
 
 ## Contrato
-- OpenAPI: `openapi.yaml`
+- Swagger UI: `/swagger-ui/index.html`
+- OpenAPI JSON gerado em runtime: `/v3/api-docs`
 
 ## Cache
 - Implementacao via `Spring Cache` com provider `Caffeine`.
