@@ -19,6 +19,7 @@ public interface BookJpaRepository extends JpaRepository<Book, Long>, JpaSpecifi
                     SELECT b.*
                     FROM book b
                     LEFT JOIN book_category bc ON bc.book_id = b.id
+                    LEFT JOIN book_reading_collection brc ON brc.book_id = b.id
                     WHERE (:status IS NULL OR b.book_status = :status)
                       AND (
                             :categoryId IS NULL
@@ -37,6 +38,10 @@ public interface BookJpaRepository extends JpaRepository<Book, Long>, JpaSpecifi
                             )
                       )
                       AND (
+                            :collectionId IS NULL
+                            OR brc.collection_id = :collectionId
+                      )
+                      AND (
                             :query IS NULL
                             OR :query = ''
                             OR LOWER(COALESCE(b.title, '')) LIKE LOWER('%' || :query || '%')
@@ -48,6 +53,7 @@ public interface BookJpaRepository extends JpaRepository<Book, Long>, JpaSpecifi
                     SELECT COUNT(DISTINCT b.id)
                     FROM book b
                     LEFT JOIN book_category bc ON bc.book_id = b.id
+                    LEFT JOIN book_reading_collection brc ON brc.book_id = b.id
                     WHERE (:status IS NULL OR b.book_status = :status)
                       AND (
                             :categoryId IS NULL
@@ -64,6 +70,10 @@ public interface BookJpaRepository extends JpaRepository<Book, Long>, JpaSpecifi
                                 SELECT id
                                 FROM category_tree
                             )
+                      )
+                      AND (
+                            :collectionId IS NULL
+                            OR brc.collection_id = :collectionId
                       )
                       AND (
                             :query IS NULL
@@ -78,6 +88,7 @@ public interface BookJpaRepository extends JpaRepository<Book, Long>, JpaSpecifi
             @Param("status") String status,
             @Param("query") String query,
             @Param("categoryId") Long categoryId,
+            @Param("collectionId") Long collectionId,
             Pageable pageable
     );
 }

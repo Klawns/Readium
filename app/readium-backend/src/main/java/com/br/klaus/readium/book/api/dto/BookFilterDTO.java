@@ -3,6 +3,7 @@ package com.br.klaus.readium.book.api.dto;
 public record BookFilterDTO(
         String status,
         String query,
-        Long categoryId
+        Long categoryId,
+        Long collectionId
 ) {
 }

@@ -22,11 +22,12 @@ public class JpaBookRepositoryAdapter implements BookRepositoryPort {
     }
 
     @Override
-    public Page<Book> findAll(Book.BookStatus status, String query, Long categoryId, Pageable pageable) {
+    public Page<Book> findAll(Book.BookStatus status, String query, Long categoryId, Long collectionId, Pageable pageable) {
         return repository.findAllByFilters(
                 status != null ? status.name() : null,
                 query,
                 categoryId,
+                collectionId,
                 pageable
         );
     }

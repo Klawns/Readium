@@ -45,12 +45,13 @@ public class BookController {
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String query,
             @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) Long collectionId,
             @PageableDefault(size = 12) Pageable pageable) {
         
-        log.info("Listando livros. Status: {}, Query: {}, Category: {}, Page: {}",
-                status, query, categoryId, pageable.getPageNumber());
+        log.info("Listando livros. Status: {}, Query: {}, Category: {}, Collection: {}, Page: {}",
+                status, query, categoryId, collectionId, pageable.getPageNumber());
         
-        BookFilterDTO filter = new BookFilterDTO(status, query, categoryId);
+        BookFilterDTO filter = new BookFilterDTO(status, query, categoryId, collectionId);
         Page<BookResponseDTO> result = queryService.findAll(filter, pageable);
         
         log.info("Livros encontrados: {}", result.getTotalElements());

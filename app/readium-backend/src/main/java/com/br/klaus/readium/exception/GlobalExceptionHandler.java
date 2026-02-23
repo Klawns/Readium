@@ -29,6 +29,11 @@ public class GlobalExceptionHandler {
         return build(HttpStatus.NOT_FOUND, ex.getMessage(), req);
     }
 
+    @ExceptionHandler(CollectionNotFoundException.class)
+    public ResponseEntity<ApiErrorResponse> handleCollectionNotFound(CollectionNotFoundException ex, HttpServletRequest req) {
+        return build(HttpStatus.NOT_FOUND, ex.getMessage(), req);
+    }
+
     @ExceptionHandler(UnsupportedFileFormatException.class)
     public ResponseEntity<ApiErrorResponse> handleUnsupportedFile(UnsupportedFileFormatException ex, HttpServletRequest req) {
         return build(HttpStatus.BAD_REQUEST, ex.getMessage(), req);

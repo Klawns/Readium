@@ -11,7 +11,7 @@ public interface BookRepositoryPort {
 
     List<Book> findAll();
 
-    Page<Book> findAll(Book.BookStatus status, String query, Long categoryId, Pageable pageable);
+    Page<Book> findAll(Book.BookStatus status, String query, Long categoryId, Long collectionId, Pageable pageable);
 
     Optional<Book> findById(Long id);
 
