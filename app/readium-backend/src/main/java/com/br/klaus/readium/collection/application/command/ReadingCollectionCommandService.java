@@ -3,6 +3,7 @@ package com.br.klaus.readium.collection.application.command;
 import com.br.klaus.readium.book.api.BookExistenceService;
 import com.br.klaus.readium.book.events.BookDeletedEvent;
 import com.br.klaus.readium.collection.api.dto.CreateReadingCollectionRequestDTO;
+import com.br.klaus.readium.collection.api.dto.MoveReadingCollectionRequestDTO;
 import com.br.klaus.readium.collection.api.dto.ReadingCollectionResponseDTO;
 import com.br.klaus.readium.collection.api.dto.UpdateBookCollectionsRequestDTO;
 import com.br.klaus.readium.collection.api.dto.UpdateReadingCollectionRequestDTO;
@@ -24,6 +25,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.Objects;
 import java.util.Set;
 
 @Service
@@ -35,6 +37,7 @@ public class ReadingCollectionCommandService {
             "#EAB308", "#F97316", "#EF4444", "#EC4899", "#8B5CF6"
     };
     private static final String DEFAULT_ICON = "books";
+    private static final String DEFAULT_TEMPLATE_ID = "classic";
 
     private final ReadingCollectionRepositoryPort collectionRepository;
     private final BookReadingCollectionRepositoryPort bookCollectionRepository;
@@ -48,9 +51,11 @@ public class ReadingCollectionCommandService {
         String description = normalizeDescription(req.description());
         String color = normalizeColor(req.color(), name);
         String icon = normalizeIcon(req.icon());
+        String templateId = normalizeTemplateId(req.templateId());
+        int sortOrder = calculateNextSortOrder();
 
         ReadingCollection saved = collectionRepository.save(
-                ReadingCollection.create(name, slug, description, color, icon)
+                ReadingCollection.create(name, slug, description, color, icon, sortOrder, templateId)
         );
         return queryService.toResponse(saved);
     }
@@ -67,15 +72,52 @@ public class ReadingCollectionCommandService {
         String description = normalizeDescription(req.description());
         String color = normalizeColor(req.color(), name);
         String icon = normalizeIcon(req.icon());
+        String templateId = normalizeTemplateId(req.templateId());
 
         collection.setName(name);
         collection.setSlug(slug);
         collection.setDescription(description);
         collection.setColor(color);
         collection.setIcon(icon);
+        collection.setTemplateId(templateId);
 
         ReadingCollection saved = collectionRepository.save(collection);
         return queryService.toResponse(saved);
+    }
+
+    @Transactional
+    public ReadingCollectionResponseDTO move(Long collectionId, MoveReadingCollectionRequestDTO req) {
+        List<ReadingCollection> ordered = collectionRepository.findAll(null);
+        if (ordered.isEmpty()) {
+            throw new CollectionNotFoundException("Nenhuma colecao encontrada para reordenacao.");
+        }
+
+        int currentIndex = indexOfCollection(ordered, collectionId);
+        if (currentIndex < 0) {
+            throw new CollectionNotFoundException("Colecao com ID " + collectionId + " nao encontrada.");
+        }
+
+        int targetIndex = normalizeTargetIndex(req.targetIndex(), ordered.size(), currentIndex);
+        if (targetIndex == currentIndex) {
+            return queryService.toResponse(ordered.get(currentIndex));
+        }
+
+        ReadingCollection moving = ordered.remove(currentIndex);
+        ordered.add(targetIndex, moving);
+
+        boolean changed = false;
+        for (int index = 0; index < ordered.size(); index++) {
+            ReadingCollection collection = ordered.get(index);
+            if (collection.getSortOrder() != index) {
+                collection.setSortOrder(index);
+                changed = true;
+            }
+        }
+        if (changed) {
+            collectionRepository.saveAll(ordered);
+        }
+
+        return queryService.toResponse(moving);
     }
 
     @Transactional
@@ -83,10 +125,12 @@ public class ReadingCollectionCommandService {
         ReadingCollection collection = collectionRepository.findById(collectionId)
                 .orElseThrow(() -> new CollectionNotFoundException(
                         "Colecao com ID " + collectionId + " nao encontrada."
-                ));
+        ));
 
+        int removedSortOrder = collection.getSortOrder();
         bookCollectionRepository.deleteByCollectionId(collection.getId());
         collectionRepository.deleteById(collection.getId());
+        normalizeSortOrders(removedSortOrder);
     }
 
     @Transactional
@@ -176,6 +220,56 @@ public class ReadingCollectionCommandService {
         return icon.trim().toLowerCase(Locale.ROOT);
     }
 
+    private String normalizeTemplateId(String templateId) {
+        if (!StringUtils.hasText(templateId)) {
+            return DEFAULT_TEMPLATE_ID;
+        }
+        return templateId.trim().toLowerCase(Locale.ROOT);
+    }
+
+    private int calculateNextSortOrder() {
+        long totalCollections = collectionRepository.countAll();
+        return (int) Math.min(totalCollections, Integer.MAX_VALUE);
+    }
+
+    private int indexOfCollection(List<ReadingCollection> collections, Long collectionId) {
+        for (int index = 0; index < collections.size(); index++) {
+            ReadingCollection collection = collections.get(index);
+            if (Objects.equals(collection.getId(), collectionId)) {
+                return index;
+            }
+        }
+        return -1;
+    }
+
+    private int normalizeTargetIndex(Integer targetIndex, int size, int currentIndex) {
+        if (targetIndex == null) {
+            return currentIndex;
+        }
+        if (targetIndex <= 0) {
+            return 0;
+        }
+        if (targetIndex >= size - 1) {
+            return size - 1;
+        }
+        return targetIndex;
+    }
+
+    private void normalizeSortOrders(int fromIndex) {
+        List<ReadingCollection> ordered = collectionRepository.findAll(null);
+        boolean changed = false;
+        for (int index = 0; index < ordered.size(); index++) {
+            ReadingCollection collection = ordered.get(index);
+            if (index >= fromIndex && collection.getSortOrder() != index) {
+                collection.setSortOrder(index);
+                changed = true;
+            }
+        }
+        if (changed) {
+            collectionRepository.saveAll(ordered);
+        }
+    }
+
     private String generateUniqueSlug(String name, Long currentCollectionId) {
         String baseSlug = ReadingCollectionSlugService.toSlug(name);
         String candidate = baseSlug;
@@ -200,4 +294,3 @@ public class ReadingCollectionCommandService {
         return !currentCollectionId.equals(existing.get().getId());
     }
 }
-

@@ -19,8 +19,7 @@ public interface ReadingCollectionJpaRepository extends JpaRepository<ReadingCol
             select c
             from ReadingCollection c
             where (:query is null or :query = '' or lower(c.name) like lower(concat('%', :query, '%')))
-            order by lower(c.name) asc
+            order by c.sortOrder asc, lower(c.name) asc
             """)
     List<ReadingCollection> findByQuery(@Param("query") String query);
 }
-

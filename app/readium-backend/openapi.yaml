@@ -434,6 +434,25 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/Category'
+    put:
+      summary: Replace categories assigned to book
+      parameters:
+        - $ref: '#/components/parameters/BookId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateBookCategoriesRequest'
+      responses:
+        '200':
+          description: Updated categories
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Category'
 
   /collections:
     get:
@@ -494,6 +513,25 @@ paths:
         '204':
           description: Collection deleted
 
+  /collections/{id}/move:
+    patch:
+      summary: Move reading collection manually
+      parameters:
+        - $ref: '#/components/parameters/CollectionId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MoveReadingCollectionRequest'
+      responses:
+        '200':
+          description: Collection moved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReadingCollection'
+
   /books/{bookId}/collections:
     get:
       summary: List collections assigned to book
@@ -527,25 +565,6 @@ paths:
                 type: array
                 items:
                   $ref: '#/components/schemas/ReadingCollection'
-    put:
-      summary: Replace categories assigned to book
-      parameters:
-        - $ref: '#/components/parameters/BookId'
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/UpdateBookCategoriesRequest'
-      responses:
-        '200':
-          description: Updated categories
-          content:
-            application/json:
-              schema:
-                type: array
-                items:
-                  $ref: '#/components/schemas/Category'
 
 components:
   parameters:
@@ -876,7 +895,7 @@ components:
           format: int64
     ReadingCollection:
       type: object
-      required: [id, name, slug, color, icon, booksCount]
+      required: [id, name, slug, color, icon, sortOrder, templateId, booksCount]
       properties:
         id:
           type: integer
@@ -891,6 +910,10 @@ components:
         color:
           type: string
         icon:
+          type: string
+        sortOrder:
+          type: integer
+        templateId:
           type: string
         booksCount:
           type: integer
@@ -951,6 +974,8 @@ components:
           pattern: "^#([A-Fa-f0-9]{6})$"
         icon:
           type: string
+        templateId:
+          type: string
     UpdateReadingCollectionRequest:
       type: object
       required: [name]
@@ -965,6 +990,15 @@ components:
           pattern: "^#([A-Fa-f0-9]{6})$"
         icon:
           type: string
+        templateId:
+          type: string
+    MoveReadingCollectionRequest:
+      type: object
+      required: [targetIndex]
+      properties:
+        targetIndex:
+          type: integer
+          minimum: 0
     UpdateBookCollectionsRequest:
       type: object
       required: [collectionIds]

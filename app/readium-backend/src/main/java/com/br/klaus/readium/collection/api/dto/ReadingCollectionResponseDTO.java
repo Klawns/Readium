@@ -7,7 +7,8 @@ public record ReadingCollectionResponseDTO(
         String description,
         String color,
         String icon,
+        int sortOrder,
+        String templateId,
         long booksCount
 ) {
 }
-

@@ -36,8 +36,18 @@ public class JpaReadingCollectionRepositoryAdapter implements ReadingCollectionR
     }
 
     @Override
+    public long countAll() {
+        return repository.count();
+    }
+
+    @Override
     public ReadingCollection save(ReadingCollection collection) {
         return repository.save(collection);
+    }
+
+    @Override
+    public void saveAll(Collection<ReadingCollection> collections) {
+        repository.saveAll(collections);
     }
 
     @Override
@@ -45,4 +55,3 @@ public class JpaReadingCollectionRepositoryAdapter implements ReadingCollectionR
         repository.deleteById(id);
     }
 }
-

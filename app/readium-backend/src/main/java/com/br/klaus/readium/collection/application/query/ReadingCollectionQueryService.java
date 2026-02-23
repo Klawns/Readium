@@ -38,7 +38,9 @@ public class ReadingCollectionQueryService {
         return bookCollectionRepository.findByBookId(bookId)
                 .stream()
                 .map(BookReadingCollection::getCollection)
-                .sorted(Comparator.comparing(ReadingCollection::getName, String.CASE_INSENSITIVE_ORDER))
+                .sorted(Comparator
+                        .comparingInt(ReadingCollection::getSortOrder)
+                        .thenComparing(ReadingCollection::getName, String.CASE_INSENSITIVE_ORDER))
                 .map(this::toResponse)
                 .toList();
     }
@@ -54,4 +56,3 @@ public class ReadingCollectionQueryService {
         }
     }
 }
-

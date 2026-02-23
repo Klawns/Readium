@@ -16,8 +16,9 @@ public final class ReadingCollectionResponseMapper {
                 collection.getDescription(),
                 collection.getColor(),
                 collection.getIcon(),
+                collection.getSortOrder(),
+                collection.getTemplateId(),
                 booksCount
         );
     }
 }
-

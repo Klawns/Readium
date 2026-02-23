@@ -16,8 +16,11 @@ public interface ReadingCollectionRepositoryPort {
 
     Optional<ReadingCollection> findBySlug(String slug);
 
+    long countAll();
+
     ReadingCollection save(ReadingCollection collection);
+
+    void saveAll(Collection<ReadingCollection> collections);
 
     void deleteById(Long id);
 }
-

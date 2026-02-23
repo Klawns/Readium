@@ -13,7 +13,8 @@ public record UpdateReadingCollectionRequestDTO(
         @Pattern(regexp = "^#([A-Fa-f0-9]{6})$", message = "A cor deve estar no formato hexadecimal, ex: #3B82F6")
         String color,
         @Size(max = 32)
-        String icon
+        String icon,
+        @Size(max = 32)
+        String templateId
 ) {
 }
-

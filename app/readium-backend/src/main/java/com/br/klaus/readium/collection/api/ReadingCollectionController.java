@@ -1,6 +1,7 @@
 package com.br.klaus.readium.collection.api;
 
 import com.br.klaus.readium.collection.api.dto.CreateReadingCollectionRequestDTO;
+import com.br.klaus.readium.collection.api.dto.MoveReadingCollectionRequestDTO;
 import com.br.klaus.readium.collection.api.dto.ReadingCollectionResponseDTO;
 import com.br.klaus.readium.collection.api.dto.UpdateBookCollectionsRequestDTO;
 import com.br.klaus.readium.collection.api.dto.UpdateReadingCollectionRequestDTO;
@@ -44,6 +45,14 @@ public class ReadingCollectionController {
         return ResponseEntity.ok(commandService.update(id, req));
     }
 
+    @PatchMapping("/collections/{id}/move")
+    public ResponseEntity<ReadingCollectionResponseDTO> move(
+            @PathVariable Long id,
+            @RequestBody @Valid MoveReadingCollectionRequestDTO req
+    ) {
+        return ResponseEntity.ok(commandService.move(id, req));
+    }
+
     @DeleteMapping("/collections/{id}")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         commandService.delete(id);
@@ -63,4 +72,3 @@ public class ReadingCollectionController {
         return ResponseEntity.ok(commandService.updateBookCollections(bookId, req));
     }
 }
-
