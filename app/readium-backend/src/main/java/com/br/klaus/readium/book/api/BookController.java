@@ -44,11 +44,13 @@ public class BookController {
     public ResponseEntity<PagedResponseDTO<BookResponseDTO>> findAll(
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String query,
+            @RequestParam(required = false) Long categoryId,
             @PageableDefault(size = 12) Pageable pageable) {
         
-        log.info("Listando livros. Status: {}, Query: {}, Page: {}", status, query, pageable.getPageNumber());
+        log.info("Listando livros. Status: {}, Query: {}, Category: {}, Page: {}",
+                status, query, categoryId, pageable.getPageNumber());
         
-        BookFilterDTO filter = new BookFilterDTO(status, query);
+        BookFilterDTO filter = new BookFilterDTO(status, query, categoryId);
         Page<BookResponseDTO> result = queryService.findAll(filter, pageable);
         
         log.info("Livros encontrados: {}", result.getTotalElements());

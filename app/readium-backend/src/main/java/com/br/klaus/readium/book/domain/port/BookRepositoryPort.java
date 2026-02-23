@@ -8,7 +8,7 @@ import java.util.Optional;
 
 public interface BookRepositoryPort {
 
-    Page<Book> findAll(Book.BookStatus status, String query, Pageable pageable);
+    Page<Book> findAll(Book.BookStatus status, String query, Long categoryId, Pageable pageable);
 
     Optional<Book> findById(Long id);
 

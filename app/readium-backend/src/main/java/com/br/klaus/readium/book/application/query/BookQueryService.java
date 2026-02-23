@@ -40,7 +40,8 @@ public class BookQueryService {
             }
         }
 
-        return repository.findAll(status, filter.query(), pageable).map(BookResponseMapper::toResponse);
+        return repository.findAll(status, filter.query(), filter.categoryId(), pageable)
+                .map(BookResponseMapper::toResponse);
     }
 
     @Transactional(readOnly = true)
