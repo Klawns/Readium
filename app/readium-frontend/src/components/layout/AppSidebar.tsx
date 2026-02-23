@@ -10,6 +10,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar.tsx"
 import { Link, useLocation } from "react-router-dom"
+import { ThemePicker } from "@/features/preferences/components/ThemePicker.tsx"
 
 interface AppSidebarProps {
   onUploadClick?: () => void
@@ -48,6 +49,11 @@ export function AppSidebar({ onUploadClick }: AppSidebarProps) {
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+        <SidebarGroup>
+          <SidebarGroupContent>
+            <ThemePicker />
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>

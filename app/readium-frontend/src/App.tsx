@@ -6,6 +6,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import LibraryPage from "./pages/LibraryPage.tsx";
 import ReaderPage from "./pages/ReaderPage.tsx";
 import NotFound from "./pages/NotFound.tsx";
+import { ThemeProvider } from "./features/preferences/theme/ThemeProvider.tsx";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -20,23 +21,25 @@ const queryClient = new QueryClient({
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter
-        future={{
-          v7_startTransition: true,
-          v7_relativeSplatPath: true,
-        }}
-      >
-        <Routes>
-          <Route path="/" element={<Navigate to="/books" replace />} />
-          <Route path="/books" element={<LibraryPage />} />
-          <Route path="/books/:id" element={<ReaderPage />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-    </TooltipProvider>
+    <ThemeProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter
+          future={{
+            v7_startTransition: true,
+            v7_relativeSplatPath: true,
+          }}
+        >
+          <Routes>
+            <Route path="/" element={<Navigate to="/books" replace />} />
+            <Route path="/books" element={<LibraryPage />} />
+            <Route path="/books/:id" element={<ReaderPage />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </BrowserRouter>
+      </TooltipProvider>
+    </ThemeProvider>
   </QueryClientProvider>
 );
 
