@@ -7,6 +7,7 @@ interface UpdateLibrarySearchParamsInput {
   page?: number;
   query?: string;
   categoryId?: number | null;
+  collectionId?: number | null;
 }
 
 const parseStatusFilter = (value: string | null): StatusFilter => {
@@ -42,12 +43,14 @@ export const useLibrarySearchParams = () => {
   const page = parsePage(searchParams.get('page'));
   const searchQuery = (searchParams.get('query') || '').trim();
   const categoryId = parseCategoryId(searchParams.get('categoryId'));
+  const collectionId = parseCategoryId(searchParams.get('collectionId'));
 
   const updateParams = useCallback((next: UpdateLibrarySearchParamsInput) => {
     const nextStatus = next.status ?? statusFilter;
     const nextPage = Math.max(0, next.page ?? page);
     const nextQuery = (next.query ?? searchQuery).trim();
     const nextCategoryId = next.categoryId !== undefined ? next.categoryId : categoryId;
+    const nextCollectionId = next.collectionId !== undefined ? next.collectionId : collectionId;
 
     const params = new URLSearchParams();
     params.set('status', nextStatus);
@@ -58,15 +61,19 @@ export const useLibrarySearchParams = () => {
     if (typeof nextCategoryId === 'number' && Number.isFinite(nextCategoryId) && nextCategoryId > 0) {
       params.set('categoryId', nextCategoryId.toString());
     }
+    if (typeof nextCollectionId === 'number' && Number.isFinite(nextCollectionId) && nextCollectionId > 0) {
+      params.set('collectionId', nextCollectionId.toString());
+    }
 
     setSearchParams(params);
-  }, [categoryId, page, searchQuery, setSearchParams, statusFilter]);
+  }, [categoryId, collectionId, page, searchQuery, setSearchParams, statusFilter]);
 
   return {
     statusFilter,
     page,
     searchQuery,
     categoryId,
+    collectionId,
     updateParams,
   };
 };

@@ -5,6 +5,7 @@ import type {
   BookRecommendation,
   BookStatus,
   Category,
+  ReadingCollection,
   SmartCollection,
   StatusFilter,
 } from '@/types';
@@ -18,6 +19,7 @@ import { CategoryFilterBar } from '@/features/classification/components/Category
 import { LibraryViewPresetBar } from '../components/LibraryViewPresetBar.tsx';
 import type { LibraryLayoutMode, SavedLibraryView } from '../domain/library-view';
 import { LibraryInsightsSection } from '@/features/insights/components/LibraryInsightsSection.tsx';
+import { CollectionFilterBar } from '@/features/collections/components/CollectionFilterBar.tsx';
 
 interface LibraryViewProps {
   books: Book[];
@@ -33,6 +35,8 @@ interface LibraryViewProps {
   uploadProgress: number | null;
   categories: Category[];
   selectedCategoryId: number | null;
+  collections: ReadingCollection[];
+  selectedCollectionId: number | null;
   layoutMode: LibraryLayoutMode;
   savedViews: SavedLibraryView[];
   insightMetrics?: BookMetrics;
@@ -49,9 +53,12 @@ interface LibraryViewProps {
   onBookClick: (bookId: number) => void;
   onBookStatusChange: (bookId: number, status: BookStatus) => void;
   onBookManageCategories: (book: Book) => void;
+  onBookManageCollections: (book: Book) => void;
   onPageChange: (page: number) => void;
   onCategoryFilterChange: (categoryId: number | null) => void;
+  onCollectionFilterChange: (collectionId: number | null) => void;
   onOpenCategoryManager: () => void;
+  onOpenCollectionManager: () => void;
   onLayoutModeChange: (layoutMode: LibraryLayoutMode) => void;
   onApplySavedView: (view: SavedLibraryView) => void;
   onSaveCurrentView: (name: string) => void;
@@ -105,6 +112,8 @@ export default function LibraryView({
   uploadProgress,
   categories,
   selectedCategoryId,
+  collections,
+  selectedCollectionId,
   layoutMode,
   savedViews,
   insightMetrics,
@@ -121,9 +130,12 @@ export default function LibraryView({
   onBookClick,
   onBookStatusChange,
   onBookManageCategories,
+  onBookManageCollections,
   onPageChange,
   onCategoryFilterChange,
+  onCollectionFilterChange,
   onOpenCategoryManager,
+  onOpenCollectionManager,
   onLayoutModeChange,
   onApplySavedView,
   onSaveCurrentView,
@@ -163,6 +175,13 @@ export default function LibraryView({
           selectedCategoryId={selectedCategoryId}
           onSelectCategory={onCategoryFilterChange}
           onManageCategories={onOpenCategoryManager}
+        />
+
+        <CollectionFilterBar
+          collections={collections}
+          selectedCollectionId={selectedCollectionId}
+          onSelectCollection={onCollectionFilterChange}
+          onManageCollections={onOpenCollectionManager}
         />
 
         <LibraryViewPresetBar
@@ -229,6 +248,7 @@ export default function LibraryView({
                   onClick={() => onBookClick(book.id)}
                   onStatusChange={(status) => onBookStatusChange(book.id, status)}
                   onManageCategories={() => onBookManageCategories(book)}
+                  onManageCollections={() => onBookManageCollections(book)}
                   density={layoutMode === 'compact' ? 'compact' : 'comfortable'}
                 />
               ))}

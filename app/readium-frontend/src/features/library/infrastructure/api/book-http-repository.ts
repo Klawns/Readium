@@ -9,8 +9,9 @@ export class BookHttpRepository implements BookRepository {
     size?: number,
     query?: string,
     categoryId?: number | null,
+    collectionId?: number | null,
   ): Promise<BookPage> {
-    return bookApi.getBooks(status, page, size, query, categoryId);
+    return bookApi.getBooks(status, page, size, query, categoryId, collectionId);
   }
 
   upload(file: File, options?: UploadBookOptions): Promise<Book> {

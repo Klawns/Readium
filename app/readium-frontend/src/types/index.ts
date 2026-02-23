@@ -10,6 +10,7 @@ import {
   BookOcrStatusResponseSchema,
   BookTextLayerQualityResponseSchema,
   CategorySchema,
+  ReadingCollectionSchema,
   BookMetricsSchema,
   SmartCollectionSchema,
   BookRecommendationSchema,
@@ -25,6 +26,7 @@ export type Translation = z.infer<typeof TranslationSchema>;
 export type BookOcrStatusResponse = z.infer<typeof BookOcrStatusResponseSchema>;
 export type BookTextLayerQualityResponse = z.infer<typeof BookTextLayerQualityResponseSchema>;
 export type Category = z.infer<typeof CategorySchema>;
+export type ReadingCollection = z.infer<typeof ReadingCollectionSchema>;
 export type BookMetrics = z.infer<typeof BookMetricsSchema>;
 export type SmartCollection = z.infer<typeof SmartCollectionSchema>;
 export type BookRecommendation = z.infer<typeof BookRecommendationSchema>;

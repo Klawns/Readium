@@ -11,6 +11,7 @@ export interface BookRepository {
     size?: number,
     query?: string,
     categoryId?: number | null,
+    collectionId?: number | null,
   ): Promise<BookPage>;
   upload(file: File, options?: UploadBookOptions): Promise<Book>;
   updateStatus(bookId: number, status: BookStatus): Promise<void>;

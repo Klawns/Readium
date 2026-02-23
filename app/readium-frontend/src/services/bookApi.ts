@@ -27,6 +27,7 @@ export const bookApi = {
     size = 12,
     query?: string,
     categoryId?: number | null,
+    collectionId?: number | null,
   ): Promise<BookPage> => {
     const params: Record<string, string> = {
       page: page.toString(),
@@ -43,6 +44,10 @@ export const bookApi = {
 
     if (typeof categoryId === 'number' && Number.isFinite(categoryId) && categoryId > 0) {
       params.categoryId = categoryId.toString();
+    }
+
+    if (typeof collectionId === 'number' && Number.isFinite(collectionId) && collectionId > 0) {
+      params.collectionId = collectionId.toString();
     }
 
     const response = await httpClient.get<BookPage>('/books', { params });

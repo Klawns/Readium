@@ -8,6 +8,7 @@ export interface SavedLibraryView {
   statusFilter: StatusFilter;
   searchQuery: string;
   categoryId: number | null;
+  collectionId: number | null;
   layoutMode: LibraryLayoutMode;
   createdAt: string;
 }
@@ -16,5 +17,6 @@ export interface LibraryViewSnapshot {
   statusFilter: StatusFilter;
   searchQuery: string;
   categoryId: number | null;
+  collectionId: number | null;
   layoutMode: LibraryLayoutMode;
 }

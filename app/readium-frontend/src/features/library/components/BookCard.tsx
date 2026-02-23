@@ -7,6 +7,7 @@ interface BookCardProps {
   onClick: () => void;
   onStatusChange?: (status: BookStatus) => void;
   onManageCategories?: () => void;
+  onManageCollections?: () => void;
   density?: 'comfortable' | 'compact';
 }
 
@@ -15,6 +16,7 @@ export default function BookCard({
   onClick,
   onStatusChange,
   onManageCategories,
+  onManageCollections,
   density = 'comfortable',
 }: BookCardProps) {
   // Calcular progresso
@@ -84,6 +86,20 @@ export default function BookCard({
           >
             <FolderTree className="h-3 w-3" />
             Categorias
+          </button>
+        ) : null}
+
+        {onManageCollections ? (
+          <button
+            type="button"
+            className="absolute left-2 top-11 z-10 inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white/90 px-2 py-1 text-[10px] font-medium text-slate-700 shadow-sm backdrop-blur-sm transition hover:bg-white"
+            onClick={(event) => {
+              event.stopPropagation();
+              onManageCollections();
+            }}
+          >
+            <BookIcon className="h-3 w-3" />
+            Colecoes
           </button>
         ) : null}
       </div>

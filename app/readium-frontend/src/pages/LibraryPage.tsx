@@ -13,11 +13,15 @@ import type { Book } from '@/types';
 import { useLibraryViewPreferences } from '@/features/library/ui/hooks/useLibraryViewPreferences.ts';
 import type { SavedLibraryView } from '@/features/library/domain/library-view';
 import { useInsights } from '@/features/insights/ui/hooks/useInsights.ts';
+import { useReadingCollections } from '@/features/collections/ui/hooks/useReadingCollections.ts';
+import { CollectionManagerDialog } from '@/features/collections/components/CollectionManagerDialog.tsx';
+import { useBookCollections } from '@/features/collections/ui/hooks/useBookCollections.ts';
+import { BookCollectionDialog } from '@/features/collections/components/BookCollectionDialog.tsx';
 
 export default function LibraryPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const { statusFilter, page, searchQuery, categoryId, updateParams } = useLibrarySearchParams();
+  const { statusFilter, page, searchQuery, categoryId, collectionId, updateParams } = useLibrarySearchParams();
 
   const {
     books,
@@ -28,7 +32,7 @@ export default function LibraryPage() {
     updateStatus,
     isUploading,
     uploadProgress,
-  } = useLibrary({ page, statusFilter, searchQuery, categoryId });
+  } = useLibrary({ page, statusFilter, searchQuery, categoryId, collectionId });
 
   const {
     categories,
@@ -40,6 +44,15 @@ export default function LibraryPage() {
     isSaving: categoriesSaving,
     isDeleting: categoriesDeleting,
   } = useCategories();
+  const {
+    collections,
+    isLoading: collectionsLoading,
+    createCollection,
+    updateCollection,
+    deleteCollection,
+    isSaving: collectionsSaving,
+    isDeleting: collectionsDeleting,
+  } = useReadingCollections();
   const {
     layoutMode,
     setLayoutMode,
@@ -58,7 +71,9 @@ export default function LibraryPage() {
   const [uploadOpen, setUploadOpen] = useState(false);
   const [localSearch, setLocalSearch] = useState(searchQuery);
   const [categoriesOpen, setCategoriesOpen] = useState(false);
+  const [collectionsOpen, setCollectionsOpen] = useState(false);
   const [selectedBookForCategories, setSelectedBookForCategories] = useState<Book | null>(null);
+  const [selectedBookForCollections, setSelectedBookForCollections] = useState<Book | null>(null);
 
   const {
     bookCategories,
@@ -66,6 +81,12 @@ export default function LibraryPage() {
     setBookCategories,
     isSaving: bookCategoriesSaving,
   } = useBookCategories(selectedBookForCategories?.id ?? null);
+  const {
+    bookCollections,
+    isLoading: bookCollectionsLoading,
+    setBookCollections,
+    isSaving: bookCollectionsSaving,
+  } = useBookCollections(selectedBookForCollections?.id ?? null);
 
   useEffect(() => {
     setLocalSearch(searchQuery);
@@ -92,6 +113,16 @@ export default function LibraryPage() {
     updateParams({ categoryId: null, page: 0 });
   }, [categories, categoryId, updateParams]);
 
+  useEffect(() => {
+    if (collectionId == null) {
+      return;
+    }
+    if (collections.some((collection) => collection.id === collectionId)) {
+      return;
+    }
+    updateParams({ collectionId: null, page: 0 });
+  }, [collections, collectionId, updateParams]);
+
   const handleUpload = async (file: File) => {
     await uploadBook(file);
     setUploadOpen(false);
@@ -104,6 +135,7 @@ export default function LibraryPage() {
       status: savedView.statusFilter,
       query: savedView.searchQuery,
       categoryId: savedView.categoryId,
+      collectionId: savedView.collectionId ?? null,
       page: 0,
     });
   };
@@ -113,6 +145,7 @@ export default function LibraryPage() {
       statusFilter,
       searchQuery: localSearch,
       categoryId,
+      collectionId,
       layoutMode,
     });
   };
@@ -133,6 +166,8 @@ export default function LibraryPage() {
       uploadProgress={uploadProgress}
       categories={categories}
       selectedCategoryId={categoryId}
+      collections={collections}
+      selectedCollectionId={collectionId}
       layoutMode={layoutMode}
       savedViews={savedViews}
       insightMetrics={metrics}
@@ -150,8 +185,11 @@ export default function LibraryPage() {
       onBookStatusChange={(bookId, status) => updateStatus(bookId, status)}
       onPageChange={(nextPage) => updateParams({ page: nextPage })}
       onCategoryFilterChange={(nextCategoryId) => updateParams({ categoryId: nextCategoryId, page: 0 })}
+      onCollectionFilterChange={(nextCollectionId) => updateParams({ collectionId: nextCollectionId, page: 0 })}
       onOpenCategoryManager={() => setCategoriesOpen(true)}
+      onOpenCollectionManager={() => setCollectionsOpen(true)}
       onBookManageCategories={(book) => setSelectedBookForCategories(book)}
+      onBookManageCollections={(book) => setSelectedBookForCollections(book)}
       onLayoutModeChange={setLayoutMode}
       onApplySavedView={handleApplySavedView}
       onSaveCurrentView={handleSaveCurrentView}
@@ -176,6 +214,20 @@ export default function LibraryPage() {
       onDeleteCategory={deleteCategory}
       />
 
+      <CollectionManagerDialog
+      open={collectionsOpen}
+      onOpenChange={setCollectionsOpen}
+      collections={collections}
+      isLoading={collectionsLoading}
+      isSaving={collectionsSaving}
+      isDeleting={collectionsDeleting}
+      onCreateCollection={createCollection}
+      onUpdateCollection={({ collectionId: targetCollectionId, name, description, color, icon }) =>
+        updateCollection({ collectionId: targetCollectionId, payload: { name, description, color, icon } })
+      }
+      onDeleteCollection={deleteCollection}
+      />
+
       <BookCategoryDialog
       open={Boolean(selectedBookForCategories)}
       onOpenChange={(open) => {
@@ -189,6 +241,21 @@ export default function LibraryPage() {
       isLoading={bookCategoriesLoading}
       isSaving={bookCategoriesSaving}
       onSave={setBookCategories}
+      />
+
+      <BookCollectionDialog
+      open={Boolean(selectedBookForCollections)}
+      onOpenChange={(open) => {
+        if (!open) {
+          setSelectedBookForCollections(null);
+        }
+      }}
+      bookTitle={selectedBookForCollections?.title ?? ''}
+      collections={collections}
+      selectedCollections={bookCollections}
+      isLoading={bookCollectionsLoading}
+      isSaving={bookCollectionsSaving}
+      onSave={setBookCollections}
       />
     </>
   );

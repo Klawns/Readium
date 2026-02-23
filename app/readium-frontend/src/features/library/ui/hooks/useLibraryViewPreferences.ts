@@ -28,11 +28,26 @@ const readSavedViews = (): SavedLibraryView[] => {
     return [];
   }
   try {
-    const parsed = JSON.parse(raw) as SavedLibraryView[];
+    const parsed = JSON.parse(raw) as Array<Partial<SavedLibraryView>>;
     if (!Array.isArray(parsed)) {
       return [];
     }
-    return parsed;
+    return parsed
+      .filter((view): view is Partial<SavedLibraryView> & { id: string; name: string; createdAt: string } =>
+        typeof view.id === 'string' && typeof view.name === 'string' && typeof view.createdAt === 'string',
+      )
+      .map((view) => ({
+        id: view.id,
+        name: view.name,
+        statusFilter: view.statusFilter === 'READ' || view.statusFilter === 'READING' || view.statusFilter === 'TO_READ'
+          ? view.statusFilter
+          : 'ALL',
+        searchQuery: typeof view.searchQuery === 'string' ? view.searchQuery : '',
+        categoryId: typeof view.categoryId === 'number' ? view.categoryId : null,
+        collectionId: typeof view.collectionId === 'number' ? view.collectionId : null,
+        layoutMode: view.layoutMode === 'compact' ? 'compact' : 'grid',
+        createdAt: view.createdAt,
+      }));
   } catch {
     return [];
   }
@@ -73,6 +88,7 @@ export const useLibraryViewPreferences = () => {
       statusFilter: snapshot.statusFilter,
       searchQuery: snapshot.searchQuery.trim(),
       categoryId: snapshot.categoryId,
+      collectionId: snapshot.collectionId,
       layoutMode: snapshot.layoutMode,
       createdAt: new Date().toISOString(),
     };

@@ -13,6 +13,18 @@ export const CategorySchema = z.object({
 });
 export const CategoryListSchema = z.array(CategorySchema);
 
+export const ReadingCollectionSchema = z.object({
+  id: z.number(),
+  name: z.string(),
+  slug: z.string(),
+  description: z.string().nullable().optional(),
+  color: z.string(),
+  icon: z.string(),
+  booksCount: z.number(),
+});
+
+export const ReadingCollectionListSchema = z.array(ReadingCollectionSchema);
+
 export const BookSchema = z.object({
   id: z.number(),
   title: z.string(),

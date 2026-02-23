@@ -10,8 +10,9 @@ export class FetchLibraryBooksUseCase {
     size: number,
     query: string,
     categoryId: number | null,
+    collectionId: number | null,
   ): Promise<BookPage> {
-    return this.repository.getBooks(status, page, size, query, categoryId);
+    return this.repository.getBooks(status, page, size, query, categoryId, collectionId);
   }
 }
 
