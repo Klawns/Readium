@@ -25,6 +25,7 @@ export const useBookCategories = (bookId: number | null) => {
       queryClient.setQueryData(queryKeys.bookCategories(bookId), categories);
       queryClient.invalidateQueries({ queryKey: queryKeys.categoriesRoot() });
       queryClient.invalidateQueries({ queryKey: queryKeys.booksRoot() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.insightsRoot() });
       toast.success('Categorias do livro atualizadas.');
     },
     onError: () => {

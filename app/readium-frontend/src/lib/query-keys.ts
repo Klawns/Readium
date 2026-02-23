@@ -13,5 +13,9 @@ export const queryKeys = {
   readerAnnotationsPage: (bookId: number, page: number) =>
     ['reader', 'annotations', bookId, 'page', page] as const,
   readerTranslations: (bookId: number) => ['reader', 'translations', bookId] as const,
+  insightsRoot: () => ['insights'] as const,
+  insightsMetrics: () => ['insights', 'metrics'] as const,
+  insightsSmartCollections: () => ['insights', 'smart-collections'] as const,
+  insightsRecommendations: (limit: number) => ['insights', 'recommendations', limit] as const,
 };
 

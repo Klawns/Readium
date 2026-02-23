@@ -28,6 +28,7 @@ export const useCategories = (query = '') => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.categoriesRoot() });
       queryClient.invalidateQueries({ queryKey: queryKeys.booksRoot() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.insightsRoot() });
       toast.success('Categoria criada.');
     },
     onError: () => {
@@ -41,6 +42,7 @@ export const useCategories = (query = '') => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.categoriesRoot() });
       queryClient.invalidateQueries({ queryKey: queryKeys.booksRoot() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.insightsRoot() });
       toast.success('Categoria atualizada.');
     },
     onError: () => {
@@ -53,6 +55,7 @@ export const useCategories = (query = '') => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.categoriesRoot() });
       queryClient.invalidateQueries({ queryKey: queryKeys.booksRoot() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.insightsRoot() });
       toast.success('Categoria removida.');
     },
     onError: () => {
@@ -66,6 +69,7 @@ export const useCategories = (query = '') => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.categoriesRoot() });
       queryClient.invalidateQueries({ queryKey: queryKeys.booksRoot() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.insightsRoot() });
     },
     onError: () => {
       toast.error('Erro ao mover categoria.');

@@ -12,6 +12,7 @@ import { useBookCategories } from '@/features/classification/ui/hooks/useBookCat
 import type { Book } from '@/types';
 import { useLibraryViewPreferences } from '@/features/library/ui/hooks/useLibraryViewPreferences.ts';
 import type { SavedLibraryView } from '@/features/library/domain/library-view';
+import { useInsights } from '@/features/insights/ui/hooks/useInsights.ts';
 
 export default function LibraryPage() {
   const navigate = useNavigate();
@@ -46,6 +47,13 @@ export default function LibraryPage() {
     saveCurrentView,
     deleteSavedView,
   } = useLibraryViewPreferences();
+  const {
+    metrics,
+    smartCollections,
+    recommendations,
+    isLoading: insightsLoading,
+    isError: insightsError,
+  } = useInsights({ recommendationLimit: 6 });
 
   const [uploadOpen, setUploadOpen] = useState(false);
   const [localSearch, setLocalSearch] = useState(searchQuery);
@@ -127,6 +135,11 @@ export default function LibraryPage() {
       selectedCategoryId={categoryId}
       layoutMode={layoutMode}
       savedViews={savedViews}
+      insightMetrics={metrics}
+      insightSmartCollections={smartCollections}
+      insightRecommendations={recommendations}
+      insightsLoading={insightsLoading}
+      insightsError={insightsError}
       onSearchChange={setLocalSearch}
       onOpenUpload={() => setUploadOpen(true)}
       onCloseUpload={() => setUploadOpen(false)}
@@ -143,6 +156,7 @@ export default function LibraryPage() {
       onApplySavedView={handleApplySavedView}
       onSaveCurrentView={handleSaveCurrentView}
       onDeleteSavedView={deleteSavedView}
+      onOpenInsightBook={(bookId) => navigate(`/books/${bookId}`)}
       />
 
       <CategoryManagerDialog

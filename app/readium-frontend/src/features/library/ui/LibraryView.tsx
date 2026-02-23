@@ -1,5 +1,13 @@
 import { BookOpen, CheckCircle2, Clock, Plus, Search } from 'lucide-react';
-import type { Book, BookStatus, Category, StatusFilter } from '@/types';
+import type {
+  Book,
+  BookMetrics,
+  BookRecommendation,
+  BookStatus,
+  Category,
+  SmartCollection,
+  StatusFilter,
+} from '@/types';
 import AppLayout from '@/components/layout/AppLayout.tsx';
 import { Input } from '@/components/ui/input.tsx';
 import { Button } from '@/components/ui/button.tsx';
@@ -9,6 +17,7 @@ import UploadModal from '../components/UploadModal.tsx';
 import { CategoryFilterBar } from '@/features/classification/components/CategoryFilterBar.tsx';
 import { LibraryViewPresetBar } from '../components/LibraryViewPresetBar.tsx';
 import type { LibraryLayoutMode, SavedLibraryView } from '../domain/library-view';
+import { LibraryInsightsSection } from '@/features/insights/components/LibraryInsightsSection.tsx';
 
 interface LibraryViewProps {
   books: Book[];
@@ -26,6 +35,11 @@ interface LibraryViewProps {
   selectedCategoryId: number | null;
   layoutMode: LibraryLayoutMode;
   savedViews: SavedLibraryView[];
+  insightMetrics?: BookMetrics;
+  insightSmartCollections: SmartCollection[];
+  insightRecommendations: BookRecommendation[];
+  insightsLoading: boolean;
+  insightsError: boolean;
   onSearchChange: (value: string) => void;
   onOpenUpload: () => void;
   onCloseUpload: () => void;
@@ -42,6 +56,7 @@ interface LibraryViewProps {
   onApplySavedView: (view: SavedLibraryView) => void;
   onSaveCurrentView: (name: string) => void;
   onDeleteSavedView: (viewId: string) => void;
+  onOpenInsightBook: (bookId: number) => void;
 }
 
 const getEmptyStateMessage = (statusFilter: StatusFilter, searchQuery: string) => {
@@ -92,6 +107,11 @@ export default function LibraryView({
   selectedCategoryId,
   layoutMode,
   savedViews,
+  insightMetrics,
+  insightSmartCollections,
+  insightRecommendations,
+  insightsLoading,
+  insightsError,
   onSearchChange,
   onOpenUpload,
   onCloseUpload,
@@ -108,6 +128,7 @@ export default function LibraryView({
   onApplySavedView,
   onSaveCurrentView,
   onDeleteSavedView,
+  onOpenInsightBook,
 }: LibraryViewProps) {
   const emptyState = getEmptyStateMessage(statusFilter, searchQuery);
 
@@ -151,6 +172,15 @@ export default function LibraryView({
           onApplyView={onApplySavedView}
           onSaveView={onSaveCurrentView}
           onDeleteView={onDeleteSavedView}
+        />
+
+        <LibraryInsightsSection
+          metrics={insightMetrics}
+          smartCollections={insightSmartCollections}
+          recommendations={insightRecommendations}
+          isLoading={insightsLoading}
+          isError={insightsError}
+          onOpenBook={onOpenInsightBook}
         />
 
         {isLoading ? (

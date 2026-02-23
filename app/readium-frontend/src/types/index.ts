@@ -10,6 +10,9 @@ import {
   BookOcrStatusResponseSchema,
   BookTextLayerQualityResponseSchema,
   CategorySchema,
+  BookMetricsSchema,
+  SmartCollectionSchema,
+  BookRecommendationSchema,
 } from '@/services/schemas.ts';
 
 // Derivando tipos dos schemas Zod para garantir Single Source of Truth
@@ -22,6 +25,9 @@ export type Translation = z.infer<typeof TranslationSchema>;
 export type BookOcrStatusResponse = z.infer<typeof BookOcrStatusResponseSchema>;
 export type BookTextLayerQualityResponse = z.infer<typeof BookTextLayerQualityResponseSchema>;
 export type Category = z.infer<typeof CategorySchema>;
+export type BookMetrics = z.infer<typeof BookMetricsSchema>;
+export type SmartCollection = z.infer<typeof SmartCollectionSchema>;
+export type BookRecommendation = z.infer<typeof BookRecommendationSchema>;
 
 // Derivando Page<Book> do schema para garantir compatibilidade
 export type BookPage = z.infer<typeof PaginatedBookResponseSchema>;

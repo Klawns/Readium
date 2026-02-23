@@ -54,6 +54,7 @@ export const useLibrary = ({ page, statusFilter, searchQuery, categoryId }: UseL
         setUploadProgress(null);
       }, 450);
       queryClient.invalidateQueries({ queryKey: queryKeys.booksRoot(), refetchType: 'inactive' });
+      queryClient.invalidateQueries({ queryKey: queryKeys.insightsRoot(), refetchType: 'inactive' });
     },
     onError: (error) => {
       setUploadProgress(null);
@@ -68,6 +69,7 @@ export const useLibrary = ({ page, statusFilter, searchQuery, categoryId }: UseL
     onSuccess: () => {
       toast.success('Status atualizado!');
       queryClient.invalidateQueries({ queryKey: queryKeys.booksRoot() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.insightsRoot() });
     },
     onError: () => {
       toast.error('Erro ao atualizar status.');

@@ -135,3 +135,34 @@ export const BookTextLayerQualityResponseSchema = z.object({
   status: OcrStatusSchema,
   updatedAt: z.string().nullable().optional(),
 });
+
+export const BookMetricsSchema = z.object({
+  totalBooks: z.number(),
+  toReadBooks: z.number(),
+  readingBooks: z.number(),
+  readBooks: z.number(),
+  categorizedBooks: z.number(),
+  uncategorizedBooks: z.number(),
+  totalPagesKnown: z.number(),
+  pagesRead: z.number(),
+  averageProgressPercent: z.number(),
+  completionPercent: z.number(),
+});
+
+export const SmartCollectionSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  description: z.string(),
+  totalBooks: z.number(),
+  previewBooks: z.array(BookSchema),
+});
+
+export const SmartCollectionListSchema = z.array(SmartCollectionSchema);
+
+export const BookRecommendationSchema = z.object({
+  book: BookSchema,
+  reason: z.string(),
+  score: z.number(),
+});
+
+export const BookRecommendationListSchema = z.array(BookRecommendationSchema);
