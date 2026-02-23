@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
-import { Upload, FileText } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog.tsx';
+import { FileText, Upload } from 'lucide-react';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog.tsx';
 import { Button } from '@/components/ui/button.tsx';
 
 interface UploadModalProps {
@@ -37,62 +37,78 @@ export default function UploadModal({
   };
 
   const handleSubmit = async () => {
-    if (!file) return;
+    if (!file) {
+      return;
+    }
     await onUpload(file);
   };
 
   return (
     <Dialog open={open} onOpenChange={(value) => { if (!value && !isUploading) onClose(); }}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Upload de livro</DialogTitle>
+          <DialogTitle>Adicionar livro</DialogTitle>
           <DialogDescription>
-            Selecione um arquivo PDF ou EPUB para adicionar a sua biblioteca.
+            Selecione um arquivo PDF ou EPUB para incluir na biblioteca.
           </DialogDescription>
         </DialogHeader>
 
         <div
-          onDragOver={(event) => { event.preventDefault(); setDragOver(true); }}
+          onDragOver={(event) => {
+            event.preventDefault();
+            setDragOver(true);
+          }}
           onDragLeave={() => setDragOver(false)}
           onDrop={(event) => {
             event.preventDefault();
             setDragOver(false);
             const droppedFile = event.dataTransfer.files[0];
-            if (droppedFile) handleFile(droppedFile);
+            if (droppedFile) {
+              handleFile(droppedFile);
+            }
           }}
           onClick={() => !isUploading && inputRef.current?.click()}
-          className={`flex cursor-pointer flex-col items-center justify-center gap-3 rounded-lg border-2 border-dashed p-8 transition-colors ${
-            dragOver ? 'border-primary bg-primary/5' : 'border-border hover:border-muted-foreground/30'
-          } ${isUploading ? 'cursor-not-allowed opacity-50' : ''}`}
+          className={`rounded-xl border border-dashed p-6 transition sm:p-8 ${
+            dragOver ? 'border-primary bg-primary/5' : 'border-slate-300 bg-slate-50/50 hover:border-slate-400'
+          } ${isUploading ? 'cursor-not-allowed opacity-70' : 'cursor-pointer'}`}
         >
-          {file ? (
-            <>
-              <FileText className="h-8 w-8 text-primary" />
-              <div className="w-full max-w-full text-center">
-                <p className="break-all text-sm font-medium text-foreground">{file.name}</p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  {(file.size / 1024 / 1024).toFixed(1)} MB
-                </p>
-              </div>
-              <button
-                onClick={(event) => { event.stopPropagation(); setFile(null); }}
-                className="text-xs text-muted-foreground hover:text-foreground"
-                disabled={isUploading}
-              >
-                Remover
-              </button>
-            </>
-          ) : (
-            <>
-              <Upload className="h-8 w-8 text-muted-foreground" />
-              <div className="text-center">
-                <p className="text-sm text-muted-foreground">
-                  Arraste um arquivo ou <span className="font-medium text-primary">clique para selecionar</span>
-                </p>
-                <p className="mt-1 text-xs text-muted-foreground/60">PDF ou EPUB</p>
-              </div>
-            </>
-          )}
+          <div className="flex flex-col items-center justify-center gap-3 text-center">
+            {file ? (
+              <>
+                <div className="rounded-full border border-slate-200 bg-white p-3">
+                  <FileText className="h-6 w-6 text-slate-700" />
+                </div>
+                <div className="w-full max-w-full">
+                  <p className="break-all text-sm font-medium text-slate-800">{file.name}</p>
+                  <p className="mt-1 text-xs text-slate-500">{(file.size / 1024 / 1024).toFixed(1)} MB</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    setFile(null);
+                  }}
+                  className="text-xs text-slate-500 hover:text-slate-700"
+                  disabled={isUploading}
+                >
+                  Remover arquivo
+                </button>
+              </>
+            ) : (
+              <>
+                <div className="rounded-full border border-slate-200 bg-white p-3">
+                  <Upload className="h-6 w-6 text-slate-600" />
+                </div>
+                <div>
+                  <p className="text-sm text-slate-600">
+                    Arraste e solte ou <span className="font-medium text-slate-900">clique para selecionar</span>
+                  </p>
+                  <p className="mt-1 text-xs text-slate-500">Formatos aceitos: PDF, EPUB</p>
+                </div>
+              </>
+            )}
+          </div>
+
           <input
             ref={inputRef}
             type="file"
@@ -100,33 +116,35 @@ export default function UploadModal({
             className="hidden"
             onChange={(event) => {
               const selectedFile = event.target.files?.[0];
-              if (selectedFile) handleFile(selectedFile);
+              if (selectedFile) {
+                handleFile(selectedFile);
+              }
               event.target.value = '';
             }}
             disabled={isUploading}
           />
         </div>
 
-        <div className="mt-2 flex justify-end gap-2">
-          <Button variant="ghost" onClick={onClose} disabled={isUploading}>
-            Cancelar
-          </Button>
-          <Button onClick={() => { void handleSubmit(); }} disabled={!file || isUploading}>
-            {isUploading ? `Enviando${uploadProgress !== null ? ` (${uploadProgress}%)` : '...'}` : 'Enviar'}
-          </Button>
-        </div>
-
         {isUploading && uploadProgress !== null ? (
           <div className="space-y-1">
-            <div className="h-2 overflow-hidden rounded bg-muted">
+            <div className="h-1.5 overflow-hidden rounded bg-slate-200">
               <div
                 className="h-full rounded bg-primary transition-all duration-150"
                 style={{ width: `${Math.max(0, Math.min(100, uploadProgress))}%` }}
               />
             </div>
-            <p className="text-right text-[11px] text-muted-foreground">{uploadProgress}% enviado</p>
+            <p className="text-right text-[11px] text-slate-500">{uploadProgress}% enviado</p>
           </div>
         ) : null}
+
+        <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+          <Button variant="outline" onClick={onClose} disabled={isUploading}>
+            Cancelar
+          </Button>
+          <Button onClick={() => { void handleSubmit(); }} disabled={!file || isUploading}>
+            {isUploading ? `Enviando${uploadProgress !== null ? ` (${uploadProgress}%)` : '...'}` : 'Enviar livro'}
+          </Button>
+        </div>
       </DialogContent>
     </Dialog>
   );

@@ -1,5 +1,5 @@
 import type { FC } from 'react';
-import { Palette, Plus } from 'lucide-react';
+import { GripVertical, Layers3, Palette, Plus } from 'lucide-react';
 import type { Category } from '@/types';
 import { Button } from '@/components/ui/button.tsx';
 import { Input } from '@/components/ui/input.tsx';
@@ -7,7 +7,6 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog.tsx';
@@ -46,10 +45,7 @@ export const CategoryManagerDialog: FC<CategoryManagerDialogProps> = ({
   onMoveCategory,
   onDeleteCategory,
 }) => {
-  const {
-    tree,
-    flattened,
-  } = useCategoryHierarchy(categories);
+  const { tree, flattened } = useCategoryHierarchy(categories);
 
   const {
     newName,
@@ -64,6 +60,7 @@ export const CategoryManagerDialog: FC<CategoryManagerDialogProps> = ({
     setEditingColor,
     beginEdit,
     cancelEdit,
+    clearCreate,
     normalizeHexColor,
   } = useCategoryManagerState();
 
@@ -81,7 +78,7 @@ export const CategoryManagerDialog: FC<CategoryManagerDialogProps> = ({
       color: normalizeHexColor(newColor),
       parentId: null,
     });
-    setNewName('');
+    clearCreate();
   };
 
   const handleSaveEdit = async (categoryId: number) => {
@@ -102,47 +99,66 @@ export const CategoryManagerDialog: FC<CategoryManagerDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl border-0 bg-gradient-to-b from-slate-50 to-white p-0">
-        <DialogHeader className="rounded-t-xl border-b border-slate-200 bg-slate-900 px-6 py-5 text-slate-100">
-          <DialogTitle className="text-xl">Gerenciar categorias</DialogTitle>
-          <DialogDescription className="text-slate-300">
-            Organize categorias em hierarquia e arraste para mudar o pai.
+      <DialogContent className="max-h-[90vh] max-w-5xl overflow-hidden border border-slate-200 bg-slate-50 p-0">
+        <DialogHeader className="border-b border-slate-200 bg-white px-5 py-4">
+          <DialogTitle className="text-lg text-slate-900">Categorias</DialogTitle>
+          <DialogDescription className="text-slate-600">
+            Estruture a hierarquia e arraste categorias para reorganizar.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6 px-6 py-5">
-          <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
-            <p className="mb-3 text-sm font-semibold text-slate-700">Nova categoria raiz</p>
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div className="grid max-h-[calc(90vh-82px)] grid-cols-1 overflow-hidden md:grid-cols-[300px_1fr]">
+          <aside className="border-b border-slate-200 bg-white p-4 md:border-b-0 md:border-r">
+            <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Nova categoria raiz</p>
+            <div className="mt-3 space-y-3">
               <Input
                 value={newName}
                 onChange={(event) => setNewName(event.target.value)}
                 placeholder="Ex: Arquitetura de Software"
-                className="sm:flex-1"
               />
-              <label className="flex items-center gap-2 rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
-                <Palette className="h-4 w-4" />
-                <input
-                  type="color"
+              <div className="flex items-center gap-2">
+                <label className="inline-flex items-center gap-2 rounded-md border border-slate-200 px-2.5 py-2 text-xs text-slate-600">
+                  <Palette className="h-4 w-4" />
+                  <input
+                    type="color"
+                    value={newColor}
+                    onChange={(event) => setNewColor(event.target.value)}
+                    className="h-6 w-8 cursor-pointer border-0 bg-transparent p-0"
+                  />
+                </label>
+                <Input
                   value={newColor}
                   onChange={(event) => setNewColor(event.target.value)}
-                  className="h-6 w-8 cursor-pointer border-0 bg-transparent p-0"
+                  className="h-9"
                 />
-              </label>
+              </div>
               <Button
                 onClick={() => void handleCreate()}
                 disabled={!canCreate || isSaving}
-                className="bg-slate-900 text-white hover:bg-slate-800"
+                className="w-full gap-2"
               >
-                <Plus className="mr-2 h-4 w-4" />
-                Adicionar
+                <Plus className="h-4 w-4" />
+                Criar categoria
               </Button>
             </div>
-          </div>
+            <div className="mt-5 rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs text-slate-600">
+              <p className="font-medium text-slate-700">Dica</p>
+              <p className="mt-1">
+                Use arrastar e soltar para trocar o pai da categoria. Solte no bloco "Raiz" para remover o pai.
+              </p>
+            </div>
+          </aside>
 
-          <div className="space-y-2">
-            <p className="text-sm font-semibold text-slate-700">Hierarquia de categorias</p>
-            <div className="max-h-[420px] overflow-y-auto pr-1">
+          <section className="flex min-h-0 flex-col p-4">
+            <div className="mb-3 flex items-center gap-2 text-sm font-medium text-slate-700">
+              <Layers3 className="h-4 w-4" />
+              Hierarquia atual
+              <span className="ml-auto inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white px-2 py-0.5 text-[11px] text-slate-500">
+                <GripVertical className="h-3 w-3" />
+                Arrastar ativo
+              </span>
+            </div>
+            <div className="min-h-0 flex-1 overflow-y-auto pr-1">
               <CategoryHierarchyTree
                 nodes={tree}
                 isLoading={isLoading}
@@ -166,14 +182,8 @@ export const CategoryManagerDialog: FC<CategoryManagerDialogProps> = ({
                 onDropOnTarget={dragDrop.performDrop}
               />
             </div>
-          </div>
+          </section>
         </div>
-
-        <DialogFooter className="border-t border-slate-200 bg-slate-50 px-6 py-4">
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Fechar
-          </Button>
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

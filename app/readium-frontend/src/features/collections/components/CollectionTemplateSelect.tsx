@@ -8,8 +8,8 @@ interface CollectionTemplateSelectProps {
 
 export const CollectionTemplateSelect: FC<CollectionTemplateSelectProps> = ({ value, onChange }) => (
   <div className="space-y-2">
-    <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Template visual</p>
-    <div className="grid gap-2 sm:grid-cols-2">
+    <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">Template</p>
+    <div className="flex flex-wrap gap-2">
       {COLLECTION_TEMPLATE_PRESETS.map((template) => {
         const active = template.id === value;
         return (
@@ -17,18 +17,20 @@ export const CollectionTemplateSelect: FC<CollectionTemplateSelectProps> = ({ va
             key={template.id}
             type="button"
             onClick={() => onChange(template.id)}
-            className={`rounded-lg border p-3 text-left transition ${
-              active ? 'border-slate-900 ring-1 ring-slate-900' : 'border-slate-200 hover:border-slate-400'
+            className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium transition ${
+              active
+                ? 'border-slate-900 bg-slate-900 text-white'
+                : `${template.chipClassName} hover:border-slate-400`
             }`}
           >
-            <div className={`rounded-md border px-2 py-1 text-xs font-medium ${template.chipClassName}`}>
-              {template.label}
-            </div>
-            <p className="mt-2 text-xs text-slate-500">{template.description}</p>
+            <span
+              className={`h-2 w-2 rounded-full ${active ? 'bg-white/80' : 'bg-slate-400'}`}
+              aria-hidden="true"
+            />
+            <span>{template.label}</span>
           </button>
         );
       })}
     </div>
   </div>
 );
-

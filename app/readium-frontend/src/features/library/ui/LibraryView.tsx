@@ -1,25 +1,16 @@
-import { BookOpen, CheckCircle2, Clock, Plus, Search } from 'lucide-react';
+import { BookOpen, CheckCircle2, Clock, Plus } from 'lucide-react';
 import type {
   Book,
-  BookMetrics,
-  BookRecommendation,
   BookStatus,
   Category,
   ReadingCollection,
-  SmartCollection,
   StatusFilter,
 } from '@/types';
 import AppLayout from '@/components/layout/AppLayout.tsx';
-import { Input } from '@/components/ui/input.tsx';
 import { Button } from '@/components/ui/button.tsx';
 import BookCard from '../components/BookCard.tsx';
-import BookFilter from '../components/BookFilter.tsx';
+import { LibraryCommandBar } from '../components/LibraryCommandBar.tsx';
 import UploadModal from '../components/UploadModal.tsx';
-import { CategoryFilterBar } from '@/features/classification/components/CategoryFilterBar.tsx';
-import { LibraryViewPresetBar } from '../components/LibraryViewPresetBar.tsx';
-import type { LibraryLayoutMode, SavedLibraryView } from '../domain/library-view';
-import { LibraryInsightsSection } from '@/features/insights/components/LibraryInsightsSection.tsx';
-import { CollectionFilterBar } from '@/features/collections/components/CollectionFilterBar.tsx';
 
 interface LibraryViewProps {
   books: Book[];
@@ -37,13 +28,6 @@ interface LibraryViewProps {
   selectedCategoryId: number | null;
   collections: ReadingCollection[];
   selectedCollectionId: number | null;
-  layoutMode: LibraryLayoutMode;
-  savedViews: SavedLibraryView[];
-  insightMetrics?: BookMetrics;
-  insightSmartCollections: SmartCollection[];
-  insightRecommendations: BookRecommendation[];
-  insightsLoading: boolean;
-  insightsError: boolean;
   onSearchChange: (value: string) => void;
   onOpenUpload: () => void;
   onCloseUpload: () => void;
@@ -57,13 +41,9 @@ interface LibraryViewProps {
   onPageChange: (page: number) => void;
   onCategoryFilterChange: (categoryId: number | null) => void;
   onCollectionFilterChange: (collectionId: number | null) => void;
+  onClearAllFilters: () => void;
   onOpenCategoryManager: () => void;
   onOpenCollectionManager: () => void;
-  onLayoutModeChange: (layoutMode: LibraryLayoutMode) => void;
-  onApplySavedView: (view: SavedLibraryView) => void;
-  onSaveCurrentView: (name: string) => void;
-  onDeleteSavedView: (viewId: string) => void;
-  onOpenInsightBook: (bookId: number) => void;
 }
 
 const getEmptyStateMessage = (statusFilter: StatusFilter, searchQuery: string) => {
@@ -114,13 +94,6 @@ export default function LibraryView({
   selectedCategoryId,
   collections,
   selectedCollectionId,
-  layoutMode,
-  savedViews,
-  insightMetrics,
-  insightSmartCollections,
-  insightRecommendations,
-  insightsLoading,
-  insightsError,
   onSearchChange,
   onOpenUpload,
   onCloseUpload,
@@ -134,73 +107,48 @@ export default function LibraryView({
   onPageChange,
   onCategoryFilterChange,
   onCollectionFilterChange,
+  onClearAllFilters,
   onOpenCategoryManager,
   onOpenCollectionManager,
-  onLayoutModeChange,
-  onApplySavedView,
-  onSaveCurrentView,
-  onDeleteSavedView,
-  onOpenInsightBook,
 }: LibraryViewProps) {
   const emptyState = getEmptyStateMessage(statusFilter, searchQuery);
 
   return (
     <AppLayout onUploadClick={onOpenUpload}>
-      <div className="container mx-auto max-w-7xl space-y-8 px-4 py-8 animate-fade-in">
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-          <div className="space-y-1">
+      <div className="container mx-auto max-w-7xl space-y-6 px-4 py-8 animate-fade-in">
+        <div className="space-y-3">
+          <div className="space-y-1.5">
             <h1 className="text-3xl font-bold tracking-tight text-foreground">Biblioteca</h1>
             <p className="text-muted-foreground">Gerencie e organize sua colecao pessoal.</p>
           </div>
-
-          <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row sm:items-center">
-            <div className="relative w-full sm:w-72">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <Input
-                placeholder="Buscar por titulo ou autor..."
-                value={localSearch}
-                onChange={(event) => onSearchChange(event.target.value)}
-                className="bg-background/50 pl-9 backdrop-blur-sm"
-              />
-            </div>
-            <BookFilter active={statusFilter} onChange={onFilterChange} />
-            <Button onClick={onOpenUpload} size="icon" className="shrink-0 lg:hidden">
-              <Plus className="h-5 w-5" />
-            </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs text-slate-600">
+              {books.length} livros na pagina
+            </span>
+            <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs text-slate-600">
+              {totalPages} pagina(s)
+            </span>
           </div>
         </div>
 
-        <CategoryFilterBar
-          categories={categories}
-          selectedCategoryId={selectedCategoryId}
-          onSelectCategory={onCategoryFilterChange}
-          onManageCategories={onOpenCategoryManager}
-        />
-
-        <CollectionFilterBar
-          collections={collections}
-          selectedCollectionId={selectedCollectionId}
-          onSelectCollection={onCollectionFilterChange}
-          onManageCollections={onOpenCollectionManager}
-        />
-
-        <LibraryViewPresetBar
-          layoutMode={layoutMode}
-          onLayoutModeChange={onLayoutModeChange}
-          savedViews={savedViews}
-          onApplyView={onApplySavedView}
-          onSaveView={onSaveCurrentView}
-          onDeleteView={onDeleteSavedView}
-        />
-
-        <LibraryInsightsSection
-          metrics={insightMetrics}
-          smartCollections={insightSmartCollections}
-          recommendations={insightRecommendations}
-          isLoading={insightsLoading}
-          isError={insightsError}
-          onOpenBook={onOpenInsightBook}
-        />
+        <div className="sticky top-0 z-20 -mx-1 border-b border-slate-200/70 bg-slate-50/85 px-1 py-2 backdrop-blur supports-[backdrop-filter]:bg-slate-50/70">
+          <LibraryCommandBar
+            searchValue={localSearch}
+            statusFilter={statusFilter}
+            categories={categories}
+            collections={collections}
+            selectedCategoryId={selectedCategoryId}
+            selectedCollectionId={selectedCollectionId}
+            onSearchChange={onSearchChange}
+            onStatusChange={onFilterChange}
+            onCategoryChange={onCategoryFilterChange}
+            onCollectionChange={onCollectionFilterChange}
+            onClearAllFilters={onClearAllFilters}
+            onOpenCategoryManager={onOpenCategoryManager}
+            onOpenCollectionManager={onOpenCollectionManager}
+            onOpenUpload={onOpenUpload}
+          />
+        </div>
 
         {isLoading ? (
           <div className="grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
@@ -236,11 +184,7 @@ export default function LibraryView({
           </div>
         ) : (
           <>
-            <div className={
-              layoutMode === 'compact'
-                ? 'grid grid-cols-3 gap-x-4 gap-y-6 sm:grid-cols-4 lg:grid-cols-6 xl:grid-cols-7 2xl:grid-cols-8'
-                : 'grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6'
-            }>
+            <div className="grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
               {books.map((book) => (
                 <BookCard
                   key={book.id}
@@ -249,7 +193,7 @@ export default function LibraryView({
                   onStatusChange={(status) => onBookStatusChange(book.id, status)}
                   onManageCategories={() => onBookManageCategories(book)}
                   onManageCollections={() => onBookManageCollections(book)}
-                  density={layoutMode === 'compact' ? 'compact' : 'comfortable'}
+                  density="comfortable"
                 />
               ))}
             </div>

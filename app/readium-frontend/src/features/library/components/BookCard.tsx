@@ -31,6 +31,11 @@ export default function BookCard({
 
   const normalizedAuthor = book.author?.trim() || null;
   const isMetadataPending = !normalizedAuthor && book.pages == null;
+  const knownPages = book.pages ?? 0;
+  const readPages = knownPages > 0
+    ? Math.max(0, Math.min(book.lastReadPage ?? 0, knownPages))
+    : Math.max(0, book.lastReadPage ?? 0);
+  const pageProgressLabel = knownPages > 0 ? `${readPages}/${knownPages} pags` : null;
 
   return (
     <div
@@ -109,17 +114,26 @@ export default function BookCard({
         <h3 className="font-medium text-sm leading-tight line-clamp-2 text-foreground group-hover:text-primary transition-colors" title={book.title}>
           {book.title}
         </h3>
-        {normalizedAuthor ? (
-          <p className="text-xs text-muted-foreground truncate" title={normalizedAuthor}>{normalizedAuthor}</p>
-        ) : isMetadataPending ? (
-          <p className="text-[10px] uppercase tracking-wider text-muted-foreground/50 font-medium animate-pulse">
-            Processando metadados...
-          </p>
-        ) : (
-          <p className="text-[10px] uppercase tracking-wider text-amber-700/80 font-medium" title="Autor nao encontrado nos metadados do arquivo">
-            Autor desconhecido
-          </p>
-        )}
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+          {normalizedAuthor ? (
+            <p className="max-w-full truncate text-xs text-muted-foreground" title={normalizedAuthor}>
+              {normalizedAuthor}
+            </p>
+          ) : isMetadataPending ? (
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground/50 font-medium animate-pulse">
+              Processando metadados...
+            </p>
+          ) : (
+            <p className="text-[10px] uppercase tracking-wider text-amber-700/80 font-medium" title="Autor nao encontrado nos metadados do arquivo">
+              Autor desconhecido
+            </p>
+          )}
+          {pageProgressLabel ? (
+            <span className="rounded-full border border-slate-200 bg-slate-50 px-1.5 py-0.5 text-[10px] font-medium text-slate-600">
+              {pageProgressLabel}
+            </span>
+          ) : null}
+        </div>
         
         {/* Progress Bar */}
         {(book.status === 'READING' || (progressPercentage > 0 && progressPercentage < 100)) && density !== 'compact' && (

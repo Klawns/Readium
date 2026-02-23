@@ -7,6 +7,7 @@ export const queryKeys = {
     categoryId: number | null,
     collectionId: number | null,
   ) => ['books', statusFilter, page, searchQuery, categoryId, collectionId] as const,
+  booksLookup: (searchQuery: string) => ['books', 'lookup', searchQuery] as const,
   categoriesRoot: () => ['categories'] as const,
   categoriesList: (query: string) => ['categories', 'list', query] as const,
   bookCategories: (bookId: number) => ['book', bookId, 'categories'] as const,

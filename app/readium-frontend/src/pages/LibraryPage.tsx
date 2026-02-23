@@ -10,13 +10,12 @@ import { CategoryManagerDialog } from '@/features/classification/components/Cate
 import { BookCategoryDialog } from '@/features/classification/components/BookCategoryDialog.tsx';
 import { useBookCategories } from '@/features/classification/ui/hooks/useBookCategories.ts';
 import type { Book } from '@/types';
-import { useLibraryViewPreferences } from '@/features/library/ui/hooks/useLibraryViewPreferences.ts';
-import type { SavedLibraryView } from '@/features/library/domain/library-view';
-import { useInsights } from '@/features/insights/ui/hooks/useInsights.ts';
 import { useReadingCollections } from '@/features/collections/ui/hooks/useReadingCollections.ts';
 import { CollectionManagerDialog } from '@/features/collections/components/CollectionManagerDialog.tsx';
 import { useBookCollections } from '@/features/collections/ui/hooks/useBookCollections.ts';
 import { BookCollectionDialog } from '@/features/collections/components/BookCollectionDialog.tsx';
+import { useLibraryBookLookup } from '@/features/library/ui/hooks/useLibraryBookLookup.ts';
+import { useAssignCollectionToBooks } from '@/features/collections/ui/hooks/useAssignCollectionToBooks.ts';
 
 export default function LibraryPage() {
   const navigate = useNavigate();
@@ -54,20 +53,6 @@ export default function LibraryPage() {
     isSaving: collectionsSaving,
     isDeleting: collectionsDeleting,
   } = useReadingCollections();
-  const {
-    layoutMode,
-    setLayoutMode,
-    savedViews,
-    saveCurrentView,
-    deleteSavedView,
-  } = useLibraryViewPreferences();
-  const {
-    metrics,
-    smartCollections,
-    recommendations,
-    isLoading: insightsLoading,
-    isError: insightsError,
-  } = useInsights({ recommendationLimit: 6 });
 
   const [uploadOpen, setUploadOpen] = useState(false);
   const [localSearch, setLocalSearch] = useState(searchQuery);
@@ -88,6 +73,13 @@ export default function LibraryPage() {
     setBookCollections,
     isSaving: bookCollectionsSaving,
   } = useBookCollections(selectedBookForCollections?.id ?? null);
+  const [collectionBooksQuery, setCollectionBooksQuery] = useState('');
+  const {
+    books: selectableBooks,
+    totalBooks: selectableBooksTotal,
+    isLoading: selectableBooksLoading,
+  } = useLibraryBookLookup(collectionBooksQuery);
+  const { assignCollectionToBooks, isAssigningBooks } = useAssignCollectionToBooks();
 
   useEffect(() => {
     setLocalSearch(searchQuery);
@@ -129,28 +121,6 @@ export default function LibraryPage() {
     setUploadOpen(false);
   };
 
-  const handleApplySavedView = (savedView: SavedLibraryView) => {
-    setLayoutMode(savedView.layoutMode);
-    setLocalSearch(savedView.searchQuery);
-    updateParams({
-      status: savedView.statusFilter,
-      query: savedView.searchQuery,
-      categoryId: savedView.categoryId,
-      collectionId: savedView.collectionId ?? null,
-      page: 0,
-    });
-  };
-
-  const handleSaveCurrentView = (name: string) => {
-    saveCurrentView(name, {
-      statusFilter,
-      searchQuery: localSearch,
-      categoryId,
-      collectionId,
-      layoutMode,
-    });
-  };
-
   return (
     <>
       <LibraryView
@@ -169,13 +139,6 @@ export default function LibraryPage() {
       selectedCategoryId={categoryId}
       collections={collections}
       selectedCollectionId={collectionId}
-      layoutMode={layoutMode}
-      savedViews={savedViews}
-      insightMetrics={metrics}
-      insightSmartCollections={smartCollections}
-      insightRecommendations={recommendations}
-      insightsLoading={insightsLoading}
-      insightsError={insightsError}
       onSearchChange={setLocalSearch}
       onOpenUpload={() => setUploadOpen(true)}
       onCloseUpload={() => setUploadOpen(false)}
@@ -187,15 +150,16 @@ export default function LibraryPage() {
       onPageChange={(nextPage) => updateParams({ page: nextPage })}
       onCategoryFilterChange={(nextCategoryId) => updateParams({ categoryId: nextCategoryId, page: 0 })}
       onCollectionFilterChange={(nextCollectionId) => updateParams({ collectionId: nextCollectionId, page: 0 })}
+      onClearAllFilters={() => updateParams({
+        status: 'ALL',
+        categoryId: null,
+        collectionId: null,
+        page: 0,
+      })}
       onOpenCategoryManager={() => setCategoriesOpen(true)}
       onOpenCollectionManager={() => setCollectionsOpen(true)}
       onBookManageCategories={(book) => setSelectedBookForCategories(book)}
       onBookManageCollections={(book) => setSelectedBookForCollections(book)}
-      onLayoutModeChange={setLayoutMode}
-      onApplySavedView={handleApplySavedView}
-      onSaveCurrentView={handleSaveCurrentView}
-      onDeleteSavedView={deleteSavedView}
-      onOpenInsightBook={(bookId) => navigate(`/books/${bookId}`)}
       />
 
       <CategoryManagerDialog
@@ -217,12 +181,36 @@ export default function LibraryPage() {
 
       <CollectionManagerDialog
       open={collectionsOpen}
-      onOpenChange={setCollectionsOpen}
+      onOpenChange={(open) => {
+        setCollectionsOpen(open);
+        if (!open) {
+          setCollectionBooksQuery('');
+        }
+      }}
       collections={collections}
       isLoading={collectionsLoading}
-      isSaving={collectionsSaving}
+      isSaving={collectionsSaving || isAssigningBooks}
       isDeleting={collectionsDeleting}
-      onCreateCollection={createCollection}
+      availableBooks={selectableBooks}
+      booksSearchQuery={collectionBooksQuery}
+      booksTotal={selectableBooksTotal}
+      isLoadingBooks={selectableBooksLoading}
+      onBooksSearchQueryChange={setCollectionBooksQuery}
+      onCreateCollection={async ({ initialBookIds = [], ...payload }) => {
+        const created = await createCollection(payload);
+        const createdCollectionId =
+          typeof created === 'object' && created !== null && 'id' in created
+            ? Number((created as { id: number }).id)
+            : null;
+
+        if (createdCollectionId && initialBookIds.length > 0) {
+          await assignCollectionToBooks({
+            collectionId: createdCollectionId,
+            bookIds: initialBookIds,
+          });
+        }
+        return created;
+      }}
       onUpdateCollection={({ collectionId: targetCollectionId, name, description, color, icon, templateId }) =>
         updateCollection({
           collectionId: targetCollectionId,

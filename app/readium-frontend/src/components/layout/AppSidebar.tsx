@@ -1,4 +1,4 @@
-import { BookOpen, Library, Upload } from "lucide-react"
+import { BarChart3, BookOpen, FolderKanban, Library, Upload } from "lucide-react"
 import {
   Sidebar,
   SidebarContent,
@@ -10,7 +10,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar.tsx"
 import { Link, useLocation } from "react-router-dom"
-import { ThemePicker } from "@/features/preferences/components/ThemePicker.tsx"
+import { SidebarSettings } from "./SidebarSettings.tsx"
 
 interface AppSidebarProps {
   onUploadClick?: () => void
@@ -18,7 +18,9 @@ interface AppSidebarProps {
 
 export function AppSidebar({ onUploadClick }: AppSidebarProps) {
   const location = useLocation()
-  const isActive = (path: string) => location.pathname === path || location.pathname.startsWith(path + '/')
+  const isLibraryActive = location.pathname === '/books' || /^\/books\/\d+$/.test(location.pathname)
+  const isInsightsActive = location.pathname === '/books/insights'
+  const isCollectionsActive = location.pathname === '/books/collections' || location.pathname === '/books/folders'
 
   return (
     <Sidebar collapsible="icon">
@@ -35,10 +37,26 @@ export function AppSidebar({ onUploadClick }: AppSidebarProps) {
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton asChild isActive={isActive('/books')} tooltip="Biblioteca">
+                <SidebarMenuButton asChild isActive={isLibraryActive} tooltip="Biblioteca">
                   <Link to="/books">
                     <Library />
                     <span>Biblioteca</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={isInsightsActive} tooltip="Insights">
+                  <Link to="/books/insights">
+                    <BarChart3 />
+                    <span>Insights</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={isCollectionsActive} tooltip="Colecoes">
+                  <Link to="/books/collections">
+                    <FolderKanban />
+                    <span>Colecoes</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -51,12 +69,8 @@ export function AppSidebar({ onUploadClick }: AppSidebarProps) {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
-        <SidebarGroup>
-          <SidebarGroupContent>
-            <ThemePicker />
-          </SidebarGroupContent>
-        </SidebarGroup>
       </SidebarContent>
+      <SidebarSettings />
     </Sidebar>
   )
 }

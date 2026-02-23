@@ -30,6 +30,11 @@ export const useCategoryManagerState = () => {
     setEditingColor(DEFAULT_COLOR);
   };
 
+  const clearCreate = () => {
+    setNewName('');
+    setNewColor(DEFAULT_COLOR);
+  };
+
   return {
     newName,
     newColor,
@@ -43,6 +48,7 @@ export const useCategoryManagerState = () => {
     setEditingColor,
     beginEdit,
     cancelEdit,
+    clearCreate,
     normalizeHexColor,
   };
 };

@@ -6,21 +6,28 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu.tsx';
+import { cn } from '@/lib/utils.ts';
 import { THEME_PRESETS } from '../theme/theme-presets';
 import { useTheme } from '../theme/useTheme';
 
-export const ThemePicker = () => {
+interface ThemePickerProps {
+  buttonClassName?: string;
+  labelClassName?: string;
+  align?: 'start' | 'center' | 'end';
+}
+
+export const ThemePicker = ({ buttonClassName, labelClassName, align = 'start' }: ThemePickerProps) => {
   const { themeId, setThemeId } = useTheme();
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm" className="w-full justify-start gap-2">
+        <Button variant="ghost" size="sm" className={cn('w-full justify-start gap-2', buttonClassName)}>
           <Palette className="h-4 w-4" />
-          <span>Tema</span>
+          <span className={labelClassName}>Tema</span>
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" className="w-48">
+      <DropdownMenuContent align={align} className="w-48">
         {THEME_PRESETS.map((preset) => (
           <DropdownMenuItem
             key={preset.id}
