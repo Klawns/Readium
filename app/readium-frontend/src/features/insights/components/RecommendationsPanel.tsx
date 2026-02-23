@@ -7,6 +7,7 @@ interface RecommendationsPanelProps {
   recommendations: BookRecommendation[];
   isLoading: boolean;
   onOpenBook: (bookId: number) => void;
+  showHeader?: boolean;
 }
 
 const cardClass =
@@ -16,6 +17,7 @@ export const RecommendationsPanel: FC<RecommendationsPanelProps> = ({
   recommendations,
   isLoading,
   onOpenBook,
+  showHeader = true,
 }) => {
   if (isLoading) {
     return (
@@ -33,10 +35,12 @@ export const RecommendationsPanel: FC<RecommendationsPanelProps> = ({
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center gap-2 text-slate-700">
-        <Compass className="h-4 w-4" />
-        <h2 className="text-sm font-semibold uppercase tracking-wide">Recomendacoes pessoais</h2>
-      </div>
+      {showHeader ? (
+        <div className="flex items-center gap-2 text-slate-700">
+          <Compass className="h-4 w-4" />
+          <h2 className="text-sm font-semibold uppercase tracking-wide">Recomendacoes pessoais</h2>
+        </div>
+      ) : null}
       <div className="grid gap-3 lg:grid-cols-2">
         {recommendations.map((item) => (
           <article key={item.book.id} className={cardClass}>
@@ -64,4 +68,3 @@ export const RecommendationsPanel: FC<RecommendationsPanelProps> = ({
     </div>
   );
 };
-

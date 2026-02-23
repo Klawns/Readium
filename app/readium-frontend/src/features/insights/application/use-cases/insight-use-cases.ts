@@ -1,4 +1,4 @@
-import type { BookMetrics, BookRecommendation, SmartCollection } from '@/types';
+import type { BookMetrics, BookRecommendation, ReadingEvolutionPoint, SmartCollection } from '@/types';
 import type { InsightsRepository } from '../../domain/ports/InsightsRepository';
 
 export class GetBookMetricsUseCase {
@@ -25,3 +25,10 @@ export class GetBookRecommendationsUseCase {
   }
 }
 
+export class GetReadingEvolutionUseCase {
+  constructor(private readonly repository: InsightsRepository) {}
+
+  execute(days = 30): Promise<ReadingEvolutionPoint[]> {
+    return this.repository.getEvolution(days);
+  }
+}

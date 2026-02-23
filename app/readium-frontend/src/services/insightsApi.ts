@@ -1,8 +1,9 @@
 import { httpClient } from './http';
-import type { BookMetrics, BookRecommendation, SmartCollection } from '@/types';
+import type { BookMetrics, BookRecommendation, ReadingEvolutionPoint, SmartCollection } from '@/types';
 import {
   BookMetricsSchema,
   BookRecommendationListSchema,
+  ReadingEvolutionPointListSchema,
   SmartCollectionListSchema,
 } from './schemas.ts';
 
@@ -32,5 +33,14 @@ export const insightsApi = {
     }
     return BookRecommendationListSchema.parse(response.data);
   },
-};
 
+  getEvolution: async (days = 30): Promise<ReadingEvolutionPoint[]> => {
+    const response = await httpClient.get<ReadingEvolutionPoint[]>('/books/insights/evolution', {
+      params: { days },
+    });
+    if (response.status >= 400) {
+      throw new Error(`Erro ao carregar evolucao de leitura: ${response.status}`);
+    }
+    return ReadingEvolutionPointListSchema.parse(response.data);
+  },
+};

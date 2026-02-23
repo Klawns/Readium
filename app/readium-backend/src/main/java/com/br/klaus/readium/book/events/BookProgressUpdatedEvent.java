@@ -4,7 +4,8 @@ import java.time.LocalDateTime;
 
 public record BookProgressUpdatedEvent(
         Long bookId,
-        Integer lastReadPage,
+        Integer previousLastReadPage,
+        Integer currentLastReadPage,
         String status,
         LocalDateTime updatedAt
 ) {

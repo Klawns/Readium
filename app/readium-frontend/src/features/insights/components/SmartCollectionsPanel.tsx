@@ -7,6 +7,7 @@ interface SmartCollectionsPanelProps {
   collections: SmartCollection[];
   isLoading: boolean;
   onOpenBook: (bookId: number) => void;
+  showHeader?: boolean;
 }
 
 const collectionTitleClass =
@@ -16,6 +17,7 @@ export const SmartCollectionsPanel: FC<SmartCollectionsPanelProps> = ({
   collections,
   isLoading,
   onOpenBook,
+  showHeader = true,
 }) => {
   if (isLoading) {
     return (
@@ -33,10 +35,12 @@ export const SmartCollectionsPanel: FC<SmartCollectionsPanelProps> = ({
 
   return (
     <div className="space-y-3">
-      <div className="flex items-center gap-2 text-slate-700">
-        <Layers3 className="h-4 w-4" />
-        <h2 className="text-sm font-semibold uppercase tracking-wide">Colecoes inteligentes</h2>
-      </div>
+      {showHeader ? (
+        <div className="flex items-center gap-2 text-slate-700">
+          <Layers3 className="h-4 w-4" />
+          <h2 className="text-sm font-semibold uppercase tracking-wide">Colecoes inteligentes</h2>
+        </div>
+      ) : null}
       <div className="grid gap-3 lg:grid-cols-2 xl:grid-cols-3">
         {collections.map((collection) => (
           <article key={collection.id} className={collectionTitleClass}>
@@ -75,4 +79,3 @@ export const SmartCollectionsPanel: FC<SmartCollectionsPanelProps> = ({
     </div>
   );
 };
-

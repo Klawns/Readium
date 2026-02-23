@@ -122,6 +122,7 @@ public class BookCommandService {
         if (!Objects.equals(previousPage, book.getLastReadPage()) || previousStatus != book.getBookStatus()) {
             eventPublisher.publishEvent(new BookProgressUpdatedEvent(
                     book.getId(),
+                    previousPage,
                     book.getLastReadPage(),
                     book.getBookStatus() != null ? book.getBookStatus().name() : null,
                     LocalDateTime.now()
