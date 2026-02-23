@@ -10,6 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog.tsx';
+import { useCategoryHierarchy } from '../ui/hooks/useCategoryHierarchy';
 
 interface BookCategoryDialogProps {
   open: boolean;
@@ -33,6 +34,7 @@ export const BookCategoryDialog: FC<BookCategoryDialogProps> = ({
   onSave,
 }) => {
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
+  const { flattened } = useCategoryHierarchy(categories);
 
   useEffect(() => {
     if (!open) {
@@ -73,22 +75,23 @@ export const BookCategoryDialog: FC<BookCategoryDialogProps> = ({
               Crie categorias antes de classificar este livro.
             </div>
           ) : (
-            categories.map((category) => {
-              const isSelected = selectedIdSet.has(category.id);
+            flattened.map((node) => {
+              const isSelected = selectedIdSet.has(node.category.id);
               return (
                 <button
-                  key={category.id}
+                  key={node.category.id}
                   type="button"
                   className={`flex w-full items-center gap-3 rounded-lg border p-3 text-left transition ${
                     isSelected
                       ? 'border-slate-900 bg-slate-900/5'
                       : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50'
                   }`}
-                  onClick={() => toggleCategory(category.id)}
+                  onClick={() => toggleCategory(node.category.id)}
+                  style={{ paddingLeft: `${node.depth * 18 + 12}px` }}
                 >
-                  <span className="h-3 w-10 rounded-full" style={{ backgroundColor: category.color }} />
-                  <span className="min-w-0 flex-1 truncate text-sm font-medium text-slate-800">{category.name}</span>
-                  <span className="text-xs text-slate-500">{category.booksCount}</span>
+                  <span className="h-3 w-10 rounded-full" style={{ backgroundColor: node.category.color }} />
+                  <span className="min-w-0 flex-1 truncate text-sm font-medium text-slate-800">{node.category.name}</span>
+                  <span className="text-xs text-slate-500">{node.category.booksCount}</span>
                   {isSelected && (
                     <span className="rounded-full bg-slate-900 p-1 text-white">
                       <Check className="h-3 w-3" />

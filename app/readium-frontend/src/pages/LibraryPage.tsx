@@ -10,6 +10,8 @@ import { CategoryManagerDialog } from '@/features/classification/components/Cate
 import { BookCategoryDialog } from '@/features/classification/components/BookCategoryDialog.tsx';
 import { useBookCategories } from '@/features/classification/ui/hooks/useBookCategories.ts';
 import type { Book } from '@/types';
+import { useLibraryViewPreferences } from '@/features/library/ui/hooks/useLibraryViewPreferences.ts';
+import type { SavedLibraryView } from '@/features/library/domain/library-view';
 
 export default function LibraryPage() {
   const navigate = useNavigate();
@@ -32,10 +34,18 @@ export default function LibraryPage() {
     isLoading: categoriesLoading,
     createCategory,
     updateCategory,
+    moveCategory,
     deleteCategory,
     isSaving: categoriesSaving,
     isDeleting: categoriesDeleting,
   } = useCategories();
+  const {
+    layoutMode,
+    setLayoutMode,
+    savedViews,
+    saveCurrentView,
+    deleteSavedView,
+  } = useLibraryViewPreferences();
 
   const [uploadOpen, setUploadOpen] = useState(false);
   const [localSearch, setLocalSearch] = useState(searchQuery);
@@ -79,6 +89,26 @@ export default function LibraryPage() {
     setUploadOpen(false);
   };
 
+  const handleApplySavedView = (savedView: SavedLibraryView) => {
+    setLayoutMode(savedView.layoutMode);
+    setLocalSearch(savedView.searchQuery);
+    updateParams({
+      status: savedView.statusFilter,
+      query: savedView.searchQuery,
+      categoryId: savedView.categoryId,
+      page: 0,
+    });
+  };
+
+  const handleSaveCurrentView = (name: string) => {
+    saveCurrentView(name, {
+      statusFilter,
+      searchQuery: localSearch,
+      categoryId,
+      layoutMode,
+    });
+  };
+
   return (
     <>
       <LibraryView
@@ -95,6 +125,8 @@ export default function LibraryPage() {
       uploadProgress={uploadProgress}
       categories={categories}
       selectedCategoryId={categoryId}
+      layoutMode={layoutMode}
+      savedViews={savedViews}
       onSearchChange={setLocalSearch}
       onOpenUpload={() => setUploadOpen(true)}
       onCloseUpload={() => setUploadOpen(false)}
@@ -107,6 +139,10 @@ export default function LibraryPage() {
       onCategoryFilterChange={(nextCategoryId) => updateParams({ categoryId: nextCategoryId, page: 0 })}
       onOpenCategoryManager={() => setCategoriesOpen(true)}
       onBookManageCategories={(book) => setSelectedBookForCategories(book)}
+      onLayoutModeChange={setLayoutMode}
+      onApplySavedView={handleApplySavedView}
+      onSaveCurrentView={handleSaveCurrentView}
+      onDeleteSavedView={deleteSavedView}
       />
 
       <CategoryManagerDialog
@@ -117,8 +153,11 @@ export default function LibraryPage() {
       isSaving={categoriesSaving}
       isDeleting={categoriesDeleting}
       onCreateCategory={createCategory}
-      onUpdateCategory={({ categoryId: targetCategoryId, name, color }) =>
-        updateCategory({ categoryId: targetCategoryId, payload: { name, color } })
+      onUpdateCategory={({ categoryId: targetCategoryId, name, color, parentId }) =>
+        updateCategory({ categoryId: targetCategoryId, payload: { name, color, parentId } })
+      }
+      onMoveCategory={({ categoryId: targetCategoryId, parentId }) =>
+        moveCategory({ categoryId: targetCategoryId, parentId })
       }
       onDeleteCategory={deleteCategory}
       />

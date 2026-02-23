@@ -15,6 +15,10 @@ export class CategoryHttpRepository implements CategoryRepository {
     return categoryApi.updateCategory(categoryId, command);
   }
 
+  move(categoryId: number, parentId: number | null): Promise<Category> {
+    return categoryApi.moveCategory(categoryId, { parentId });
+  }
+
   delete(categoryId: number): Promise<void> {
     return categoryApi.deleteCategory(categoryId);
   }

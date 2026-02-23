@@ -7,6 +7,8 @@ import BookCard from '../components/BookCard.tsx';
 import BookFilter from '../components/BookFilter.tsx';
 import UploadModal from '../components/UploadModal.tsx';
 import { CategoryFilterBar } from '@/features/classification/components/CategoryFilterBar.tsx';
+import { LibraryViewPresetBar } from '../components/LibraryViewPresetBar.tsx';
+import type { LibraryLayoutMode, SavedLibraryView } from '../domain/library-view';
 
 interface LibraryViewProps {
   books: Book[];
@@ -22,6 +24,8 @@ interface LibraryViewProps {
   uploadProgress: number | null;
   categories: Category[];
   selectedCategoryId: number | null;
+  layoutMode: LibraryLayoutMode;
+  savedViews: SavedLibraryView[];
   onSearchChange: (value: string) => void;
   onOpenUpload: () => void;
   onCloseUpload: () => void;
@@ -34,6 +38,10 @@ interface LibraryViewProps {
   onPageChange: (page: number) => void;
   onCategoryFilterChange: (categoryId: number | null) => void;
   onOpenCategoryManager: () => void;
+  onLayoutModeChange: (layoutMode: LibraryLayoutMode) => void;
+  onApplySavedView: (view: SavedLibraryView) => void;
+  onSaveCurrentView: (name: string) => void;
+  onDeleteSavedView: (viewId: string) => void;
 }
 
 const getEmptyStateMessage = (statusFilter: StatusFilter, searchQuery: string) => {
@@ -82,6 +90,8 @@ export default function LibraryView({
   uploadProgress,
   categories,
   selectedCategoryId,
+  layoutMode,
+  savedViews,
   onSearchChange,
   onOpenUpload,
   onCloseUpload,
@@ -94,6 +104,10 @@ export default function LibraryView({
   onPageChange,
   onCategoryFilterChange,
   onOpenCategoryManager,
+  onLayoutModeChange,
+  onApplySavedView,
+  onSaveCurrentView,
+  onDeleteSavedView,
 }: LibraryViewProps) {
   const emptyState = getEmptyStateMessage(statusFilter, searchQuery);
 
@@ -130,6 +144,15 @@ export default function LibraryView({
           onManageCategories={onOpenCategoryManager}
         />
 
+        <LibraryViewPresetBar
+          layoutMode={layoutMode}
+          onLayoutModeChange={onLayoutModeChange}
+          savedViews={savedViews}
+          onApplyView={onApplySavedView}
+          onSaveView={onSaveCurrentView}
+          onDeleteView={onDeleteSavedView}
+        />
+
         {isLoading ? (
           <div className="grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
             {Array.from({ length: 12 }).map((_, index) => (
@@ -164,7 +187,11 @@ export default function LibraryView({
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
+            <div className={
+              layoutMode === 'compact'
+                ? 'grid grid-cols-3 gap-x-4 gap-y-6 sm:grid-cols-4 lg:grid-cols-6 xl:grid-cols-7 2xl:grid-cols-8'
+                : 'grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6'
+            }>
               {books.map((book) => (
                 <BookCard
                   key={book.id}
@@ -172,6 +199,7 @@ export default function LibraryView({
                   onClick={() => onBookClick(book.id)}
                   onStatusChange={(status) => onBookStatusChange(book.id, status)}
                   onManageCategories={() => onBookManageCategories(book)}
+                  density={layoutMode === 'compact' ? 'compact' : 'comfortable'}
                 />
               ))}
             </div>

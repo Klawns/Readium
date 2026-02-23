@@ -5,6 +5,11 @@ import { CategoryListSchema, CategorySchema } from './schemas.ts';
 export interface SaveCategoryPayload {
   name: string;
   color?: string;
+  parentId?: number | null;
+}
+
+export interface MoveCategoryPayload {
+  parentId: number | null;
 }
 
 export const categoryApi = {
@@ -33,6 +38,14 @@ export const categoryApi = {
     const response = await httpClient.patch<Category>(`/categories/${categoryId}`, payload);
     if (response.status >= 400) {
       throw new Error(`Erro ao atualizar categoria: ${response.status}`);
+    }
+    return CategorySchema.parse(response.data);
+  },
+
+  moveCategory: async (categoryId: number, payload: MoveCategoryPayload): Promise<Category> => {
+    const response = await httpClient.patch<Category>(`/categories/${categoryId}/move`, payload);
+    if (response.status >= 400) {
+      throw new Error(`Erro ao mover categoria: ${response.status}`);
     }
     return CategorySchema.parse(response.data);
   },

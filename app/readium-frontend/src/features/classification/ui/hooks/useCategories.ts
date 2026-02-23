@@ -5,12 +5,14 @@ import {
   createCategoryUseCase,
   deleteCategoryUseCase,
   listCategoriesUseCase,
+  moveCategoryUseCase,
   updateCategoryUseCase,
 } from '../../application/use-cases/category-use-case-factory';
 
 interface SaveCategoryPayload {
   name: string;
   color?: string;
+  parentId?: number | null;
 }
 
 export const useCategories = (query = '') => {
@@ -58,14 +60,27 @@ export const useCategories = (query = '') => {
     },
   });
 
+  const moveMutation = useMutation({
+    mutationFn: ({ categoryId, parentId }: { categoryId: number; parentId: number | null }) =>
+      moveCategoryUseCase.execute(categoryId, parentId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.categoriesRoot() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.booksRoot() });
+    },
+    onError: () => {
+      toast.error('Erro ao mover categoria.');
+    },
+  });
+
   return {
     categories: categoriesQuery.data ?? [],
     isLoading: categoriesQuery.isLoading,
     isError: categoriesQuery.isError,
     createCategory: createMutation.mutateAsync,
     updateCategory: updateMutation.mutateAsync,
+    moveCategory: moveMutation.mutateAsync,
     deleteCategory: deleteMutation.mutateAsync,
-    isSaving: createMutation.isPending || updateMutation.isPending,
+    isSaving: createMutation.isPending || updateMutation.isPending || moveMutation.isPending,
     isDeleting: deleteMutation.isPending,
   };
 };

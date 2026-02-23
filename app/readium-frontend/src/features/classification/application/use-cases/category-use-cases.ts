@@ -33,6 +33,14 @@ export class DeleteCategoryUseCase {
   }
 }
 
+export class MoveCategoryUseCase {
+  constructor(private readonly repository: CategoryRepository) {}
+
+  execute(categoryId: number, parentId: number | null): Promise<Category> {
+    return this.repository.move(categoryId, parentId);
+  }
+}
+
 export class ListBookCategoriesUseCase {
   constructor(private readonly repository: CategoryRepository) {}
 

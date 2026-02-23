@@ -7,9 +7,16 @@ interface BookCardProps {
   onClick: () => void;
   onStatusChange?: (status: BookStatus) => void;
   onManageCategories?: () => void;
+  density?: 'comfortable' | 'compact';
 }
 
-export default function BookCard({ book, onClick, onStatusChange, onManageCategories }: BookCardProps) {
+export default function BookCard({
+  book,
+  onClick,
+  onStatusChange,
+  onManageCategories,
+  density = 'comfortable',
+}: BookCardProps) {
   // Calcular progresso
   let progressPercentage = 0;
   if (book.status === 'READ' || (book.pages && book.lastReadPage && book.lastReadPage >= book.pages)) {
@@ -26,7 +33,7 @@ export default function BookCard({ book, onClick, onStatusChange, onManageCatego
   return (
     <div
       onClick={onClick}
-      className="group relative flex flex-col gap-3 cursor-pointer animate-fade-in"
+      className={`group relative flex flex-col cursor-pointer animate-fade-in ${density === 'compact' ? 'gap-2' : 'gap-3'}`}
     >
       {/* Cover Container */}
       <div className="relative aspect-[2/3] w-full overflow-hidden rounded-xl bg-muted shadow-sm transition-all duration-300 group-hover:shadow-xl group-hover:-translate-y-1">
@@ -82,7 +89,7 @@ export default function BookCard({ book, onClick, onStatusChange, onManageCatego
       </div>
 
       {/* Info */}
-      <div className="space-y-1 min-h-[3.5rem]">
+      <div className={`space-y-1 ${density === 'compact' ? 'min-h-[2.8rem]' : 'min-h-[3.5rem]'}`}>
         <h3 className="font-medium text-sm leading-tight line-clamp-2 text-foreground group-hover:text-primary transition-colors" title={book.title}>
           {book.title}
         </h3>
@@ -99,7 +106,7 @@ export default function BookCard({ book, onClick, onStatusChange, onManageCatego
         )}
         
         {/* Progress Bar */}
-        {(book.status === 'READING' || (progressPercentage > 0 && progressPercentage < 100)) && (
+        {(book.status === 'READING' || (progressPercentage > 0 && progressPercentage < 100)) && density !== 'compact' && (
            <div className="space-y-1 mt-2">
              <div className="h-1 w-full bg-muted rounded-full overflow-hidden">
                <div 

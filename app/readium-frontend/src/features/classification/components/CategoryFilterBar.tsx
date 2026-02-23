@@ -2,6 +2,7 @@ import { type FC } from 'react';
 import { Layers3, Settings2 } from 'lucide-react';
 import type { Category } from '@/types';
 import { Button } from '@/components/ui/button.tsx';
+import { useCategoryHierarchy } from '../ui/hooks/useCategoryHierarchy';
 
 interface CategoryFilterBarProps {
   categories: Category[];
@@ -16,6 +17,8 @@ export const CategoryFilterBar: FC<CategoryFilterBarProps> = ({
   onSelectCategory,
   onManageCategories,
 }) => {
+  const { flattened } = useCategoryHierarchy(categories);
+
   return (
     <div className="rounded-2xl border border-slate-200/80 bg-gradient-to-r from-slate-50 to-white p-4 shadow-sm">
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
@@ -42,20 +45,22 @@ export const CategoryFilterBar: FC<CategoryFilterBarProps> = ({
           Todas
         </button>
 
-        {categories.map((category) => {
-          const isActive = selectedCategoryId === category.id;
+        {flattened.map((node) => {
+          const isActive = selectedCategoryId === node.category.id;
+          const leftPadding = node.depth * 10;
           return (
             <button
-              key={category.id}
+              key={node.category.id}
               type="button"
-              onClick={() => onSelectCategory(category.id)}
+              onClick={() => onSelectCategory(node.category.id)}
               className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium transition ${
                 isActive ? 'border-slate-900 bg-slate-900 text-white' : 'border-slate-300 bg-white text-slate-700 hover:border-slate-400'
               }`}
+              style={{ marginLeft: `${leftPadding}px` }}
             >
-              <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: category.color }} />
-              <span>{category.name}</span>
-              <span className={`${isActive ? 'text-slate-300' : 'text-slate-500'}`}>{category.booksCount}</span>
+              <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: node.category.color }} />
+              <span>{node.category.name}</span>
+              <span className={`${isActive ? 'text-slate-300' : 'text-slate-500'}`}>{node.category.booksCount}</span>
             </button>
           );
         })}

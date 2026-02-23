@@ -7,6 +7,8 @@ export const CategorySchema = z.object({
   name: z.string(),
   slug: z.string(),
   color: z.string(),
+  parentId: z.number().nullable().optional(),
+  sortOrder: z.number(),
   booksCount: z.number(),
 });
 export const CategoryListSchema = z.array(CategorySchema);
