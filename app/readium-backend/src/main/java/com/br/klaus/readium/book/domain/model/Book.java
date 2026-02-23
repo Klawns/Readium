@@ -122,7 +122,8 @@ public class Book {
             throw new IllegalArgumentException("Pagina invalida. O livro so tem " + this.pages + " paginas.");
         }
 
-        this.lastReadPage = newPage;
+        int currentPage = this.lastReadPage == null ? 0 : this.lastReadPage;
+        this.lastReadPage = Math.max(currentPage, newPage);
         refreshStatusFromProgress();
     }
 
