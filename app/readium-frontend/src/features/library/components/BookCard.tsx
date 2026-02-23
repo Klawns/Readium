@@ -1,14 +1,15 @@
 import type { Book, BookStatus } from '@/types';
-import { Book as BookIcon } from 'lucide-react';
+import { Book as BookIcon, FolderTree } from 'lucide-react';
 import StatusSelector from './StatusSelector.tsx';
 
 interface BookCardProps {
   book: Book;
   onClick: () => void;
   onStatusChange?: (status: BookStatus) => void;
+  onManageCategories?: () => void;
 }
 
-export default function BookCard({ book, onClick, onStatusChange }: BookCardProps) {
+export default function BookCard({ book, onClick, onStatusChange, onManageCategories }: BookCardProps) {
   // Calcular progresso
   let progressPercentage = 0;
   if (book.status === 'READ' || (book.pages && book.lastReadPage && book.lastReadPage >= book.pages)) {
@@ -64,6 +65,20 @@ export default function BookCard({ book, onClick, onStatusChange }: BookCardProp
              />
            ) : null}
         </div>
+
+        {onManageCategories ? (
+          <button
+            type="button"
+            className="absolute left-2 top-2 z-10 inline-flex items-center gap-1 rounded-full border border-slate-200 bg-white/90 px-2 py-1 text-[10px] font-medium text-slate-700 shadow-sm backdrop-blur-sm transition hover:bg-white"
+            onClick={(event) => {
+              event.stopPropagation();
+              onManageCategories();
+            }}
+          >
+            <FolderTree className="h-3 w-3" />
+            Categorias
+          </button>
+        ) : null}
       </div>
 
       {/* Info */}

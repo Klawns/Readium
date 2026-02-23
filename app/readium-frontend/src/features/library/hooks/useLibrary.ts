@@ -24,15 +24,16 @@ interface UseLibraryParams {
   page: number;
   statusFilter: StatusFilter;
   searchQuery: string;
+  categoryId: number | null;
 }
 
-export const useLibrary = ({ page, statusFilter, searchQuery }: UseLibraryParams) => {
+export const useLibrary = ({ page, statusFilter, searchQuery, categoryId }: UseLibraryParams) => {
   const queryClient = useQueryClient();
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
 
   const booksQuery = useQuery({
-    queryKey: queryKeys.books(statusFilter, page, searchQuery),
-    queryFn: () => fetchLibraryBooksUseCase.execute(statusFilter, page, LIBRARY_PAGE_SIZE, searchQuery),
+    queryKey: queryKeys.books(statusFilter, page, searchQuery, categoryId),
+    queryFn: () => fetchLibraryBooksUseCase.execute(statusFilter, page, LIBRARY_PAGE_SIZE, searchQuery, categoryId),
     placeholderData: keepPreviousData,
     staleTime: 15_000,
   });

@@ -49,13 +49,19 @@ export const updateLibraryCachesAfterUpload = (
   const bookQueries = queryClient.getQueryCache().findAll({ queryKey: queryKeys.booksRoot() });
   for (const query of bookQueries) {
     const queryKey = query.queryKey;
-    if (!Array.isArray(queryKey) || queryKey.length < 4) {
+    if (!Array.isArray(queryKey) || queryKey.length < 5) {
       continue;
     }
 
     const cachedStatus = queryKey[1];
     const cachedSearch = queryKey[3];
+    const cachedCategoryId = queryKey[4];
     if (typeof cachedStatus !== 'string' || typeof cachedSearch !== 'string') {
+      continue;
+    }
+
+    // Livro novo entra apenas em consultas sem filtro de categoria.
+    if (cachedCategoryId !== null) {
       continue;
     }
 

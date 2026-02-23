@@ -21,7 +21,13 @@ interface UploadBookOptions {
 }
 
 export const bookApi = {
-  getBooks: async (status?: StatusFilter, page = 0, size = 12, query?: string): Promise<BookPage> => {
+  getBooks: async (
+    status?: StatusFilter,
+    page = 0,
+    size = 12,
+    query?: string,
+    categoryId?: number | null,
+  ): Promise<BookPage> => {
     const params: Record<string, string> = {
       page: page.toString(),
       size: size.toString(),
@@ -33,6 +39,10 @@ export const bookApi = {
 
     if (query && query.trim()) {
       params.query = query.trim();
+    }
+
+    if (typeof categoryId === 'number' && Number.isFinite(categoryId) && categoryId > 0) {
+      params.categoryId = categoryId.toString();
     }
 
     const response = await httpClient.get<BookPage>('/books', { params });

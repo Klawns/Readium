@@ -4,8 +4,14 @@ import type { BookRepository, UploadBookOptions } from '../../domain/ports/BookR
 export class FetchLibraryBooksUseCase {
   constructor(private readonly repository: BookRepository) {}
 
-  execute(status: StatusFilter, page: number, size: number, query: string): Promise<BookPage> {
-    return this.repository.getBooks(status, page, size, query);
+  execute(
+    status: StatusFilter,
+    page: number,
+    size: number,
+    query: string,
+    categoryId: number | null,
+  ): Promise<BookPage> {
+    return this.repository.getBooks(status, page, size, query, categoryId);
   }
 }
 

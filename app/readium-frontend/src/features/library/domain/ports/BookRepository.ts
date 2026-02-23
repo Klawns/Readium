@@ -5,7 +5,13 @@ export interface UploadBookOptions {
 }
 
 export interface BookRepository {
-  getBooks(status?: StatusFilter, page?: number, size?: number, query?: string): Promise<BookPage>;
+  getBooks(
+    status?: StatusFilter,
+    page?: number,
+    size?: number,
+    query?: string,
+    categoryId?: number | null,
+  ): Promise<BookPage>;
   upload(file: File, options?: UploadBookOptions): Promise<Book>;
   updateStatus(bookId: number, status: BookStatus): Promise<void>;
 }

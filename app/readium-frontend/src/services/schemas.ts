@@ -2,6 +2,14 @@ import { z } from 'zod';
 
 export const BookStatusSchema = z.enum(['TO_READ', 'READING', 'READ']);
 export const OcrStatusSchema = z.enum(['PENDING', 'RUNNING', 'DONE', 'FAILED']);
+export const CategorySchema = z.object({
+  id: z.number(),
+  name: z.string(),
+  slug: z.string(),
+  color: z.string(),
+  booksCount: z.number(),
+});
+export const CategoryListSchema = z.array(CategorySchema);
 
 export const BookSchema = z.object({
   id: z.number(),

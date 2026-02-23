@@ -1,11 +1,12 @@
 import { BookOpen, CheckCircle2, Clock, Plus, Search } from 'lucide-react';
-import type { Book, BookStatus, StatusFilter } from '@/types';
+import type { Book, BookStatus, Category, StatusFilter } from '@/types';
 import AppLayout from '@/components/layout/AppLayout.tsx';
 import { Input } from '@/components/ui/input.tsx';
 import { Button } from '@/components/ui/button.tsx';
 import BookCard from '../components/BookCard.tsx';
 import BookFilter from '../components/BookFilter.tsx';
 import UploadModal from '../components/UploadModal.tsx';
+import { CategoryFilterBar } from '@/features/classification/components/CategoryFilterBar.tsx';
 
 interface LibraryViewProps {
   books: Book[];
@@ -19,6 +20,8 @@ interface LibraryViewProps {
   uploadOpen: boolean;
   isUploading: boolean;
   uploadProgress: number | null;
+  categories: Category[];
+  selectedCategoryId: number | null;
   onSearchChange: (value: string) => void;
   onOpenUpload: () => void;
   onCloseUpload: () => void;
@@ -27,7 +30,10 @@ interface LibraryViewProps {
   onRetry: () => void;
   onBookClick: (bookId: number) => void;
   onBookStatusChange: (bookId: number, status: BookStatus) => void;
+  onBookManageCategories: (book: Book) => void;
   onPageChange: (page: number) => void;
+  onCategoryFilterChange: (categoryId: number | null) => void;
+  onOpenCategoryManager: () => void;
 }
 
 const getEmptyStateMessage = (statusFilter: StatusFilter, searchQuery: string) => {
@@ -74,6 +80,8 @@ export default function LibraryView({
   uploadOpen,
   isUploading,
   uploadProgress,
+  categories,
+  selectedCategoryId,
   onSearchChange,
   onOpenUpload,
   onCloseUpload,
@@ -82,7 +90,10 @@ export default function LibraryView({
   onRetry,
   onBookClick,
   onBookStatusChange,
+  onBookManageCategories,
   onPageChange,
+  onCategoryFilterChange,
+  onOpenCategoryManager,
 }: LibraryViewProps) {
   const emptyState = getEmptyStateMessage(statusFilter, searchQuery);
 
@@ -111,6 +122,13 @@ export default function LibraryView({
             </Button>
           </div>
         </div>
+
+        <CategoryFilterBar
+          categories={categories}
+          selectedCategoryId={selectedCategoryId}
+          onSelectCategory={onCategoryFilterChange}
+          onManageCategories={onOpenCategoryManager}
+        />
 
         {isLoading ? (
           <div className="grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
@@ -153,6 +171,7 @@ export default function LibraryView({
                   book={book}
                   onClick={() => onBookClick(book.id)}
                   onStatusChange={(status) => onBookStatusChange(book.id, status)}
+                  onManageCategories={() => onBookManageCategories(book)}
                 />
               ))}
             </div>

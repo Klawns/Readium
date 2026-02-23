@@ -1,7 +1,10 @@
 export const queryKeys = {
   booksRoot: () => ['books'] as const,
-  books: (statusFilter: string, page: number, searchQuery: string) =>
-    ['books', statusFilter, page, searchQuery] as const,
+  books: (statusFilter: string, page: number, searchQuery: string, categoryId: number | null) =>
+    ['books', statusFilter, page, searchQuery, categoryId] as const,
+  categoriesRoot: () => ['categories'] as const,
+  categoriesList: (query: string) => ['categories', 'list', query] as const,
+  bookCategories: (bookId: number) => ['book', bookId, 'categories'] as const,
   book: (bookId: number) => ['book', bookId] as const,
   bookOcrStatus: (bookId: number) => ['book', bookId, 'ocr-status'] as const,
   bookTextLayerQuality: (bookId: number) => ['book', bookId, 'text-layer-quality'] as const,

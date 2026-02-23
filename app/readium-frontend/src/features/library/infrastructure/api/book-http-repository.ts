@@ -3,8 +3,14 @@ import type { Book, BookPage, BookStatus, StatusFilter } from '@/types';
 import type { BookRepository, UploadBookOptions } from '../../domain/ports/BookRepository';
 
 export class BookHttpRepository implements BookRepository {
-  getBooks(status?: StatusFilter, page?: number, size?: number, query?: string): Promise<BookPage> {
-    return bookApi.getBooks(status, page, size, query);
+  getBooks(
+    status?: StatusFilter,
+    page?: number,
+    size?: number,
+    query?: string,
+    categoryId?: number | null,
+  ): Promise<BookPage> {
+    return bookApi.getBooks(status, page, size, query, categoryId);
   }
 
   upload(file: File, options?: UploadBookOptions): Promise<Book> {
