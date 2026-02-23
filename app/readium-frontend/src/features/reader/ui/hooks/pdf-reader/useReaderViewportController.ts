@@ -45,6 +45,14 @@ export const useReaderViewportController = ({
 
   const handleViewportStateChange = useCallback((nextState: ReaderViewportState) => {
     setViewportState((previous) => {
+      const isTransientResetToFirstPage = nextState.totalPages <= 0 && nextState.currentPage <= 1;
+      if (isTransientResetToFirstPage && previous.currentPage > 1) {
+        return {
+          ...previous,
+          zoomLevel: nextState.zoomLevel || previous.zoomLevel,
+        };
+      }
+
       if (
         previous.currentPage === nextState.currentPage &&
         previous.totalPages === nextState.totalPages &&

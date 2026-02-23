@@ -105,6 +105,7 @@ const PdfReader: React.FC<PdfReaderProps> = ({
   useReaderProgressSync({
     bookId,
     currentPage,
+    initialPage,
   });
   useReaderCopyShortcut({
     containerRef,

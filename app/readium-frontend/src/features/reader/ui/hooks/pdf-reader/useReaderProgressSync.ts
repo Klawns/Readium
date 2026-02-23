@@ -11,25 +11,60 @@ const logger = createLogger('reader');
 interface UseReaderProgressSyncParams {
   bookId: number;
   currentPage: number;
+  initialPage: number;
 }
 
-export const useReaderProgressSync = ({ bookId, currentPage }: UseReaderProgressSyncParams) => {
+export const useReaderProgressSync = ({ bookId, currentPage, initialPage }: UseReaderProgressSyncParams) => {
   const queryClient = useQueryClient();
   const currentPageRef = useRef(currentPage);
   const timeoutRef = useRef<number | null>(null);
   const lastSavedPageRef = useRef<number | null>(null);
+  const previousBookIdRef = useRef(bookId);
+  const sessionInitialPageRef = useRef(initialPage);
+  const skipFirstCurrentPageSampleRef = useRef(true);
+  const hasSeenNonFirstPageRef = useRef(false);
 
-  useEffect(() => {
-    currentPageRef.current = currentPage;
-  }, [currentPage]);
-
-  useEffect(() => {
+  if (previousBookIdRef.current !== bookId) {
+    previousBookIdRef.current = bookId;
+    sessionInitialPageRef.current = initialPage;
     currentPageRef.current = currentPage;
     lastSavedPageRef.current = null;
+    skipFirstCurrentPageSampleRef.current = true;
+    hasSeenNonFirstPageRef.current = false;
+  }
+
+  useEffect(() => {
+    currentPageRef.current = currentPage;
+
+    if (skipFirstCurrentPageSampleRef.current) {
+      skipFirstCurrentPageSampleRef.current = false;
+      return;
+    }
+
+    if (currentPage > 1) {
+      hasSeenNonFirstPageRef.current = true;
+    }
   }, [bookId, currentPage]);
 
-  const persistProgress = useCallback(async (page: number, keepalive = false) => {
+  const canPersistPage = useCallback((page: number) => {
     if (page <= 0) {
+      return false;
+    }
+
+    if (page !== 1) {
+      return true;
+    }
+
+    if (sessionInitialPageRef.current <= 1) {
+      return true;
+    }
+
+    // Evita sobrescrever progresso com pagina 1 durante bootstrap/transicoes do viewport.
+    return hasSeenNonFirstPageRef.current;
+  }, []);
+
+  const persistProgress = useCallback(async (page: number, keepalive = false) => {
+    if (!canPersistPage(page)) {
       return;
     }
 
@@ -40,18 +75,19 @@ export const useReaderProgressSync = ({ bookId, currentPage }: UseReaderProgress
       if (!cachedBook) {
         return cachedBook;
       }
+      const cachedLastReadPage = Math.max(0, cachedBook.lastReadPage ?? 0);
       return {
         ...cachedBook,
-        lastReadPage: page,
+        lastReadPage: Math.max(cachedLastReadPage, page),
       };
     });
 
     queryClient.invalidateQueries({ queryKey: queryKeys.booksRoot() });
-  }, [bookId, queryClient]);
+  }, [bookId, canPersistPage, queryClient]);
 
   const flushProgress = useCallback((keepalive = false) => {
     const page = currentPageRef.current;
-    if (page <= 0) {
+    if (!canPersistPage(page)) {
       return;
     }
     if (!keepalive && lastSavedPageRef.current === page) {
@@ -60,10 +96,10 @@ export const useReaderProgressSync = ({ bookId, currentPage }: UseReaderProgress
     void persistProgress(page, keepalive).catch((error: unknown) => {
       logger.error('failed to save progress', error);
     });
-  }, [persistProgress]);
+  }, [canPersistPage, persistProgress]);
 
   useEffect(() => {
-    if (currentPage <= 0) {
+    if (!canPersistPage(currentPage)) {
       return;
     }
     if (timeoutRef.current !== null) {
@@ -81,7 +117,7 @@ export const useReaderProgressSync = ({ bookId, currentPage }: UseReaderProgress
         timeoutRef.current = null;
       }
     };
-  }, [currentPage, flushProgress]);
+  }, [canPersistPage, currentPage, flushProgress]);
 
   useEffect(() => {
     return () => {
@@ -93,8 +129,23 @@ export const useReaderProgressSync = ({ bookId, currentPage }: UseReaderProgress
     const handleBeforeUnload = () => {
       flushProgress(true);
     };
+    const handlePageHide = () => {
+      flushProgress(true);
+    };
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        flushProgress(true);
+      }
+    };
 
     window.addEventListener('beforeunload', handleBeforeUnload);
-    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+    window.addEventListener('pagehide', handlePageHide);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      window.removeEventListener('pagehide', handlePageHide);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
   }, [flushProgress]);
 };
