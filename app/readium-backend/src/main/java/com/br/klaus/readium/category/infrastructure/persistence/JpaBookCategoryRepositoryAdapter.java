@@ -15,6 +15,11 @@ public class JpaBookCategoryRepositoryAdapter implements BookCategoryRepositoryP
     private final BookCategoryJpaRepository repository;
 
     @Override
+    public List<BookCategory> findAll() {
+        return repository.findAll();
+    }
+
+    @Override
     public List<BookCategory> findByBookId(Long bookId) {
         return repository.findByBookId(bookId);
     }

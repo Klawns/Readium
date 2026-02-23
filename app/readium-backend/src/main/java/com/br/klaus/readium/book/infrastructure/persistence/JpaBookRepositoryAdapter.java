@@ -7,6 +7,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
 import java.util.Optional;
 
 @Component
@@ -14,6 +15,11 @@ import java.util.Optional;
 public class JpaBookRepositoryAdapter implements BookRepositoryPort {
 
     private final BookJpaRepository repository;
+
+    @Override
+    public List<Book> findAll() {
+        return repository.findAll();
+    }
 
     @Override
     public Page<Book> findAll(Book.BookStatus status, String query, Long categoryId, Pageable pageable) {

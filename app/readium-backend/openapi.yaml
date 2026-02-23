@@ -166,6 +166,50 @@ paths:
               schema:
                 $ref: '#/components/schemas/BookTextLayerQuality'
 
+  /books/insights/metrics:
+    get:
+      summary: Get personal reading metrics
+      responses:
+        '200':
+          description: Reading metrics
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BookMetrics'
+
+  /books/insights/smart-collections:
+    get:
+      summary: List smart collections
+      responses:
+        '200':
+          description: Smart collections
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SmartCollection'
+
+  /books/insights/recommendations:
+    get:
+      summary: List book recommendations
+      parameters:
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 12
+      responses:
+        '200':
+          description: Recommended books
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/BookRecommendation'
+
   /books/{bookId}/annotations:
     get:
       summary: List annotations by book
@@ -482,6 +526,75 @@ components:
           type: boolean
         empty:
           type: boolean
+    BookMetrics:
+      type: object
+      required:
+        - totalBooks
+        - toReadBooks
+        - readingBooks
+        - readBooks
+        - categorizedBooks
+        - uncategorizedBooks
+        - totalPagesKnown
+        - pagesRead
+        - averageProgressPercent
+        - completionPercent
+      properties:
+        totalBooks:
+          type: integer
+          format: int64
+        toReadBooks:
+          type: integer
+          format: int64
+        readingBooks:
+          type: integer
+          format: int64
+        readBooks:
+          type: integer
+          format: int64
+        categorizedBooks:
+          type: integer
+          format: int64
+        uncategorizedBooks:
+          type: integer
+          format: int64
+        totalPagesKnown:
+          type: integer
+          format: int64
+        pagesRead:
+          type: integer
+          format: int64
+        averageProgressPercent:
+          type: integer
+        completionPercent:
+          type: integer
+    SmartCollection:
+      type: object
+      required: [id, name, description, totalBooks, previewBooks]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        totalBooks:
+          type: integer
+          format: int64
+        previewBooks:
+          type: array
+          items:
+            $ref: '#/components/schemas/Book'
+    BookRecommendation:
+      type: object
+      required: [book, reason, score]
+      properties:
+        book:
+          $ref: '#/components/schemas/Book'
+        reason:
+          type: string
+        score:
+          type: number
     UpdateBookStatusRequest:
       type: object
       required: [bookId, status]

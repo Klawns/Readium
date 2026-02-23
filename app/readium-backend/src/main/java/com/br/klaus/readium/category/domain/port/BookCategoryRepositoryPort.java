@@ -7,6 +7,8 @@ import java.util.List;
 
 public interface BookCategoryRepositoryPort {
 
+    List<BookCategory> findAll();
+
     List<BookCategory> findByBookId(Long bookId);
 
     long countByCategoryId(Long categoryId);
