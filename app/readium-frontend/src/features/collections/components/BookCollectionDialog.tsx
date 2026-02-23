@@ -10,6 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog.tsx';
+import { resolveCollectionTemplate } from '../application/services/collection-template-presets';
 
 interface BookCollectionDialogProps {
   open: boolean;
@@ -75,14 +76,15 @@ export const BookCollectionDialog: FC<BookCollectionDialogProps> = ({
           ) : (
             collections.map((collection) => {
               const isSelected = selectedIdSet.has(collection.id);
+              const template = resolveCollectionTemplate(collection.templateId);
               return (
                 <button
                   key={collection.id}
                   type="button"
-                  className={`flex w-full items-center gap-3 rounded-lg border p-3 text-left transition ${
+                  className={`flex w-full items-center gap-3 rounded-lg border bg-gradient-to-r p-3 text-left transition ${
                     isSelected
                       ? 'border-slate-900 bg-slate-900/5'
-                      : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50'
+                      : `${template.panelClassName} hover:border-slate-300`
                   }`}
                   onClick={() => toggleCollection(collection.id)}
                 >
@@ -123,4 +125,3 @@ export const BookCollectionDialog: FC<BookCollectionDialogProps> = ({
     </Dialog>
   );
 };
-

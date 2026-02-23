@@ -36,6 +36,14 @@ export class DeleteReadingCollectionUseCase {
   }
 }
 
+export class MoveReadingCollectionUseCase {
+  constructor(private readonly repository: ReadingCollectionRepository) {}
+
+  execute(collectionId: number, targetIndex: number): Promise<ReadingCollection> {
+    return this.repository.move(collectionId, targetIndex);
+  }
+}
+
 export class ListBookCollectionsUseCase {
   constructor(private readonly repository: ReadingCollectionRepository) {}
 
@@ -51,4 +59,3 @@ export class SetBookCollectionsUseCase {
     return this.repository.setBookCollections(bookId, collectionIds);
   }
 }
-

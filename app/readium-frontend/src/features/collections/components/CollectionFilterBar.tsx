@@ -2,6 +2,7 @@ import { type FC } from 'react';
 import { Bookmark, Settings2 } from 'lucide-react';
 import type { ReadingCollection } from '@/types';
 import { Button } from '@/components/ui/button.tsx';
+import { resolveCollectionTemplate } from '../application/services/collection-template-presets';
 
 interface CollectionFilterBarProps {
   collections: ReadingCollection[];
@@ -43,6 +44,7 @@ export const CollectionFilterBar: FC<CollectionFilterBarProps> = ({
 
       {collections.map((collection) => {
         const isActive = selectedCollectionId === collection.id;
+        const template = resolveCollectionTemplate(collection.templateId);
         return (
           <button
             key={collection.id}
@@ -51,7 +53,7 @@ export const CollectionFilterBar: FC<CollectionFilterBarProps> = ({
             className={`inline-flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs font-medium transition ${
               isActive
                 ? 'border-slate-900 bg-slate-900 text-white'
-                : 'border-slate-300 bg-white text-slate-700 hover:border-slate-400'
+                : `${template.chipClassName} hover:border-slate-400`
             }`}
           >
             <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: collection.color }} />
@@ -63,4 +65,3 @@ export const CollectionFilterBar: FC<CollectionFilterBarProps> = ({
     </div>
   </div>
 );
-

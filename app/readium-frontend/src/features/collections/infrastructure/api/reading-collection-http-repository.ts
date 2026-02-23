@@ -18,6 +18,10 @@ export class ReadingCollectionHttpRepository implements ReadingCollectionReposit
     return collectionApi.updateCollection(collectionId, command);
   }
 
+  move(collectionId: number, targetIndex: number): Promise<ReadingCollection> {
+    return collectionApi.moveCollection(collectionId, { targetIndex });
+  }
+
   delete(collectionId: number): Promise<void> {
     return collectionApi.deleteCollection(collectionId);
   }
@@ -30,4 +34,3 @@ export class ReadingCollectionHttpRepository implements ReadingCollectionReposit
     return collectionApi.setBookCollections(bookId, collectionIds);
   }
 }
-

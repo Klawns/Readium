@@ -49,6 +49,7 @@ export default function LibraryPage() {
     isLoading: collectionsLoading,
     createCollection,
     updateCollection,
+    moveCollection,
     deleteCollection,
     isSaving: collectionsSaving,
     isDeleting: collectionsDeleting,
@@ -222,8 +223,14 @@ export default function LibraryPage() {
       isSaving={collectionsSaving}
       isDeleting={collectionsDeleting}
       onCreateCollection={createCollection}
-      onUpdateCollection={({ collectionId: targetCollectionId, name, description, color, icon }) =>
-        updateCollection({ collectionId: targetCollectionId, payload: { name, description, color, icon } })
+      onUpdateCollection={({ collectionId: targetCollectionId, name, description, color, icon, templateId }) =>
+        updateCollection({
+          collectionId: targetCollectionId,
+          payload: { name, description, color, icon, templateId },
+        })
+      }
+      onMoveCollection={({ collectionId: targetCollectionId, targetIndex }) =>
+        moveCollection({ collectionId: targetCollectionId, targetIndex })
       }
       onDeleteCollection={deleteCollection}
       />

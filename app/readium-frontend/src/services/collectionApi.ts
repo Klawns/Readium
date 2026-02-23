@@ -7,6 +7,11 @@ export interface SaveReadingCollectionPayload {
   description?: string | null;
   color?: string;
   icon?: string;
+  templateId?: string;
+}
+
+export interface MoveReadingCollectionPayload {
+  targetIndex: number;
 }
 
 export const collectionApi = {
@@ -42,6 +47,17 @@ export const collectionApi = {
     return ReadingCollectionSchema.parse(response.data);
   },
 
+  moveCollection: async (
+    collectionId: number,
+    payload: MoveReadingCollectionPayload,
+  ): Promise<ReadingCollection> => {
+    const response = await httpClient.patch<ReadingCollection>(`/collections/${collectionId}/move`, payload);
+    if (response.status >= 400) {
+      throw new Error(`Erro ao mover colecao: ${response.status}`);
+    }
+    return ReadingCollectionSchema.parse(response.data);
+  },
+
   deleteCollection: async (collectionId: number): Promise<void> => {
     const response = await httpClient.delete(`/collections/${collectionId}`);
     if (response.status >= 400) {
@@ -65,4 +81,3 @@ export const collectionApi = {
     return ReadingCollectionListSchema.parse(response.data);
   },
 };
-

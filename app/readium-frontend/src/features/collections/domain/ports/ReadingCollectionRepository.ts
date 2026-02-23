@@ -5,14 +5,15 @@ export interface SaveReadingCollectionCommand {
   description?: string | null;
   color?: string;
   icon?: string;
+  templateId?: string;
 }
 
 export interface ReadingCollectionRepository {
   list(query?: string): Promise<ReadingCollection[]>;
   create(command: SaveReadingCollectionCommand): Promise<ReadingCollection>;
   update(collectionId: number, command: SaveReadingCollectionCommand): Promise<ReadingCollection>;
+  move(collectionId: number, targetIndex: number): Promise<ReadingCollection>;
   delete(collectionId: number): Promise<void>;
   listByBook(bookId: number): Promise<ReadingCollection[]>;
   setBookCollections(bookId: number, collectionIds: number[]): Promise<ReadingCollection[]>;
 }
-

@@ -20,6 +20,8 @@ export const ReadingCollectionSchema = z.object({
   description: z.string().nullable().optional(),
   color: z.string(),
   icon: z.string(),
+  sortOrder: z.number(),
+  templateId: z.string(),
   booksCount: z.number(),
 });
 

@@ -1,5 +1,5 @@
 import type { FC } from 'react';
-import { BookmarkPlus, Palette, Save, Trash2, X } from 'lucide-react';
+import { ArrowDown, ArrowUp, BookmarkPlus, Palette, Save, Trash2, X } from 'lucide-react';
 import type { ReadingCollection } from '@/types';
 import { Button } from '@/components/ui/button.tsx';
 import { Input } from '@/components/ui/input.tsx';
@@ -11,6 +11,9 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog.tsx';
 import { useReadingCollectionManagerState } from '../ui/hooks/useReadingCollectionManagerState';
+import { CollectionTemplateSelect } from './CollectionTemplateSelect';
+import { useCollectionManualOrder } from '../ui/hooks/useCollectionManualOrder';
+import { resolveCollectionTemplate } from '../application/services/collection-template-presets';
 
 interface CollectionManagerDialogProps {
   open: boolean;
@@ -24,6 +27,7 @@ interface CollectionManagerDialogProps {
     description?: string | null;
     color?: string;
     icon?: string;
+    templateId?: string;
   }) => Promise<unknown>;
   onUpdateCollection: (payload: {
     collectionId: number;
@@ -31,6 +35,11 @@ interface CollectionManagerDialogProps {
     description?: string | null;
     color?: string;
     icon?: string;
+    templateId?: string;
+  }) => Promise<unknown>;
+  onMoveCollection: (payload: {
+    collectionId: number;
+    targetIndex: number;
   }) => Promise<unknown>;
   onDeleteCollection: (collectionId: number) => Promise<unknown>;
 }
@@ -44,9 +53,14 @@ export const CollectionManagerDialog: FC<CollectionManagerDialogProps> = ({
   isDeleting,
   onCreateCollection,
   onUpdateCollection,
+  onMoveCollection,
   onDeleteCollection,
 }) => {
   const state = useReadingCollectionManagerState();
+  const order = useCollectionManualOrder({
+    collections,
+    onMoveCollection,
+  });
 
   const handleCreate = async () => {
     const name = state.newName.trim();
@@ -59,6 +73,7 @@ export const CollectionManagerDialog: FC<CollectionManagerDialogProps> = ({
       description: state.newDescription.trim() || null,
       color: state.normalizeHexColor(state.newColor),
       icon: state.normalizeIcon(state.newIcon),
+      templateId: state.normalizeTemplateId(state.newTemplateId),
     });
     state.clearCreate();
   };
@@ -75,6 +90,7 @@ export const CollectionManagerDialog: FC<CollectionManagerDialogProps> = ({
       description: state.editingDescription.trim() || null,
       color: state.normalizeHexColor(state.editingColor),
       icon: state.normalizeIcon(state.editingIcon),
+      templateId: state.normalizeTemplateId(state.editingTemplateId),
     });
     state.cancelEdit();
   };
@@ -124,6 +140,12 @@ export const CollectionManagerDialog: FC<CollectionManagerDialogProps> = ({
                 onChange={(event) => state.setNewIcon(event.target.value)}
                 placeholder="Icone (ex: books, target, rocket)"
               />
+              <div className="md:col-span-2">
+                <CollectionTemplateSelect
+                  value={state.newTemplateId}
+                  onChange={(templateId) => state.setNewTemplateId(templateId)}
+                />
+              </div>
             </div>
             <div className="mt-4">
               <Button onClick={() => void handleCreate()} disabled={!state.canCreate || isSaving} className="gap-2">
@@ -145,12 +167,13 @@ export const CollectionManagerDialog: FC<CollectionManagerDialogProps> = ({
                   Nenhuma colecao criada ainda.
                 </div>
               ) : (
-                collections.map((collection) => {
+                order.orderedCollections.map((collection) => {
                   const isEditing = state.editingCollectionId === collection.id;
+                  const template = resolveCollectionTemplate(collection.templateId);
                   return (
                     <div
                       key={collection.id}
-                      className="flex flex-col gap-3 rounded-lg border border-slate-200 bg-white p-3 shadow-sm"
+                      className={`flex flex-col gap-3 rounded-lg border bg-gradient-to-r p-3 shadow-sm ${template.panelClassName}`}
                     >
                       <div className="flex items-center gap-2">
                         <span
@@ -194,6 +217,12 @@ export const CollectionManagerDialog: FC<CollectionManagerDialogProps> = ({
                             onChange={(event) => state.setEditingIcon(event.target.value)}
                             className="h-8"
                           />
+                          <div className="md:col-span-2">
+                            <CollectionTemplateSelect
+                              value={state.editingTemplateId}
+                              onChange={(templateId) => state.setEditingTemplateId(templateId)}
+                            />
+                          </div>
                         </div>
                       ) : (
                         <div>
@@ -201,6 +230,9 @@ export const CollectionManagerDialog: FC<CollectionManagerDialogProps> = ({
                           {collection.description ? (
                             <p className="mt-1 line-clamp-2 text-xs text-slate-500">{collection.description}</p>
                           ) : null}
+                          <p className={`mt-2 inline-flex rounded-full border px-2 py-0.5 text-[10px] font-medium ${template.chipClassName}`}>
+                            {template.label}
+                          </p>
                           <p className="mt-1 text-xs text-slate-500">{collection.booksCount} livros</p>
                         </div>
                       )}
@@ -223,6 +255,22 @@ export const CollectionManagerDialog: FC<CollectionManagerDialogProps> = ({
                           <>
                             <Button size="sm" variant="outline" onClick={() => state.beginEdit(collection)}>
                               Editar
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => void order.moveUp(collection.id)}
+                              disabled={!order.canMoveUp(collection.id) || isSaving}
+                            >
+                              <ArrowUp className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => void order.moveDown(collection.id)}
+                              disabled={!order.canMoveDown(collection.id) || isSaving}
+                            >
+                              <ArrowDown className="h-4 w-4" />
                             </Button>
                             <Button
                               size="sm"

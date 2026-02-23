@@ -5,6 +5,7 @@ import {
   createReadingCollectionUseCase,
   deleteReadingCollectionUseCase,
   listReadingCollectionsUseCase,
+  moveReadingCollectionUseCase,
   updateReadingCollectionUseCase,
 } from '../../application/use-cases/reading-collection-use-case-factory';
 
@@ -13,6 +14,7 @@ interface SaveReadingCollectionPayload {
   description?: string | null;
   color?: string;
   icon?: string;
+  templateId?: string;
 }
 
 export const useReadingCollections = (query = '') => {
@@ -63,15 +65,30 @@ export const useReadingCollections = (query = '') => {
     },
   });
 
+  const moveMutation = useMutation({
+    mutationFn: ({ collectionId, targetIndex }: { collectionId: number; targetIndex: number }) =>
+      moveReadingCollectionUseCase.execute(collectionId, targetIndex),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: queryKeys.readingCollectionsRoot() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.booksRoot() });
+      queryClient.invalidateQueries({ queryKey: queryKeys.insightsRoot() });
+    },
+    onError: () => {
+      toast.error('Erro ao reordenar colecao.');
+    },
+  });
+
   return {
-    collections: collectionsQuery.data ?? [],
+    collections: [...(collectionsQuery.data ?? [])].sort(
+      (left, right) => left.sortOrder - right.sortOrder || left.name.localeCompare(right.name),
+    ),
     isLoading: collectionsQuery.isLoading,
     isError: collectionsQuery.isError,
     createCollection: createMutation.mutateAsync,
     updateCollection: updateMutation.mutateAsync,
+    moveCollection: moveMutation.mutateAsync,
     deleteCollection: deleteMutation.mutateAsync,
-    isSaving: createMutation.isPending || updateMutation.isPending,
+    isSaving: createMutation.isPending || updateMutation.isPending || moveMutation.isPending,
     isDeleting: deleteMutation.isPending,
   };
 };
-
