@@ -9,6 +9,7 @@ public record UpdateCategoryRequestDTO(
         @Size(max = 80)
         String name,
         @Pattern(regexp = "^#([A-Fa-f0-9]{6})$", message = "A cor deve estar no formato hexadecimal, ex: #3B82F6")
-        String color
+        String color,
+        Long parentId
 ) {
 }

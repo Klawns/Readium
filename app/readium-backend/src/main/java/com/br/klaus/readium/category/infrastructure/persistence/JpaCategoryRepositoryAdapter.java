@@ -21,6 +21,11 @@ public class JpaCategoryRepositoryAdapter implements CategoryRepositoryPort {
     }
 
     @Override
+    public List<Category> findByParentId(Long parentId) {
+        return repository.findByParentIdOrderBySortOrderAscNameAsc(parentId);
+    }
+
+    @Override
     public List<Category> findAllById(Collection<Long> ids) {
         return repository.findByIdIn(ids);
     }
@@ -36,8 +41,18 @@ public class JpaCategoryRepositoryAdapter implements CategoryRepositoryPort {
     }
 
     @Override
+    public long countByParentId(Long parentId) {
+        return repository.countByParentId(parentId);
+    }
+
+    @Override
     public Category save(Category category) {
         return repository.save(category);
+    }
+
+    @Override
+    public void saveAll(Collection<Category> categories) {
+        repository.saveAll(categories);
     }
 
     @Override

@@ -352,6 +352,25 @@ paths:
         '204':
           description: Category deleted
 
+  /categories/{id}/move:
+    patch:
+      summary: Move category in hierarchy
+      parameters:
+        - $ref: '#/components/parameters/CategoryId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MoveCategoryRequest'
+      responses:
+        '200':
+          description: Category moved
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Category'
+
   /books/{bookId}/categories:
     get:
       summary: List categories assigned to book
@@ -617,7 +636,7 @@ components:
           nullable: true
     Category:
       type: object
-      required: [id, name, slug, color, booksCount]
+      required: [id, name, slug, color, sortOrder, booksCount]
       properties:
         id:
           type: integer
@@ -628,6 +647,12 @@ components:
           type: string
         color:
           type: string
+        parentId:
+          type: integer
+          format: int64
+          nullable: true
+        sortOrder:
+          type: integer
         booksCount:
           type: integer
           format: int64
@@ -640,6 +665,10 @@ components:
         color:
           type: string
           pattern: "^#([A-Fa-f0-9]{6})$"
+        parentId:
+          type: integer
+          format: int64
+          nullable: true
     UpdateCategoryRequest:
       type: object
       required: [name]
@@ -649,6 +678,17 @@ components:
         color:
           type: string
           pattern: "^#([A-Fa-f0-9]{6})$"
+        parentId:
+          type: integer
+          format: int64
+          nullable: true
+    MoveCategoryRequest:
+      type: object
+      properties:
+        parentId:
+          type: integer
+          format: int64
+          nullable: true
     UpdateBookCategoriesRequest:
       type: object
       required: [categoryIds]

@@ -14,6 +14,8 @@ public final class CategoryResponseMapper {
                 category.getName(),
                 category.getSlug(),
                 category.getColor(),
+                category.getParentId(),
+                category.getSortOrder(),
                 booksCount
         );
     }

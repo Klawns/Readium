@@ -2,6 +2,7 @@ package com.br.klaus.readium.category.api;
 
 import com.br.klaus.readium.category.api.dto.CategoryResponseDTO;
 import com.br.klaus.readium.category.api.dto.CreateCategoryRequestDTO;
+import com.br.klaus.readium.category.api.dto.MoveCategoryRequestDTO;
 import com.br.klaus.readium.category.api.dto.UpdateBookCategoriesRequestDTO;
 import com.br.klaus.readium.category.api.dto.UpdateCategoryRequestDTO;
 import com.br.klaus.readium.category.application.command.CategoryCommandService;
@@ -39,6 +40,13 @@ public class CategoryController {
             @PathVariable Long id,
             @RequestBody @Valid UpdateCategoryRequestDTO req) {
         return ResponseEntity.ok(commandService.update(id, req));
+    }
+
+    @PatchMapping("/categories/{id}/move")
+    public ResponseEntity<CategoryResponseDTO> move(
+            @PathVariable Long id,
+            @RequestBody MoveCategoryRequestDTO req) {
+        return ResponseEntity.ok(commandService.move(id, req));
     }
 
     @DeleteMapping("/categories/{id}")

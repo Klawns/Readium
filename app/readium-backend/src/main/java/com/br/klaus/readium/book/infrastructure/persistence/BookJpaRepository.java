@@ -20,7 +20,22 @@ public interface BookJpaRepository extends JpaRepository<Book, Long>, JpaSpecifi
                     FROM book b
                     LEFT JOIN book_category bc ON bc.book_id = b.id
                     WHERE (:status IS NULL OR b.book_status = :status)
-                      AND (:categoryId IS NULL OR bc.category_id = :categoryId)
+                      AND (
+                            :categoryId IS NULL
+                            OR bc.category_id IN (
+                                WITH RECURSIVE category_tree(id) AS (
+                                    SELECT id
+                                    FROM category
+                                    WHERE id = :categoryId
+                                    UNION ALL
+                                    SELECT c.id
+                                    FROM category c
+                                    JOIN category_tree ct ON c.parent_id = ct.id
+                                )
+                                SELECT id
+                                FROM category_tree
+                            )
+                      )
                       AND (
                             :query IS NULL
                             OR :query = ''
@@ -34,7 +49,22 @@ public interface BookJpaRepository extends JpaRepository<Book, Long>, JpaSpecifi
                     FROM book b
                     LEFT JOIN book_category bc ON bc.book_id = b.id
                     WHERE (:status IS NULL OR b.book_status = :status)
-                      AND (:categoryId IS NULL OR bc.category_id = :categoryId)
+                      AND (
+                            :categoryId IS NULL
+                            OR bc.category_id IN (
+                                WITH RECURSIVE category_tree(id) AS (
+                                    SELECT id
+                                    FROM category
+                                    WHERE id = :categoryId
+                                    UNION ALL
+                                    SELECT c.id
+                                    FROM category c
+                                    JOIN category_tree ct ON c.parent_id = ct.id
+                                )
+                                SELECT id
+                                FROM category_tree
+                            )
+                      )
                       AND (
                             :query IS NULL
                             OR :query = ''

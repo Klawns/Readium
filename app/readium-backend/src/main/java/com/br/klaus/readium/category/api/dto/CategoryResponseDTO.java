@@ -5,6 +5,8 @@ public record CategoryResponseDTO(
         String name,
         String slug,
         String color,
+        Long parentId,
+        int sortOrder,
         long booksCount
 ) {
 }
