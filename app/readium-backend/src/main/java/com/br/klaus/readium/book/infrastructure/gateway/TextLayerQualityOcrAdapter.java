@@ -11,11 +11,16 @@ import org.apache.pdfbox.text.PDFTextStripper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -26,6 +31,9 @@ import java.util.regex.Pattern;
 @Component
 @Slf4j
 public class TextLayerQualityOcrAdapter implements OcrGatewayPort {
+
+    private static final int MIN_OCR_TIMEOUT_SECONDS = 60;
+    private static final int MAX_PROCESS_OUTPUT_CHARS = 12000;
 
     @Value("${app.ocr.sample-pages:10}")
     private int samplePages;
@@ -65,9 +73,7 @@ public class TextLayerQualityOcrAdapter implements OcrGatewayPort {
 
         if ("OCRMYPDF".equalsIgnoreCase(ocrEngine)) {
             processedFilePath = runOcrmypdf(inputFile.toPath());
-            if (processedFilePath != null) {
-                scoreFilePath = processedFilePath;
-            }
+            scoreFilePath = processedFilePath;
         }
 
         double score = computePdfTextLayerScore(scoreFilePath);
@@ -75,59 +81,125 @@ public class TextLayerQualityOcrAdapter implements OcrGatewayPort {
     }
 
     private String runOcrmypdf(Path inputPath) {
+        Instant start = Instant.now();
         try {
             Path outputDir = Paths.get(storagePath, "ocr");
             Files.createDirectories(outputDir);
 
             Path outputPath = outputDir.resolve(UUID.randomUUID() + ".pdf");
+            List<String> command = buildOcrmypdfCommand(inputPath, outputPath);
 
-            List<String> command = new ArrayList<>(tokenizeCommand(ocrmypdfCommand));
-            if (command.isEmpty()) {
-                command.add("ocrmypdf");
-            }
-            command.add("--skip-text");
-            command.add("--rotate-pages");
-            command.add("--deskew");
-            command.add("--optimize");
-            command.add("1");
-            if (ocrmypdfLanguages != null && !ocrmypdfLanguages.isBlank()) {
-                command.add("-l");
-                command.add(ocrmypdfLanguages.trim());
-            }
-            command.add(inputPath.toString());
-            command.add(outputPath.toString());
+            long timeoutSeconds = Math.max(ocrmypdfTimeoutSeconds, MIN_OCR_TIMEOUT_SECONDS);
+            log.info("Executando OCRmyPDF para {} com timeout={}s e idiomas='{}'", inputPath, timeoutSeconds, ocrmypdfLanguages);
+            log.debug("Comando OCRmyPDF: {}", command);
 
             ProcessBuilder pb = new ProcessBuilder(command);
             pb.redirectErrorStream(true);
 
             Process process = pb.start();
-            boolean finished = process.waitFor(ocrmypdfTimeoutSeconds, TimeUnit.SECONDS);
+            StringBuilder outputBuffer = new StringBuilder();
+            Thread outputReader = startOutputReader(process, outputBuffer);
+
+            boolean finished = process.waitFor(timeoutSeconds, TimeUnit.SECONDS);
             if (!finished) {
                 process.destroyForcibly();
-                log.warn("OCRmyPDF timeout excedido para arquivo {}", inputPath);
-                return null;
+                process.waitFor(10, TimeUnit.SECONDS);
+                joinOutputReader(outputReader);
+                String outputTail = summarizeOutput(outputBuffer);
+                throw new StorageException("OCRmyPDF timeout apos " + timeoutSeconds + "s. Saida: " + outputTail);
             }
 
+            joinOutputReader(outputReader);
             int exitCode = process.exitValue();
             if (exitCode != 0) {
-                log.warn("OCRmyPDF retornou codigo {} para arquivo {}", exitCode, inputPath);
-                return null;
+                String outputTail = summarizeOutput(outputBuffer);
+                throw new StorageException("OCRmyPDF finalizou com codigo " + exitCode + ". Saida: " + outputTail);
             }
 
             if (!Files.exists(outputPath)) {
-                log.warn("OCRmyPDF finalizou sem gerar arquivo de saida: {}", outputPath);
-                return null;
+                String outputTail = summarizeOutput(outputBuffer);
+                throw new StorageException("OCRmyPDF finalizou sem arquivo de saida. Saida: " + outputTail);
             }
 
+            long elapsed = Duration.between(start, Instant.now()).toSeconds();
+            log.info("OCRmyPDF concluido para {} em {}s", inputPath, elapsed);
             return outputPath.toAbsolutePath().toString();
-        } catch (IOException e) {
-            log.warn("OCRmyPDF nao disponivel ou falhou ao iniciar: {}", e.getMessage());
-            return null;
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            log.warn("OCRmyPDF interrompido para arquivo {}", inputPath);
-            return null;
+            throw new StorageException("Processamento OCR interrompido.", e);
+        } catch (IOException e) {
+            throw new StorageException("Falha ao iniciar OCRmyPDF. Verifique APP_OCRMYPDF_COMMAND.", e);
         }
+    }
+
+    private List<String> buildOcrmypdfCommand(Path inputPath, Path outputPath) {
+        List<String> command = new ArrayList<>(tokenizeCommand(ocrmypdfCommand));
+        if (command.isEmpty()) {
+            command.add("ocrmypdf");
+        }
+
+        command.add("--skip-text");
+        command.add("--rotate-pages");
+        command.add("--deskew");
+        command.add("--optimize");
+        command.add("1");
+        if (ocrmypdfLanguages != null && !ocrmypdfLanguages.isBlank()) {
+            command.add("-l");
+            command.add(ocrmypdfLanguages.trim());
+        }
+        command.add(inputPath.toString());
+        command.add(outputPath.toString());
+        return command;
+    }
+
+    private Thread startOutputReader(Process process, StringBuilder outputBuffer) {
+        Thread reader = new Thread(() -> {
+            try (BufferedReader bufferedReader = new BufferedReader(
+                    new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8))) {
+                String line;
+                while ((line = bufferedReader.readLine()) != null) {
+                    appendOutput(outputBuffer, line);
+                }
+            } catch (IOException ignored) {
+                // Sem acao necessaria; processo ja esta sendo tratado no fluxo principal.
+            }
+        }, "ocrmypdf-output-reader");
+        reader.setDaemon(true);
+        reader.start();
+        return reader;
+    }
+
+    private void joinOutputReader(Thread outputReader) {
+        try {
+            outputReader.join(2000);
+        } catch (InterruptedException ex) {
+            Thread.currentThread().interrupt();
+        }
+    }
+
+    private void appendOutput(StringBuilder outputBuffer, String line) {
+        if (outputBuffer.length() >= MAX_PROCESS_OUTPUT_CHARS) {
+            return;
+        }
+
+        int remaining = MAX_PROCESS_OUTPUT_CHARS - outputBuffer.length();
+        if (line.length() >= remaining) {
+            outputBuffer.append(line, 0, Math.max(0, remaining));
+            return;
+        }
+        outputBuffer.append(line).append(System.lineSeparator());
+    }
+
+    private String summarizeOutput(StringBuilder outputBuffer) {
+        if (outputBuffer.length() == 0) {
+            return "(sem saida do processo)";
+        }
+
+        String output = outputBuffer.toString().trim().replaceAll("\\s+", " ");
+        if (output.length() <= 400) {
+            return output;
+        }
+        return output.substring(output.length() - 400);
     }
 
     private double computePdfTextLayerScore(String pdfPath) {
@@ -185,3 +257,4 @@ public class TextLayerQualityOcrAdapter implements OcrGatewayPort {
         return tokens;
     }
 }
+

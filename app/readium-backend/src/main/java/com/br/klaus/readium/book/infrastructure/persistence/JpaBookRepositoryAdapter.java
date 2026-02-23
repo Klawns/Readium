@@ -48,6 +48,11 @@ public class JpaBookRepositoryAdapter implements BookRepositoryPort {
     }
 
     @Override
+    public List<Book> findByOcrStatus(Book.OcrStatus status) {
+        return repository.findByOcrStatus(status);
+    }
+
+    @Override
     public Book save(Book book) {
         return repository.save(book);
     }

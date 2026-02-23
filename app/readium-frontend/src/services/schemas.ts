@@ -140,6 +140,7 @@ export const BookOcrStatusResponseSchema = z.object({
   bookId: z.number(),
   status: OcrStatusSchema,
   score: z.number().nullable().optional(),
+  details: z.string().nullable().optional(),
   updatedAt: z.string().nullable().optional(),
 });
 
@@ -180,3 +181,12 @@ export const BookRecommendationSchema = z.object({
 });
 
 export const BookRecommendationListSchema = z.array(BookRecommendationSchema);
+
+export const ReadingEvolutionPointSchema = z.object({
+  date: z.string(),
+  pagesRead: z.number(),
+  booksTouched: z.number(),
+  progressUpdates: z.number(),
+});
+
+export const ReadingEvolutionPointListSchema = z.array(ReadingEvolutionPointSchema);

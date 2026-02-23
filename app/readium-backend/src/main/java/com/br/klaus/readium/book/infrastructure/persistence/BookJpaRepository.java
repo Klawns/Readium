@@ -9,10 +9,13 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.util.Optional;
+import java.util.List;
 
 public interface BookJpaRepository extends JpaRepository<Book, Long>, JpaSpecificationExecutor<Book> {
 
     Optional<Book> findByFileHash(String fileHash);
+
+    List<Book> findByOcrStatus(Book.OcrStatus ocrStatus);
 
     @Query(
             value = """

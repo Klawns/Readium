@@ -6,6 +6,7 @@ public record BookOcrStatusResponseDTO(
         Long bookId,
         String status,
         Double score,
+        String details,
         LocalDateTime updatedAt
 ) {
 }

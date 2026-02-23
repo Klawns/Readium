@@ -40,3 +40,15 @@ API da aplicacao Readium responsavel pela gestao da biblioteca, leitura, anotaco
 - Cache de listagem de traducoes por livro.
 - Cache de consultas de anotacoes por livro e por pagina.
 - Invalidacao de cache nas operacoes de create/update/delete para manter consistencia.
+
+## OCR troubleshooting
+- Verifique o engine ativo no log de startup: `ocrEngine=...`.
+- Consulte status detalhado por livro em `GET /api/books/{id}/ocr-status`.
+- Campos relevantes de diagnostico:
+  - `status`: `PENDING`, `RUNNING`, `DONE`, `FAILED`
+  - `updatedAt`: ultima atualizacao do job
+  - `details`: motivo de falha/estado atual do OCR
+- Ajustes de timeout e recuperacao:
+  - `APP_OCRMYPDF_TIMEOUT_SECONDS` (timeout do processo OCRmyPDF)
+  - `APP_OCR_RUNNING_TIMEOUT_SECONDS` (limite para RUNNING estagnado)
+  - `APP_OCR_RECOVERY_FIXED_DELAY_MS` (intervalo do watchdog de recuperacao)

@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import type { BookStatus } from '@/types';
@@ -15,6 +16,7 @@ const OCR_POLLING_INTERVAL_MS = 2000;
 
 export const useReaderBook = (bookId: number) => {
   const queryClient = useQueryClient();
+  const lastFailedAtRef = useRef<string | null>(null);
   const isValidBookId = Number.isFinite(bookId) && bookId > 0;
 
   const bookQuery = useQuery({
@@ -73,6 +75,22 @@ export const useReaderBook = (bookId: number) => {
   });
 
   const fileVersion = ocrStatusQuery.data?.updatedAt ?? null;
+
+  useEffect(() => {
+    if (!ocrStatusQuery.data || ocrStatusQuery.data.status !== 'FAILED') {
+      return;
+    }
+
+    const failureKey = `${ocrStatusQuery.data.updatedAt ?? ''}:${ocrStatusQuery.data.details ?? ''}`;
+    if (lastFailedAtRef.current === failureKey) {
+      return;
+    }
+    lastFailedAtRef.current = failureKey;
+
+    if (ocrStatusQuery.data.details) {
+      toast.error(ocrStatusQuery.data.details);
+    }
+  }, [ocrStatusQuery.data]);
 
   return {
     book: bookQuery.data,

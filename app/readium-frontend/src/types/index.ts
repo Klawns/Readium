@@ -14,6 +14,7 @@ import {
   BookMetricsSchema,
   SmartCollectionSchema,
   BookRecommendationSchema,
+  ReadingEvolutionPointSchema,
 } from '@/services/schemas.ts';
 
 // Derivando tipos dos schemas Zod para garantir Single Source of Truth
@@ -30,6 +31,7 @@ export type ReadingCollection = z.infer<typeof ReadingCollectionSchema>;
 export type BookMetrics = z.infer<typeof BookMetricsSchema>;
 export type SmartCollection = z.infer<typeof SmartCollectionSchema>;
 export type BookRecommendation = z.infer<typeof BookRecommendationSchema>;
+export type ReadingEvolutionPoint = z.infer<typeof ReadingEvolutionPointSchema>;
 
 // Derivando Page<Book> do schema para garantir compatibilidade
 export type BookPage = z.infer<typeof PaginatedBookResponseSchema>;

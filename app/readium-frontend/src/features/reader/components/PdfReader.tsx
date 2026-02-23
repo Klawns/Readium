@@ -33,6 +33,7 @@ const PdfReader: React.FC<PdfReaderProps> = ({
   totalPages: totalPagesFromProps = 0,
   ocrStatus,
   ocrScore,
+  ocrDetails,
   onTriggerOcr,
   isTriggeringOcr,
 }) => {
@@ -181,6 +182,7 @@ const PdfReader: React.FC<PdfReaderProps> = ({
           onStatusChange={onStatusChange}
           ocrStatus={ocrStatus}
           ocrScore={ocrScore}
+          ocrDetails={ocrDetails}
           onTriggerOcr={onTriggerOcr}
           isTriggeringOcr={isTriggeringOcr}
         />

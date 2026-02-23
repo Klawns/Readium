@@ -53,6 +53,7 @@ export default function ReaderPage() {
         totalPages={book.pages || 0}
         ocrStatus={ocrStatus?.status}
         ocrScore={ocrScore}
+        ocrDetails={ocrStatus?.details ?? null}
         onTriggerOcr={onTriggerOcr}
         isTriggeringOcr={isTriggeringOcr}
       />

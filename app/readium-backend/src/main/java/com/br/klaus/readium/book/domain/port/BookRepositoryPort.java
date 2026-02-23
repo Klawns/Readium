@@ -19,6 +19,8 @@ public interface BookRepositoryPort {
 
     Optional<Book> findByFileHash(String fileHash);
 
+    List<Book> findByOcrStatus(Book.OcrStatus status);
+
     Book save(Book book);
 
     void deleteById(Long id);

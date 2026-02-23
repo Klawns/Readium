@@ -13,6 +13,7 @@ public final class BookOcrStatusResponseMapper {
                 book.getId(),
                 BookOcrMapperSupport.resolveStatus(book),
                 book.getOcrScore(),
+                book.getOcrDetails(),
                 book.getOcrUpdatedAt()
         );
     }

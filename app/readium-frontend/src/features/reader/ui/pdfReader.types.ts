@@ -10,6 +10,7 @@ export interface PdfReaderProps {
   totalPages?: number;
   ocrStatus?: OcrStatus;
   ocrScore?: number | null;
+  ocrDetails?: string | null;
   onTriggerOcr?: () => void;
   isTriggeringOcr?: boolean;
 }

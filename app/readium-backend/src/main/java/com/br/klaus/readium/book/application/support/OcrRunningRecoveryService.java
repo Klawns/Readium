@@ -30,7 +30,7 @@ public class OcrRunningRecoveryService {
                 book.getOcrUpdatedAt()
         );
 
-        book.markOcrFailed();
+        book.markOcrFailed("OCR ficou em RUNNING por tempo excedido e foi marcado como FAILED automaticamente.");
         repository.save(book);
     }
 

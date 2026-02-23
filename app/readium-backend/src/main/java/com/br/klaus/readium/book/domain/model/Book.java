@@ -56,6 +56,9 @@ public class Book {
 
     private Double ocrScore;
 
+    @Column(length = 2000)
+    private String ocrDetails;
+
     private LocalDateTime ocrUpdatedAt;
 
     public enum BookFormat {
@@ -92,17 +95,20 @@ public class Book {
 
     public void markOcrQueued() {
         this.ocrStatus = OcrStatus.PENDING;
+        this.ocrDetails = null;
         this.ocrUpdatedAt = LocalDateTime.now();
     }
 
     public void markOcrRunning() {
         this.ocrStatus = OcrStatus.RUNNING;
+        this.ocrDetails = "OCR em andamento.";
         this.ocrUpdatedAt = LocalDateTime.now();
     }
 
     public void markOcrDone(Double score, String processedFilePath) {
         this.ocrStatus = OcrStatus.DONE;
         this.ocrScore = score;
+        this.ocrDetails = "OCR concluido com sucesso.";
         if (processedFilePath != null && !processedFilePath.isBlank()) {
             this.ocrFilePath = processedFilePath;
         }
@@ -110,7 +116,16 @@ public class Book {
     }
 
     public void markOcrFailed() {
+        markOcrFailed("Falha ao processar OCR.");
+    }
+
+    public void markOcrFailed(String details) {
         this.ocrStatus = OcrStatus.FAILED;
+        if (details == null || details.isBlank()) {
+            this.ocrDetails = "Falha ao processar OCR.";
+        } else {
+            this.ocrDetails = details;
+        }
         this.ocrUpdatedAt = LocalDateTime.now();
     }
 

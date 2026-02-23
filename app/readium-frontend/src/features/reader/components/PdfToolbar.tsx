@@ -10,6 +10,7 @@ interface PdfToolbarProps {
   onStatusChange?: (status: BookStatus) => void;
   ocrStatus?: OcrStatus;
   ocrScore?: number | null;
+  ocrDetails?: string | null;
   onTriggerOcr?: () => void;
   isTriggeringOcr?: boolean;
 }
@@ -26,6 +27,7 @@ const PdfToolbar: React.FC<PdfToolbarProps> = ({
   onStatusChange,
   ocrStatus,
   ocrScore,
+  ocrDetails,
   onTriggerOcr,
   isTriggeringOcr,
 }) => {
@@ -45,7 +47,10 @@ const PdfToolbar: React.FC<PdfToolbarProps> = ({
           <BookOpenText className="h-3.5 w-3.5" />
           <span>Leitor PDF</span>
           {ocrStatus && (
-            <span className="ml-2 rounded-full border border-border/60 bg-muted/70 px-2 py-0.5 text-[11px]">
+            <span
+              className="ml-2 rounded-full border border-border/60 bg-muted/70 px-2 py-0.5 text-[11px]"
+              title={ocrDetails ?? undefined}
+            >
               {ocrStatusLabel[ocrStatus]}
               {ocrScore != null && ` (${ocrScore.toFixed(0)}%)`}
             </span>
