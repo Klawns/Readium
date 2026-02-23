@@ -9,8 +9,6 @@ import java.util.List;
 
 public interface AnnotationJpaRepository extends JpaRepository<Annotation, Long> {
 
-    List<Annotation> findByBookIdAndPage(Long bookId, int page);
-
     Page<Annotation> findByBookIdAndPage(Long bookId, int page, Pageable pageable);
 
     List<Annotation> findByBookId(Long bookId);
