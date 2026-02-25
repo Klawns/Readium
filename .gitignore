@@ -29,3 +29,8 @@ app/readium-backend/Plano*Mobile.txt
 app/readium-frontend/.env*
 !app/readium-frontend/.env.example
 !app/readium-frontend/.env.mobile.example
+
+# Temporary and cache directories
+.tmp/
+.m2/
+.npm-cache/
