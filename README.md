@@ -1,17 +1,18 @@
 # Readium
 
-Readium é uma aplicação self-hosted para biblioteca digital, leitura no navegador e apoio de OCR/tradução.
+Readium e uma aplicacao self-hosted para biblioteca digital e leitura de livros. O projeto nasceu no contexto de vibe coding, mas com esforco continuo para manter qualidade de engenharia: DDD, SOLID (com prioridade para SRP) e camadas claras no frontend.
 
-## Funcionalidades
-- Biblioteca de livros com upload, busca, filtro e status de leitura.
-- Leitor PDF no navegador com sincronizacao de progresso por pagina.
-- Anotacoes por selecao de texto e pagina.
-- Edicao de anotacao ao clicar no highlight e remocao de highlight no popup.
-- Preload de highlights da pagina atual, anterior e proxima.
-- Navegacao por links/referencias internos do PDF.
-- Copia de texto selecionado no leitor.
-- Traducao automatica e traducao persistida por livro.
-- OCR sob demanda para melhorar a camada de texto em PDFs.
+## Status atual (checado em 2026-02-25)
+
+- GitHub: repositorio remoto configurado (`origin`) e branch principal `main`.
+- CI/CD automatizado: `.github/workflows/ci.yml` roda `./mvnw test` no backend e `npm run test -- --run` + `npm run build` no frontend para pushes e pull requests.
+- Backend: testes Maven passando (`mvnw.cmd test`).
+- Frontend web: bundle/Vitest garantidos (`npm run build`, `npm run test -- --run`).
+
+## CI/CD
+
+- [`ci.yml`](.github/workflows/ci.yml) dispara em push/pull para `main` e roda `backend-tests` (Java 21 + cache Maven) seguido do job `frontend` (Node 20 + `npm ci`, `npm run test -- --run`, `npm run build`).
+- Para reproduzir localmente: execute `./mvnw test` dentro de `app/readium-backend` e, em `app/readium-frontend`, rode `npm ci && npm run test -- --run && npm run build`.
 
 ## Stack
 - Backend: Java 21, Spring Boot 4, Spring Data JPA, SQLite.
