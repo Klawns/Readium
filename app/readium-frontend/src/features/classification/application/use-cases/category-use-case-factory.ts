@@ -1,4 +1,10 @@
+import {
+  getConnectionMode,
+  type ConnectionMode,
+} from '@/features/preferences/application/services/connection-mode-service.ts';
 import { CategoryHttpRepository } from '../../infrastructure/api/category-http-repository';
+import { CategoryLocalRepository } from '../../infrastructure/local/category-local-repository';
+import type { CategoryRepository } from '../../domain/ports/CategoryRepository';
 import {
   CreateCategoryUseCase,
   DeleteCategoryUseCase,
@@ -9,12 +15,39 @@ import {
   UpdateCategoryUseCase,
 } from './category-use-cases';
 
-const categoryRepository = new CategoryHttpRepository();
+export interface CategoryUseCases {
+  listCategoriesUseCase: ListCategoriesUseCase;
+  createCategoryUseCase: CreateCategoryUseCase;
+  updateCategoryUseCase: UpdateCategoryUseCase;
+  moveCategoryUseCase: MoveCategoryUseCase;
+  deleteCategoryUseCase: DeleteCategoryUseCase;
+  listBookCategoriesUseCase: ListBookCategoriesUseCase;
+  setBookCategoriesUseCase: SetBookCategoriesUseCase;
+}
 
-export const listCategoriesUseCase = new ListCategoriesUseCase(categoryRepository);
-export const createCategoryUseCase = new CreateCategoryUseCase(categoryRepository);
-export const updateCategoryUseCase = new UpdateCategoryUseCase(categoryRepository);
-export const moveCategoryUseCase = new MoveCategoryUseCase(categoryRepository);
-export const deleteCategoryUseCase = new DeleteCategoryUseCase(categoryRepository);
-export const listBookCategoriesUseCase = new ListBookCategoriesUseCase(categoryRepository);
-export const setBookCategoriesUseCase = new SetBookCategoriesUseCase(categoryRepository);
+const useCasesByMode = new Map<ConnectionMode, CategoryUseCases>();
+
+const createUseCases = (repository: CategoryRepository): CategoryUseCases => ({
+  listCategoriesUseCase: new ListCategoriesUseCase(repository),
+  createCategoryUseCase: new CreateCategoryUseCase(repository),
+  updateCategoryUseCase: new UpdateCategoryUseCase(repository),
+  moveCategoryUseCase: new MoveCategoryUseCase(repository),
+  deleteCategoryUseCase: new DeleteCategoryUseCase(repository),
+  listBookCategoriesUseCase: new ListBookCategoriesUseCase(repository),
+  setBookCategoriesUseCase: new SetBookCategoriesUseCase(repository),
+});
+
+const resolveRepositoryForMode = (mode: ConnectionMode): CategoryRepository =>
+  mode === 'LOCAL' ? new CategoryLocalRepository() : new CategoryHttpRepository();
+
+export const getCategoryUseCases = (): CategoryUseCases => {
+  const mode = getConnectionMode();
+  const existing = useCasesByMode.get(mode);
+  if (existing) {
+    return existing;
+  }
+
+  const created = createUseCases(resolveRepositoryForMode(mode));
+  useCasesByMode.set(mode, created);
+  return created;
+};

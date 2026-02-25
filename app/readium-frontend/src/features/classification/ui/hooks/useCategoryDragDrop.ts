@@ -1,7 +1,8 @@
 import { useState } from 'react';
+import type { MoveCategoryHandler } from '../../domain/category-actions';
 
 interface UseCategoryDragDropParams {
-  onMove: (payload: { categoryId: number; parentId: number | null }) => Promise<unknown>;
+  onMove: MoveCategoryHandler;
 }
 
 export const useCategoryDragDrop = ({ onMove }: UseCategoryDragDropParams) => {

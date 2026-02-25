@@ -1,30 +1,21 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { queryKeys } from '@/lib/query-keys';
-import {
-  createCategoryUseCase,
-  deleteCategoryUseCase,
-  listCategoriesUseCase,
-  moveCategoryUseCase,
-  updateCategoryUseCase,
-} from '../../application/use-cases/category-use-case-factory';
-
-interface SaveCategoryPayload {
-  name: string;
-  color?: string;
-  parentId?: number | null;
-}
+import type { MoveCategoryCommand } from '../../domain/category-actions';
+import type { SaveCategoryCommand } from '../../domain/ports/CategoryRepository';
+import { getCategoryUseCases } from '../../application/use-cases/category-use-case-factory';
 
 export const useCategories = (query = '') => {
+  const useCases = getCategoryUseCases();
   const queryClient = useQueryClient();
 
   const categoriesQuery = useQuery({
     queryKey: queryKeys.categoriesList(query),
-    queryFn: () => listCategoriesUseCase.execute(query),
+    queryFn: () => useCases.listCategoriesUseCase.execute(query),
   });
 
   const createMutation = useMutation({
-    mutationFn: (payload: SaveCategoryPayload) => createCategoryUseCase.execute(payload),
+    mutationFn: (payload: SaveCategoryCommand) => useCases.createCategoryUseCase.execute(payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.categoriesRoot() });
       queryClient.invalidateQueries({ queryKey: queryKeys.booksRoot() });
@@ -37,8 +28,8 @@ export const useCategories = (query = '') => {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ categoryId, payload }: { categoryId: number; payload: SaveCategoryPayload }) =>
-      updateCategoryUseCase.execute(categoryId, payload),
+    mutationFn: ({ categoryId, payload }: { categoryId: number; payload: SaveCategoryCommand }) =>
+      useCases.updateCategoryUseCase.execute(categoryId, payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.categoriesRoot() });
       queryClient.invalidateQueries({ queryKey: queryKeys.booksRoot() });
@@ -51,7 +42,7 @@ export const useCategories = (query = '') => {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (categoryId: number) => deleteCategoryUseCase.execute(categoryId),
+    mutationFn: (categoryId: number) => useCases.deleteCategoryUseCase.execute(categoryId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.categoriesRoot() });
       queryClient.invalidateQueries({ queryKey: queryKeys.booksRoot() });
@@ -64,8 +55,8 @@ export const useCategories = (query = '') => {
   });
 
   const moveMutation = useMutation({
-    mutationFn: ({ categoryId, parentId }: { categoryId: number; parentId: number | null }) =>
-      moveCategoryUseCase.execute(categoryId, parentId),
+    mutationFn: ({ categoryId, parentId }: MoveCategoryCommand) =>
+      useCases.moveCategoryUseCase.execute(categoryId, parentId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.categoriesRoot() });
       queryClient.invalidateQueries({ queryKey: queryKeys.booksRoot() });
