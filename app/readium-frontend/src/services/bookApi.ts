@@ -13,11 +13,21 @@ import {
   BookOcrStatusResponseSchema,
   BookTextLayerQualityResponseSchema,
 } from './schemas.ts';
+import { toApiUrl } from './http/api-base-url.ts';
 
-const apiUrl = (path: string) => `/api${path}`;
+const apiUrl = (path: string) => toApiUrl(path);
 
 interface UploadBookOptions {
   onProgress?: (progressPercent: number) => void;
+}
+
+interface UpdateProgressOptions {
+  keepalive?: boolean;
+  operationId?: string;
+}
+
+interface UpdateBookStatusOptions {
+  operationId?: string;
 }
 
 export const bookApi = {
@@ -79,13 +89,37 @@ export const bookApi = {
     return BookSchema.parse(response.data);
   },
 
-  updateBookStatus: async (bookId: number, status: BookStatus): Promise<void> => {
-    const response = await httpClient.patch('/books/status', { bookId, status });
+  updateBookStatus: async (
+    bookId: number,
+    status: BookStatus,
+    options?: UpdateBookStatusOptions,
+  ): Promise<void> => {
+    const response = await httpClient.patch('/books/status', { bookId, status }, {
+      headers: options?.operationId ? { 'X-Operation-Id': options.operationId } : undefined,
+    });
     if (response.status >= 400) throw new Error(`Erro ao atualizar status: ${response.status}`);
   },
 
-  updateProgress: async (bookId: number, page: number, keepalive = false): Promise<void> => {
-    const response = await httpClient.patch(`/books/${bookId}/progress`, { page }, { keepalive });
+  updateProgress: async (
+    bookId: number,
+    page: number,
+    keepaliveOrOptions: boolean | UpdateProgressOptions = false,
+  ): Promise<void> => {
+    const options = typeof keepaliveOrOptions === 'boolean'
+      ? { keepalive: keepaliveOrOptions, operationId: undefined }
+      : {
+        keepalive: keepaliveOrOptions.keepalive ?? false,
+        operationId: keepaliveOrOptions.operationId,
+      };
+
+    const response = await httpClient.patch(
+      `/books/${bookId}/progress`,
+      { page },
+      {
+        keepalive: options.keepalive,
+        headers: options.operationId ? { 'X-Operation-Id': options.operationId } : undefined,
+      },
+    );
     if (response.status >= 400) throw new Error(`Erro ao atualizar progresso: ${response.status}`);
   },
 

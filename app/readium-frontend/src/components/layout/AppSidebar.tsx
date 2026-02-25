@@ -1,4 +1,4 @@
-import { BarChart3, BookOpen, FolderKanban, Library, Upload } from "lucide-react"
+import { BarChart3, BookOpen, Download, FolderKanban, Library, Tag, Upload } from "lucide-react"
 import {
   Sidebar,
   SidebarContent,
@@ -21,6 +21,8 @@ export function AppSidebar({ onUploadClick }: AppSidebarProps) {
   const isLibraryActive = location.pathname === '/books' || /^\/books\/\d+$/.test(location.pathname)
   const isInsightsActive = location.pathname === '/books/insights'
   const isCollectionsActive = location.pathname === '/books/collections' || location.pathname === '/books/folders'
+  const isCategoriesActive = location.pathname === '/books/categories'
+  const isDownloadsActive = location.pathname === '/books/downloads'
 
   return (
     <Sidebar collapsible="icon">
@@ -57,6 +59,22 @@ export function AppSidebar({ onUploadClick }: AppSidebarProps) {
                   <Link to="/books/collections">
                     <FolderKanban />
                     <span>Colecoes</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={isCategoriesActive} tooltip="Categorias">
+                  <Link to="/books/categories">
+                    <Tag />
+                    <span>Categorias</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton asChild isActive={isDownloadsActive} tooltip="Downloads">
+                  <Link to="/books/downloads">
+                    <Download />
+                    <span>Downloads</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>

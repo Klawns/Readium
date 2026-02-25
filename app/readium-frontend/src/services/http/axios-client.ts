@@ -67,6 +67,7 @@ export class AxiosHttpClient implements HttpClient {
         data: data.body,
         headers: data.headers,
         params: data.params,
+        responseType: data.responseType ?? 'json',
         onUploadProgress: data.onUploadProgress
           ? (event) => {
               const total = event.total ?? 0;

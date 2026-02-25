@@ -4,12 +4,21 @@ import type { ThemeId, ThemePreset } from './theme.types';
 export const findThemePreset = (themeId: ThemeId): ThemePreset =>
   THEME_PRESETS.find((preset) => preset.id === themeId) ?? THEME_PRESETS[0];
 
+const THEME_IDS = new Set<ThemeId>(THEME_PRESETS.map((preset) => preset.id));
+
+const isThemeId = (value: string | null): value is ThemeId => {
+  if (value === null) {
+    return false;
+  }
+  return THEME_IDS.has(value as ThemeId);
+};
+
 export const readThemeFromStorage = (): ThemeId => {
   if (typeof window === 'undefined') {
     return DEFAULT_THEME_ID;
   }
   const value = window.localStorage.getItem(THEME_STORAGE_KEY);
-  if (value === 'classic' || value === 'ocean' || value === 'forest') {
+  if (isThemeId(value)) {
     return value;
   }
   return DEFAULT_THEME_ID;

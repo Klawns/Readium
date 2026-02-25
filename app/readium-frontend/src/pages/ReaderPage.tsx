@@ -43,7 +43,7 @@ export default function ReaderPage() {
   }
 
   return (
-    <div className="h-[100dvh] w-full overflow-hidden bg-gray-100">
+    <div className="reader-shell h-[100dvh] w-full overflow-hidden">
       <PdfReader
         fileUrl={fileUrl}
         bookId={bookId}

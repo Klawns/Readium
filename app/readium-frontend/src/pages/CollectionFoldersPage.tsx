@@ -122,15 +122,8 @@ export default function CollectionFoldersPage() {
           }
           return created;
         }}
-        onUpdateCollection={({ collectionId, name, description, color, icon, templateId }) =>
-          updateCollection({
-            collectionId,
-            payload: { name, description, color, icon, templateId },
-          })
-        }
-        onMoveCollection={({ collectionId, targetIndex }) =>
-          moveCollection({ collectionId, targetIndex })
-        }
+        onUpdateCollection={updateCollection}
+        onMoveCollection={moveCollection}
         onDeleteCollection={deleteCollection}
       />
     </>

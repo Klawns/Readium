@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Settings2 } from 'lucide-react';
+import { Server, Settings2 } from 'lucide-react';
 import {
   SidebarFooter,
   SidebarMenu,
@@ -8,9 +8,12 @@ import {
 } from '@/components/ui/sidebar.tsx';
 import { cn } from '@/lib/utils.ts';
 import { ThemePicker } from '@/features/preferences/components/ThemePicker.tsx';
+import { Button } from '@/components/ui/button.tsx';
+import { ServerConnectionDialog } from '@/features/preferences/components/ServerConnectionDialog.tsx';
 
 export const SidebarSettings = () => {
   const [isExpanded, setIsExpanded] = useState(false);
+  const [isServerDialogOpen, setIsServerDialogOpen] = useState(false);
 
   return (
     <SidebarFooter className="border-t border-sidebar-border/70 pt-2">
@@ -18,14 +21,25 @@ export const SidebarSettings = () => {
         <div
           className={cn(
             'overflow-hidden px-1 transition-all duration-300 ease-out',
-            isExpanded ? 'max-h-16 translate-y-0 pb-1 opacity-100' : 'max-h-0 -translate-y-2 pb-0 opacity-0',
+            isExpanded ? 'max-h-32 translate-y-0 pb-1 opacity-100' : 'max-h-0 -translate-y-2 pb-0 opacity-0',
           )}
         >
-          <ThemePicker
-            buttonClassName="h-8 rounded-md border border-sidebar-border bg-sidebar text-sidebar-foreground hover:bg-sidebar-accent"
-            labelClassName="group-data-[collapsible=icon]:hidden"
-            align="end"
-          />
+          <div className="space-y-1">
+            <ThemePicker
+              buttonClassName="h-8 rounded-md border border-sidebar-border bg-sidebar text-sidebar-foreground hover:bg-sidebar-accent"
+              labelClassName="group-data-[collapsible=icon]:hidden"
+              align="end"
+            />
+            <Button
+              type="button"
+              variant="outline"
+              className="h-8 w-full justify-start gap-2 rounded-md border-sidebar-border bg-sidebar px-2 text-sidebar-foreground hover:bg-sidebar-accent"
+              onClick={() => setIsServerDialogOpen(true)}
+            >
+              <Server className="h-4 w-4" />
+              <span className="truncate">Servidor mobile</span>
+            </Button>
+          </div>
         </div>
 
         <SidebarMenu>
@@ -41,6 +55,7 @@ export const SidebarSettings = () => {
           </SidebarMenuItem>
         </SidebarMenu>
       </div>
+      <ServerConnectionDialog open={isServerDialogOpen} onOpenChange={setIsServerDialogOpen} />
     </SidebarFooter>
   );
 };

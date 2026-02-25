@@ -26,5 +26,9 @@ export const queryKeys = {
   insightsMetrics: () => ['insights', 'metrics'] as const,
   insightsSmartCollections: () => ['insights', 'smart-collections'] as const,
   insightsRecommendations: (limit: number) => ['insights', 'recommendations', limit] as const,
+  offlineDownloadsRoot: () => ['offline', 'downloads'] as const,
+  offlineDownload: (bookId: number) => ['offline', 'downloads', bookId] as const,
+  offlineLibraryBooks: () => ['offline', 'library-books'] as const,
+  offlineBookSnapshot: (bookId: number) => ['offline', 'book-snapshot', bookId] as const,
 };
 

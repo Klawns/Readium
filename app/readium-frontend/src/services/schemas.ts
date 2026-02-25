@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { toApiAssetUrl } from './http/api-base-url.ts';
 
 export const BookStatusSchema = z.enum(['TO_READ', 'READING', 'READ']);
 export const OcrStatusSchema = z.enum(['PENDING', 'RUNNING', 'DONE', 'FAILED']);
@@ -34,31 +35,7 @@ export const BookSchema = z.object({
   pages: z.number().nullable(),
   format: z.enum(['PDF', 'EPUB']),
   status: BookStatusSchema,
-  coverUrl: z.string().nullable().transform(url => {
-    // Se a URL vier absoluta do backend (ex: http://localhost:8080/...),
-    // transformamos em relativa (/api/...) para passar pelo proxy.
-    if (!url) return null;
-    try {
-      const urlObj = new URL(url);
-      // Se for uma URL completa, pegamos apenas o pathname e adicionamos /api se necessário
-      // O backend pode retornar /books/1/cover ou http://.../books/1/cover
-      // Se o backend já retornar relativo, new URL falha (o que é bom, cai no catch)
-      
-      // Assumindo que o backend retorna /books/... ou http://.../books/...
-      // Queremos que fique /api/books/...
-      
-      // Se o pathname já começar com /api, mantemos.
-      if (urlObj.pathname.startsWith('/api')) return urlObj.pathname;
-      
-      // Se não, adicionamos /api
-      return `/api${urlObj.pathname}`;
-    } catch (e) {
-      // Se não for URL válida (já é relativa), apenas garantimos o prefixo /api
-      if (url.startsWith('http')) return url; // Fallback se algo der errado
-      if (url.startsWith('/api')) return url;
-      return `/api${url.startsWith('/') ? '' : '/'}${url}`;
-    }
-  }),
+  coverUrl: z.string().nullable().transform((url) => toApiAssetUrl(url)),
   lastReadPage: z.number().nullable().optional(), // Novo campo opcional
 });
 
@@ -190,3 +167,4 @@ export const ReadingEvolutionPointSchema = z.object({
 });
 
 export const ReadingEvolutionPointListSchema = z.array(ReadingEvolutionPointSchema);
+

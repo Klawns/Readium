@@ -5,6 +5,7 @@ export interface HttpRequest {
   headers?: Record<string, string>;
   params?: Record<string, string | number | boolean>;
   keepalive?: boolean;
+  responseType?: 'json' | 'text' | 'arraybuffer' | 'blob';
   onUploadProgress?: (progressPercent: number) => void;
 }
 
