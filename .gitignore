@@ -21,3 +21,11 @@ app/.env.*
 
 # Contexto local do agente
 agent.md
+
+# Plano tecnico local (nao versionar)
+app/readium-backend/Plano*Mobile.txt
+
+# Frontend mobile environment overrides
+app/readium-frontend/.env*
+!app/readium-frontend/.env.example
+!app/readium-frontend/.env.mobile.example
