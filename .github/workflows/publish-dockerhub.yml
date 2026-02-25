@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: read
+  actions: write
 
 env:
   DOCKER_IMAGE: klawns/readium
@@ -30,8 +31,8 @@ jobs:
           tags: |
             ${{ env.DOCKER_IMAGE }}:base
           target: runtime-base
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=base
+          cache-to: type=gha,mode=max,scope=base
       - name: Build and push OCR image
         uses: docker/build-push-action@v5
         with:
@@ -41,5 +42,5 @@ jobs:
           tags: |
             ${{ env.DOCKER_IMAGE }}:ocr
           target: runtime-ocr
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=ocr
+          cache-to: type=gha,mode=max,scope=ocr

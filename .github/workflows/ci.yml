@@ -16,6 +16,9 @@ jobs:
           distribution: temurin
           java-version: 21
           cache: maven
+      - name: Make mvnw executable
+        working-directory: app/readium-backend
+        run: chmod +x ./mvnw
       - name: Run backend tests
         working-directory: app/readium-backend
         run: ./mvnw test
