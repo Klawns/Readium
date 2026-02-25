@@ -10,7 +10,11 @@ interface UseReaderMobileUiParams {
 export const useReaderMobileUi = ({ isMobile, fileUrl, containerRef }: UseReaderMobileUiParams) => {
   const [mobileUiVisible, setMobileUiVisible] = useState(false);
   const isReaderUiVisible = !isMobile || mobileUiVisible;
-  const readerChromeSpacingClass = isReaderUiVisible ? 'pt-[68px] pb-[88px]' : 'pt-0 pb-0';
+  const readerChromeSpacingClass = isReaderUiVisible
+    ? isMobile
+      ? 'pt-[68px] pb-0'
+      : 'pt-[68px] pb-0'
+    : 'pt-0 pb-0';
 
   useEffect(() => {
     setMobileUiVisible(false);

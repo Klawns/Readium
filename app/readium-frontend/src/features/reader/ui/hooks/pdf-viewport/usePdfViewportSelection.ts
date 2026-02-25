@@ -1,9 +1,9 @@
 import { useEffect } from 'react';
 import type { SelectionCapability } from '@embedpdf/plugin-selection/react';
-import { createLogger } from '@/lib/logger.ts';
 import type { PendingSelection } from '../../readerTypes';
-
-const logger = createLogger('reader-viewport');
+import { isTouchCapableDevice } from './pdfViewport.utils';
+import { resolveViewportSelection } from './pdfViewport.selectionResolver';
+import { bindSelectionCleanupListeners } from './pdfViewport.selectionCleanup';
 
 interface UsePdfViewportSelectionParams {
   selectionCapability: Readonly<SelectionCapability> | null;
@@ -17,7 +17,6 @@ interface UsePdfViewportSelectionParams {
   onSelectionResolved: (selection: PendingSelection | null) => void;
   lastPointerTypeRef: React.MutableRefObject<string | null>;
   lastTouchSelectionAllowedRef: React.MutableRefObject<boolean>;
-  touchGestureRef: React.MutableRefObject<{ longPressArmed: boolean }>;
 }
 
 export const usePdfViewportSelection = ({
@@ -28,118 +27,68 @@ export const usePdfViewportSelection = ({
   onSelectionResolved,
   lastPointerTypeRef,
   lastTouchSelectionAllowedRef,
-  touchGestureRef,
 }: UsePdfViewportSelectionParams) => {
   useEffect(() => {
     if (!selectionCapability || !activeDocumentId || !activeDocument) {
       return;
     }
 
+    let disposed = false;
     const selectionScope = selectionCapability.forDocument(activeDocumentId);
-
-    const resolveSelection = async () => {
-      const [selectedRect] = selectionScope.getBoundingRects();
-      if (!selectedRect) {
-        onSelectionResolved(null);
-        return;
+    const isTouchDevice = isTouchCapableDevice();
+    const emitSelection = (selection: PendingSelection | null) => {
+      if (!disposed) {
+        onSelectionResolved(selection);
       }
-
-      const pageIndex = selectedRect.page;
-      const page = activeDocument.document?.pages[pageIndex];
-      if (!page) {
-        return;
-      }
-
-      const pageElement = containerRef.current?.querySelector<HTMLElement>(`[data-reader-page-index="${pageIndex}"]`);
-      if (!pageElement) {
-        return;
-      }
-
-      const pageClientRect = pageElement.getBoundingClientRect();
-      const pageRects = selectionScope.getHighlightRectsForPage(pageIndex);
-      if (pageRects.length === 0) {
-        onSelectionResolved(null);
-        return;
-      }
-
-      let selectedText = '';
-      try {
-        const textSlices = await selectionScope.getSelectedText().toPromise();
-        selectedText = textSlices.join(' ').trim();
-      } catch (error: unknown) {
-        logger.error('failed to retrieve selected text', error);
-        return;
-      }
-
-      if (!selectedText) {
-        onSelectionResolved(null);
-        return;
-      }
-
-      const scaleX = pageClientRect.width / page.size.width;
-      const scaleY = pageClientRect.height / page.size.height;
-
-      onSelectionResolved({
-        text: selectedText,
-        page: pageIndex + 1,
-        rects: pageRects.map((rect) => ({
-          x: rect.origin.x / page.size.width,
-          y: rect.origin.y / page.size.height,
-          width: rect.size.width / page.size.width,
-          height: rect.size.height / page.size.height,
-        })),
-        popupPosition: {
-          x: pageClientRect.left + (selectedRect.rect.origin.x + selectedRect.rect.size.width / 2) * scaleX,
-          y: pageClientRect.top + selectedRect.rect.origin.y * scaleY,
-        },
-      });
     };
+    const isDisposed = () => disposed;
+    const hasNativeSelectionText = () => Boolean(window.getSelection()?.toString().trim());
 
     const unsubscribeSelectionEnd = selectionScope.onEndSelection(() => {
       const isTouchSelection = lastPointerTypeRef.current === 'touch';
-      const allowTouchSelection = lastTouchSelectionAllowedRef.current || touchGestureRef.current.longPressArmed;
-
-      if (isTouchSelection && !allowTouchSelection) {
+      if (isTouchSelection && !lastTouchSelectionAllowedRef.current) {
         selectionScope.clear();
-        onSelectionResolved(null);
+        emitSelection(null);
         return;
       }
 
-      if (isTouchSelection) {
-        lastTouchSelectionAllowedRef.current = false;
-      }
-
-      void resolveSelection();
+      const shouldRetryForTouch = isTouchSelection || isTouchDevice;
+      void resolveViewportSelection({
+        selectionScope,
+        activeDocument,
+        containerRef,
+        emitSelection,
+        isDisposed,
+        retries: shouldRetryForTouch ? 6 : 0,
+        retryDelayMs: shouldRetryForTouch ? 50 : 0,
+      });
     });
 
     const unsubscribeSelectionChange = selectionScope.onSelectionChange((selection) => {
+      const isTouchSelection = lastPointerTypeRef.current === 'touch';
+      if (selection && isTouchSelection && !lastTouchSelectionAllowedRef.current) {
+        // Keep the underlying selection session alive until long-press is confirmed.
+        // Clearing here prevents subsequent drag expansion on Android touch devices.
+        return;
+      }
+
       if (!selection) {
-        onSelectionResolved(null);
+        emitSelection(null);
       }
     });
 
-    const clearStuckSelection = () => {
-      window.setTimeout(() => {
-        const state = selectionScope.getState();
-        if (state.selecting) {
-          selectionScope.clear();
-          onSelectionResolved(null);
-        }
-      }, 0);
-    };
-
-    window.addEventListener('pointerup', clearStuckSelection);
-    window.addEventListener('mouseup', clearStuckSelection);
-    window.addEventListener('dragend', clearStuckSelection);
-    window.addEventListener('blur', clearStuckSelection);
+    const unbindCleanupListeners = bindSelectionCleanupListeners({
+      selectionScope,
+      isDisposed,
+      hasNativeSelectionText,
+      emitSelection: () => emitSelection(null),
+    });
 
     return () => {
+      disposed = true;
       unsubscribeSelectionEnd();
       unsubscribeSelectionChange();
-      window.removeEventListener('pointerup', clearStuckSelection);
-      window.removeEventListener('mouseup', clearStuckSelection);
-      window.removeEventListener('dragend', clearStuckSelection);
-      window.removeEventListener('blur', clearStuckSelection);
+      unbindCleanupListeners();
     };
   }, [
     selectionCapability,
@@ -149,6 +98,5 @@ export const usePdfViewportSelection = ({
     onSelectionResolved,
     lastPointerTypeRef,
     lastTouchSelectionAllowedRef,
-    touchGestureRef,
   ]);
 };

@@ -5,6 +5,7 @@ import type { Book } from '@/types';
 import { queryKeys } from '@/lib/query-keys';
 import { saveReaderProgressUseCase } from '../../../application/use-cases/reader-progress-use-case-factory';
 import { PROGRESS_SAVE_DEBOUNCE_MS } from './pdfReader.constants';
+import { useReaderProgressLifecycle } from './useReaderProgressLifecycle';
 
 const logger = createLogger('reader');
 
@@ -119,33 +120,5 @@ export const useReaderProgressSync = ({ bookId, currentPage, initialPage }: UseR
     };
   }, [canPersistPage, currentPage, flushProgress]);
 
-  useEffect(() => {
-    return () => {
-      flushProgress();
-    };
-  }, [flushProgress]);
-
-  useEffect(() => {
-    const handleBeforeUnload = () => {
-      flushProgress(true);
-    };
-    const handlePageHide = () => {
-      flushProgress(true);
-    };
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'hidden') {
-        flushProgress(true);
-      }
-    };
-
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    window.addEventListener('pagehide', handlePageHide);
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-
-    return () => {
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-      window.removeEventListener('pagehide', handlePageHide);
-      document.removeEventListener('visibilitychange', handleVisibilityChange);
-    };
-  }, [flushProgress]);
+  useReaderProgressLifecycle({ flushProgress });
 };

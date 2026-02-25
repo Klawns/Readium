@@ -13,12 +13,12 @@ const ZoomControls: React.FC<ZoomControlsProps> = ({ zoomLevel, onZoomOut, onZoo
   const percentage = Math.round(zoomLevel * 100);
 
   return (
-    <div className="inline-flex items-center rounded-full border border-border/70 bg-background/80 p-0.5 shadow-sm">
+    <div className="inline-flex items-center rounded-xl border border-slate-900/10 bg-white p-0.5">
       <Button
         type="button"
         variant="ghost"
         size="icon"
-        className="h-7 w-7 rounded-full sm:h-8 sm:w-8"
+        className="h-7 w-7 rounded-lg text-slate-700 hover:bg-slate-100 sm:h-8 sm:w-8"
         onClick={onZoomOut}
         aria-label="Diminuir zoom"
       >
@@ -27,7 +27,7 @@ const ZoomControls: React.FC<ZoomControlsProps> = ({ zoomLevel, onZoomOut, onZoo
       <Button
         type="button"
         variant="ghost"
-        className="h-7 min-w-12 rounded-full px-2 text-[10px] font-semibold text-foreground sm:h-8 sm:min-w-16 sm:px-3 sm:text-xs"
+        className="h-7 min-w-12 rounded-lg px-2 text-[10px] font-medium text-slate-700 hover:bg-slate-100 sm:h-8 sm:min-w-16 sm:px-3 sm:text-xs"
         onClick={onZoomReset}
       >
         {percentage}%
@@ -36,7 +36,7 @@ const ZoomControls: React.FC<ZoomControlsProps> = ({ zoomLevel, onZoomOut, onZoo
         type="button"
         variant="ghost"
         size="icon"
-        className="h-7 w-7 rounded-full sm:h-8 sm:w-8"
+        className="h-7 w-7 rounded-lg text-slate-700 hover:bg-slate-100 sm:h-8 sm:w-8"
         onClick={onZoomIn}
         aria-label="Aumentar zoom"
       >

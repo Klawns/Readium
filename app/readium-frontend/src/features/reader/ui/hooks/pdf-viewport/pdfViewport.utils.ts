@@ -10,9 +10,36 @@ export const getPreferredZoomLevel = () => {
   return DEFAULT_ZOOM_LEVEL;
 };
 
+interface NavigatorWithLegacyTouch extends Navigator {
+  msMaxTouchPoints?: number;
+}
+
 export const isTouchCapableDevice = () =>
   typeof window !== 'undefined' &&
-  (window.matchMedia('(pointer: coarse)').matches || window.navigator.maxTouchPoints > 0);
+  (() => {
+    const userAgent = window.navigator.userAgent.toLowerCase();
+    const mobileUserAgent = /android|iphone|ipad|ipod/.test(userAgent);
+    return (
+      window.matchMedia('(pointer: coarse)').matches ||
+      window.matchMedia('(any-pointer: coarse)').matches ||
+      window.navigator.maxTouchPoints > 0 ||
+      ((window.navigator as NavigatorWithLegacyTouch).msMaxTouchPoints ?? 0) > 0 ||
+      'ontouchstart' in window ||
+      mobileUserAgent
+    );
+  })();
+
+export const triggerHapticFeedback = (pattern: number | number[]) => {
+  if (typeof navigator === 'undefined' || typeof navigator.vibrate !== 'function') {
+    return false;
+  }
+
+  try {
+    return navigator.vibrate(pattern);
+  } catch {
+    return false;
+  }
+};
 
 export const clampPage = (page: number, totalPages: number): number => {
   if (totalPages <= 0) {

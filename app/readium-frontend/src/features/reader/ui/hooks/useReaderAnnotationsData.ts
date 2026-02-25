@@ -1,28 +1,15 @@
 import { useMemo } from 'react';
 import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/query-keys';
-import type { ReaderRect } from '../../domain/models';
-import { AnnotationHttpRepository } from '../../infrastructure/api/annotation-http-repository';
+import type { CreateAnnotationCommand } from '../../domain/ports/AnnotationRepository';
 import {
-  CreateAnnotationUseCase,
-  DeleteAnnotationUseCase,
-  UpdateAnnotationUseCase,
-} from '../../application/use-cases/annotation-use-cases';
+  createAnnotationUseCase,
+  deleteAnnotationUseCase,
+  getBookAnnotationsUseCase,
+  getBookPageAnnotationsUseCase,
+  updateAnnotationUseCase,
+} from '../../application/use-cases/annotation-use-case-factory';
 import { buildAnnotationPageWindow, mergePageAnnotations } from './useReaderAnnotationPages';
-
-const annotationRepository = new AnnotationHttpRepository();
-const createAnnotationUseCase = new CreateAnnotationUseCase(annotationRepository);
-const updateAnnotationUseCase = new UpdateAnnotationUseCase(annotationRepository);
-const deleteAnnotationUseCase = new DeleteAnnotationUseCase(annotationRepository);
-
-export interface CreateReaderAnnotationInput {
-  bookId: number;
-  page: number;
-  rects: ReaderRect[];
-  color: string;
-  selectedText: string;
-  note?: string;
-}
 
 export const useReaderAnnotationsData = (bookId: number, currentPage: number) => {
   const queryClient = useQueryClient();
@@ -31,7 +18,7 @@ export const useReaderAnnotationsData = (bookId: number, currentPage: number) =>
 
   const allAnnotationsQuery = useQuery({
     queryKey: allAnnotationsQueryKey,
-    queryFn: () => annotationRepository.getByBook(bookId),
+    queryFn: () => getBookAnnotationsUseCase.execute(bookId),
     enabled: Number.isFinite(bookId) && bookId > 0,
     staleTime: 20_000,
     retry: 1,
@@ -40,7 +27,7 @@ export const useReaderAnnotationsData = (bookId: number, currentPage: number) =>
   const pageAnnotationsQueries = useQueries({
     queries: annotationPages.map((page) => ({
       queryKey: queryKeys.readerAnnotationsPage(bookId, page),
-      queryFn: () => annotationRepository.getByBookAndPage(bookId, page),
+      queryFn: () => getBookPageAnnotationsUseCase.execute(bookId, page),
       enabled: Number.isFinite(bookId) && bookId > 0 && page > 0,
       staleTime: 10_000,
       retry: 1,
@@ -52,7 +39,7 @@ export const useReaderAnnotationsData = (bookId: number, currentPage: number) =>
   };
 
   const createAnnotationMutation = useMutation({
-    mutationFn: (input: CreateReaderAnnotationInput) => createAnnotationUseCase.execute(input),
+    mutationFn: (input: CreateAnnotationCommand) => createAnnotationUseCase.execute(input),
     onSuccess: invalidateBookAnnotations,
   });
 

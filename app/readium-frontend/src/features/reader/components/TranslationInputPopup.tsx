@@ -2,6 +2,9 @@ import React, { useEffect, useRef, useState } from 'react';
 import { Check, ExternalLink, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { cn } from '@/lib/utils.ts';
+import { useDismissOnPointerDownOutside } from '../ui/hooks/useDismissOnPointerDownOutside';
+import { useReaderPopupLayout } from '../ui/hooks/useReaderPopupLayout';
 
 interface TranslationInputPopupProps {
   position: { x: number; y: number };
@@ -25,6 +28,11 @@ const TranslationInputPopup: React.FC<TranslationInputPopupProps> = ({
   const [text, setText] = useState(initialValue);
   const inputRef = useRef<HTMLInputElement>(null);
   const popupRef = useRef<HTMLDivElement>(null);
+  const { isMobile, style } = useReaderPopupLayout({
+    position,
+    desktopWidth: 352,
+    desktopOffset: 12,
+  });
 
   useEffect(() => {
     inputRef.current?.focus();
@@ -34,15 +42,7 @@ const TranslationInputPopup: React.FC<TranslationInputPopupProps> = ({
     setText(initialValue);
   }, [initialValue]);
 
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (popupRef.current && !popupRef.current.contains(event.target as Node)) {
-        onCancel();
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [onCancel]);
+  useDismissOnPointerDownOutside(popupRef, onCancel);
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
@@ -54,14 +54,11 @@ const TranslationInputPopup: React.FC<TranslationInputPopupProps> = ({
   return (
     <div
       ref={popupRef}
-      className="w-80 rounded-lg border bg-background p-3 shadow-xl animate-in fade-in-90 scale-95"
-      style={{
-        position: 'fixed',
-        top: position.y,
-        left: position.x,
-        transform: 'translateX(-50%) translateY(calc(-100% - 12px))',
-        zIndex: 1000,
-      }}
+      className={cn(
+        'reader-popup-surface rounded-2xl animate-in fade-in-90 zoom-in-95',
+        isMobile ? 'w-auto p-3.5' : 'w-80 p-3.5',
+      )}
+      style={style}
     >
       <div className="mb-2 text-xs text-muted-foreground">
         Traduzindo: <span className="font-medium text-foreground italic">"{originalText}"</span>
@@ -71,25 +68,31 @@ const TranslationInputPopup: React.FC<TranslationInputPopupProps> = ({
           </span>
         ) : null}
       </div>
-      <form onSubmit={handleSubmit} className="flex gap-2">
+      <form onSubmit={handleSubmit} className={cn('gap-2', isMobile ? 'grid grid-cols-[1fr_auto_auto]' : 'flex')}>
         <Input
           ref={inputRef}
           value={text}
           onChange={(event) => setText(event.target.value)}
           placeholder="Refine a traducao em portugues..."
-          className="h-8 text-sm"
+          className={cn('border-slate-900/10 bg-white text-sm focus-visible:ring-slate-300', isMobile ? 'h-9' : 'h-8')}
         />
-        <Button type="submit" size="icon">
+        <Button type="submit" size="icon" className={cn('rounded-lg', isMobile ? 'h-9 w-9' : 'h-8 w-8')}>
           <Check className="h-4 w-4" />
         </Button>
-        <Button type="button" variant="ghost" size="icon" onClick={onCancel}>
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          onClick={onCancel}
+          className={cn('rounded-lg text-slate-600 hover:bg-slate-100 hover:text-slate-800', isMobile ? 'h-9 w-9' : 'h-8 w-8')}
+        >
           <X className="h-4 w-4" />
         </Button>
       </form>
       {googleTranslateUrl ? (
-        <div className="mt-2 text-xs text-muted-foreground">
+        <div className="mt-2 rounded-lg border border-slate-900/10 bg-slate-50 px-2.5 py-2 text-xs text-slate-500">
           Traducao automatica indisponivel neste trecho.
-          <Button asChild variant="link" size="sm" className="h-auto px-1 text-xs">
+          <Button asChild variant="link" size="sm" className="h-auto px-1 py-0 text-xs">
             <a href={googleTranslateUrl} target="_blank" rel="noopener noreferrer">
               Abrir no Google Tradutor <ExternalLink className="h-3 w-3" />
             </a>

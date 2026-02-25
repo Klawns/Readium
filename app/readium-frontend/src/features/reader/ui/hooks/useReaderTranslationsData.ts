@@ -2,17 +2,11 @@ import { useMemo } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { queryKeys } from '@/lib/query-keys';
 import type { CreateTranslationCommand } from '../../domain/ports/TranslationRepository';
-import { TranslationHttpRepository } from '../../infrastructure/api/translation-http-repository';
-import { BackendTranslationProvider } from '../../infrastructure/translation/backend-translation-provider';
 import {
-  PersistTranslationUseCase,
-  TranslateSelectionUseCase,
-} from '../../application/use-cases/translation-use-cases';
-
-const translationRepository = new TranslationHttpRepository();
-const translationProvider = new BackendTranslationProvider();
-const translateSelectionUseCase = new TranslateSelectionUseCase(translationProvider);
-const persistTranslationUseCase = new PersistTranslationUseCase(translationRepository);
+  getBookTranslationsUseCase,
+  persistTranslationUseCase,
+  translateSelectionUseCase,
+} from '../../application/use-cases/translation-use-case-factory';
 
 export const useReaderTranslationsData = (bookId: number) => {
   const queryClient = useQueryClient();
@@ -20,7 +14,7 @@ export const useReaderTranslationsData = (bookId: number) => {
 
   const translationsQuery = useQuery({
     queryKey: translationsQueryKey,
-    queryFn: () => translationRepository.getByBook(bookId),
+    queryFn: () => getBookTranslationsUseCase.execute(bookId),
     enabled: Number.isFinite(bookId) && bookId > 0,
     staleTime: 20_000,
     retry: 1,

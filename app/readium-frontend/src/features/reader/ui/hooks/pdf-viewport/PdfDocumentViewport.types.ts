@@ -24,6 +24,7 @@ export interface PdfDocumentViewportProps {
   annotations: ReaderAnnotation[];
   translationOverlays: ReaderTranslationOverlay[];
   initialPage: number;
+  currentZoomLevel: number;
   onSelectionResolved: (selection: PendingSelection | null) => void;
   onTranslationOverlayInteract?: (payload: TranslationOverlayInteractPayload) => void;
   onAnnotationOverlayInteract?: (payload: AnnotationOverlayInteractPayload) => void;

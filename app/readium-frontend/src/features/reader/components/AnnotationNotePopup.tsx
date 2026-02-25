@@ -1,7 +1,10 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { cn } from '@/lib/utils.ts';
 import type { ReaderAnnotation } from '../domain/models';
+import { useDismissOnPointerDownOutside } from '../ui/hooks/useDismissOnPointerDownOutside';
+import { useReaderPopupLayout } from '../ui/hooks/useReaderPopupLayout';
 
 interface AnnotationNotePopupProps {
   annotation: ReaderAnnotation;
@@ -30,6 +33,11 @@ const AnnotationNotePopup: React.FC<AnnotationNotePopupProps> = ({
   const [note, setNote] = useState(annotation.note ?? '');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const popupRef = useRef<HTMLDivElement>(null);
+  const { isMobile, style } = useReaderPopupLayout({
+    position,
+    desktopWidth: 352,
+    desktopOffset: 14,
+  });
 
   const selectedTextPreview = useMemo(
     () => toPreviewText(annotation.selectedText.trim()),
@@ -44,18 +52,7 @@ const AnnotationNotePopup: React.FC<AnnotationNotePopupProps> = ({
     textareaRef.current?.focus();
   }, []);
 
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (popupRef.current && !popupRef.current.contains(event.target as Node)) {
-        onCancel();
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, [onCancel]);
+  useDismissOnPointerDownOutside(popupRef, onCancel);
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
@@ -65,14 +62,11 @@ const AnnotationNotePopup: React.FC<AnnotationNotePopupProps> = ({
   return (
     <div
       ref={popupRef}
-      className="w-[22rem] rounded-2xl border border-border/80 bg-background/95 p-4 shadow-2xl backdrop-blur-sm animate-in fade-in-90 zoom-in-95"
-      style={{
-        position: 'fixed',
-        top: position.y,
-        left: position.x,
-        transform: 'translateX(-50%) translateY(calc(-100% - 14px))',
-        zIndex: 1000,
-      }}
+      className={cn(
+        'reader-popup-surface rounded-2xl animate-in fade-in-90 zoom-in-95',
+        isMobile ? 'w-auto p-3.5' : 'w-[22rem] p-4',
+      )}
+      style={style}
     >
       <div className="mb-3 space-y-2">
         <div className="flex items-center justify-between">
@@ -83,14 +77,14 @@ const AnnotationNotePopup: React.FC<AnnotationNotePopupProps> = ({
             size="icon"
             onClick={onDelete}
             disabled={isDeleting || isSaving}
-            className="h-7 w-7 text-destructive hover:text-destructive"
+            className={cn('text-destructive hover:text-destructive', isMobile ? 'h-8 w-8' : 'h-7 w-7')}
             aria-label="Remover highlight"
           >
             <Trash2 className="h-4 w-4" />
           </Button>
         </div>
         {selectedTextPreview ? (
-          <p className="line-clamp-2 rounded-lg bg-muted/70 px-2 py-1 text-xs text-muted-foreground">
+          <p className="line-clamp-2 rounded-lg border border-slate-900/10 bg-slate-50 px-2 py-1 text-xs text-slate-500">
             {selectedTextPreview}
           </p>
         ) : null}
@@ -102,7 +96,10 @@ const AnnotationNotePopup: React.FC<AnnotationNotePopupProps> = ({
           value={note}
           onChange={(event) => setNote(event.target.value)}
           placeholder="Escreva sua anotacao..."
-          className="min-h-[92px] w-full resize-y rounded-xl border border-border/80 bg-background px-3 py-2 text-sm outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20"
+          className={cn(
+            'w-full resize-y rounded-xl border border-slate-900/10 bg-white px-3 py-2 text-sm outline-none transition-colors focus:border-slate-400 focus:ring-2 focus:ring-slate-300/60',
+            isMobile ? 'min-h-[84px]' : 'min-h-[92px]',
+          )}
           maxLength={1000}
         />
         <div className="flex items-center justify-between">

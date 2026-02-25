@@ -4,6 +4,22 @@ import type {
   UpdateAnnotationCommand,
 } from '../../domain/ports/AnnotationRepository';
 
+export class GetBookAnnotationsUseCase {
+  constructor(private readonly repository: AnnotationRepository) {}
+
+  execute(bookId: number) {
+    return this.repository.getByBook(bookId);
+  }
+}
+
+export class GetBookPageAnnotationsUseCase {
+  constructor(private readonly repository: AnnotationRepository) {}
+
+  execute(bookId: number, page: number) {
+    return this.repository.getByBookAndPage(bookId, page);
+  }
+}
+
 export class CreateAnnotationUseCase {
   constructor(private readonly repository: AnnotationRepository) {}
 

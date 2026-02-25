@@ -4,6 +4,14 @@ import type {
   TranslationRepository,
 } from '../../domain/ports/TranslationRepository';
 
+export class GetBookTranslationsUseCase {
+  constructor(private readonly repository: TranslationRepository) {}
+
+  execute(bookId: number) {
+    return this.repository.getByBook(bookId);
+  }
+}
+
 export class TranslateSelectionUseCase {
   constructor(private readonly provider: TranslationProvider) {}
 

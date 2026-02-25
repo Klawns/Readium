@@ -1,4 +1,4 @@
-export interface TranslateTextCommand {
+interface TranslateTextCommand {
   text: string;
   targetLanguage: string;
 }
