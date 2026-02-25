@@ -23,8 +23,10 @@ public class AnnotationController {
     private final AnnotationQueryService queryService;
 
     @PostMapping("/annotations")
-    public ResponseEntity<AnnotationResponseDTO> create(@RequestBody AnnotationRequestDTO req) {
-        AnnotationResponseDTO response = commandService.create(req);
+    public ResponseEntity<AnnotationResponseDTO> create(
+            @RequestHeader(value = "X-Operation-Id", required = false) String operationId,
+            @RequestBody AnnotationRequestDTO req) {
+        AnnotationResponseDTO response = commandService.create(req, operationId);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
 
@@ -56,14 +58,17 @@ public class AnnotationController {
 
     @PutMapping("/annotations/{id}")
     public ResponseEntity<AnnotationResponseDTO> update(
+            @RequestHeader(value = "X-Operation-Id", required = false) String operationId,
             @PathVariable Long id,
             @RequestBody UpdateAnnotationRequestDTO req) {
-        return ResponseEntity.ok(commandService.update(id, req));
+        return ResponseEntity.ok(commandService.update(id, req, operationId));
     }
 
     @DeleteMapping("/annotations/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
-        commandService.delete(id);
+    public ResponseEntity<Void> delete(
+            @RequestHeader(value = "X-Operation-Id", required = false) String operationId,
+            @PathVariable Long id) {
+        commandService.delete(id, operationId);
         return ResponseEntity.noContent().build();
     }
 }

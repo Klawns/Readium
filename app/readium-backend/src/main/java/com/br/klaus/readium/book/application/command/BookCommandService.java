@@ -15,6 +15,7 @@ import com.br.klaus.readium.book.events.BookDeletedEvent;
 import com.br.klaus.readium.book.events.BookOcrRequestedEvent;
 import com.br.klaus.readium.book.events.BookProgressUpdatedEvent;
 import com.br.klaus.readium.exception.UnsupportedFileFormatException;
+import com.br.klaus.readium.sync.application.OperationIdempotencyService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -32,12 +33,15 @@ import java.util.Objects;
 @RequiredArgsConstructor
 @Slf4j
 public class BookCommandService {
+    private static final String STATUS_OPERATION_SCOPE = "book-status";
+    private static final String PROGRESS_OPERATION_SCOPE = "book-progress";
 
     private final BookRepositoryPort repository;
     private final ApplicationEventPublisher eventPublisher;
     private final BookStoragePort storageService;
     private final BookLookupService bookLookupService;
     private final OcrRunningRecoveryService ocrRunningRecoveryService;
+    private final OperationIdempotencyService operationIdempotencyService;
 
     @Transactional
     public BookResponseDTO upload(MultipartFile file) {
@@ -97,7 +101,15 @@ public class BookCommandService {
     }
 
     @Transactional
-    public void changeBookStatus(UpdateBookStatusRequestDTO req) {
+    public void changeBookStatus(UpdateBookStatusRequestDTO req, String operationId) {
+        OperationIdempotencyService.OperationClaim claim = operationIdempotencyService.claim(
+                STATUS_OPERATION_SCOPE,
+                operationId
+        );
+        if (!claim.shouldProcess()) {
+            return;
+        }
+
         Book book = bookLookupService.loadOrThrow(req.bookId());
 
         try {
@@ -110,7 +122,15 @@ public class BookCommandService {
     }
 
     @Transactional
-    public void updateProgress(Long bookId, UpdateProgressRequestDTO req) {
+    public void updateProgress(Long bookId, UpdateProgressRequestDTO req, String operationId) {
+        OperationIdempotencyService.OperationClaim claim = operationIdempotencyService.claim(
+                PROGRESS_OPERATION_SCOPE,
+                operationId
+        );
+        if (!claim.shouldProcess()) {
+            return;
+        }
+
         Book book = bookLookupService.loadOrThrow(bookId);
 
         Integer previousPage = book.getLastReadPage();

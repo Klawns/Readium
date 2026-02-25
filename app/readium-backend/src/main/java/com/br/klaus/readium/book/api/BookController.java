@@ -70,16 +70,19 @@ public class BookController {
     }
 
     @PatchMapping("/status")
-    public ResponseEntity<Void> updateStatus(@RequestBody UpdateBookStatusRequestDTO req) {
-        commandService.changeBookStatus(req);
+    public ResponseEntity<Void> updateStatus(
+            @RequestHeader(value = "X-Operation-Id", required = false) String operationId,
+            @RequestBody UpdateBookStatusRequestDTO req) {
+        commandService.changeBookStatus(req, operationId);
         return ResponseEntity.noContent().build();
     }
     
     @PatchMapping("/{id}/progress")
     public ResponseEntity<Void> updateProgress(
+            @RequestHeader(value = "X-Operation-Id", required = false) String operationId,
             @PathVariable Long id,
             @RequestBody @Valid UpdateProgressRequestDTO req) {
-        commandService.updateProgress(id, req);
+        commandService.updateProgress(id, req, operationId);
         return ResponseEntity.noContent().build();
     }
 

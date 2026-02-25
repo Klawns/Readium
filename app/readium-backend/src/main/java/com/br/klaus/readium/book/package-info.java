@@ -2,7 +2,8 @@
         displayName = "Books",
         allowedDependencies = {
                 "exception",
-                "storage"
+                "storage",
+                "sync::api"
         }
 )
 package com.br.klaus.readium.book;

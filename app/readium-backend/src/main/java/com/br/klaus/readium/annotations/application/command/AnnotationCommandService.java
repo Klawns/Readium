@@ -11,6 +11,7 @@ import com.br.klaus.readium.book.api.BookExistenceService;
 import com.br.klaus.readium.book.events.BookDeletedEvent;
 import com.br.klaus.readium.exception.AnnotationNotFoundException;
 import com.br.klaus.readium.exception.BookNotFoundException;
+import com.br.klaus.readium.sync.application.OperationIdempotencyService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
@@ -21,13 +22,25 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class AnnotationCommandService {
+    private static final String CREATE_OPERATION_SCOPE = "annotation-create";
+    private static final String UPDATE_OPERATION_SCOPE = "annotation-update";
+    private static final String DELETE_OPERATION_SCOPE = "annotation-delete";
 
     private final AnnotationRepositoryPort repository;
     private final BookExistenceService bookExistenceService;
+    private final OperationIdempotencyService operationIdempotencyService;
 
     @Transactional
     @EvictAnnotationCaches
-    public AnnotationResponseDTO create(AnnotationRequestDTO req) {
+    public AnnotationResponseDTO create(AnnotationRequestDTO req, String operationId) {
+        OperationIdempotencyService.OperationClaim claim = operationIdempotencyService.claim(
+                CREATE_OPERATION_SCOPE,
+                operationId
+        );
+        if (!claim.shouldProcess()) {
+            return resolveDuplicatedCreate(claim);
+        }
+
         if (!bookExistenceService.existsById(req.bookId())) {
             throw new BookNotFoundException("Livro com ID " + req.bookId() + " nao encontrado.");
         }
@@ -41,12 +54,23 @@ public class AnnotationCommandService {
                 req.note()
         );
         repository.save(annotation);
+        operationIdempotencyService.attachResourceId(claim, annotation.getId());
         return AnnotationResponseMapper.toResponse(annotation);
     }
 
     @Transactional
     @EvictAnnotationCaches
-    public AnnotationResponseDTO update(Long id, UpdateAnnotationRequestDTO req) {
+    public AnnotationResponseDTO update(Long id, UpdateAnnotationRequestDTO req, String operationId) {
+        OperationIdempotencyService.OperationClaim claim = operationIdempotencyService.claim(
+                UPDATE_OPERATION_SCOPE,
+                operationId
+        );
+        if (!claim.shouldProcess()) {
+            return repository.findById(id)
+                    .map(AnnotationResponseMapper::toResponse)
+                    .orElseThrow(() -> new AnnotationNotFoundException("Anotacao com ID " + id + " nao encontrada."));
+        }
+
         Annotation annotation = repository.findById(id)
                 .orElseThrow(() -> new AnnotationNotFoundException("Anotacao com ID " + id + " nao encontrada."));
 
@@ -57,7 +81,15 @@ public class AnnotationCommandService {
 
     @Transactional
     @EvictAnnotationCaches
-    public void delete(Long id) {
+    public void delete(Long id, String operationId) {
+        OperationIdempotencyService.OperationClaim claim = operationIdempotencyService.claim(
+                DELETE_OPERATION_SCOPE,
+                operationId
+        );
+        if (!claim.shouldProcess()) {
+            return;
+        }
+
         Annotation annotation = repository.findById(id)
                 .orElseThrow(() -> new AnnotationNotFoundException("Anotacao com ID " + id + " nao encontrada para delecao."));
         repository.delete(annotation);
@@ -78,5 +110,16 @@ public class AnnotationCommandService {
         return req.rects().stream()
                 .map(rect -> new Rect(rect.x(), rect.y(), rect.width(), rect.height()))
                 .toList();
+    }
+
+    private AnnotationResponseDTO resolveDuplicatedCreate(OperationIdempotencyService.OperationClaim claim) {
+        Long resourceId = claim.resourceId();
+        if (resourceId == null) {
+            throw new IllegalStateException("Operacao de criacao de anotacao duplicada sem recurso associado.");
+        }
+
+        Annotation annotation = repository.findById(resourceId)
+                .orElseThrow(() -> new AnnotationNotFoundException("Anotacao com ID " + resourceId + " nao encontrada."));
+        return AnnotationResponseMapper.toResponse(annotation);
     }
 }

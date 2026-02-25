@@ -3,7 +3,8 @@
         allowedDependencies = {
                 "book::api",
                 "book::events",
-                "exception"
+                "exception",
+                "sync::api"
         }
 )
 package com.br.klaus.readium.annotations;
