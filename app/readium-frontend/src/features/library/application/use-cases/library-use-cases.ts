@@ -1,33 +1,22 @@
 import type { Book, BookPage, BookStatus, StatusFilter } from '@/types';
 import type { BookRepository, UploadBookOptions } from '../../domain/ports/BookRepository';
 
-export class FetchLibraryBooksUseCase {
-  constructor(private readonly repository: BookRepository) {}
-
-  execute(
+export interface LibraryUseCases {
+  fetchBooks: (
     status: StatusFilter,
     page: number,
     size: number,
     query: string,
     categoryId: number | null,
     collectionId: number | null,
-  ): Promise<BookPage> {
-    return this.repository.getBooks(status, page, size, query, categoryId, collectionId);
-  }
+  ) => Promise<BookPage>;
+  uploadBook: (file: File, options?: UploadBookOptions) => Promise<Book>;
+  updateBookStatus: (bookId: number, status: BookStatus) => Promise<void>;
 }
 
-export class UploadLibraryBookUseCase {
-  constructor(private readonly repository: BookRepository) {}
-
-  execute(file: File, options?: UploadBookOptions): Promise<Book> {
-    return this.repository.upload(file, options);
-  }
-}
-
-export class UpdateLibraryBookStatusUseCase {
-  constructor(private readonly repository: BookRepository) {}
-
-  execute(bookId: number, status: BookStatus): Promise<void> {
-    return this.repository.updateStatus(bookId, status);
-  }
-}
+export const createLibraryUseCases = (repository: BookRepository): LibraryUseCases => ({
+  fetchBooks: (status, page, size, query, categoryId, collectionId) =>
+    repository.getBooks(status, page, size, query, categoryId, collectionId),
+  uploadBook: (file, options) => repository.upload(file, options),
+  updateBookStatus: (bookId, status) => repository.updateStatus(bookId, status),
+});

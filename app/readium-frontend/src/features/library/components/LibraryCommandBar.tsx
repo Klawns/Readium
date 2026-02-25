@@ -1,18 +1,11 @@
-import { Check, Plus, Search, SlidersHorizontal, X } from 'lucide-react';
+import { Plus, Search, X } from 'lucide-react';
 import type { Category, ReadingCollection, StatusFilter } from '@/types';
 import { Button } from '@/components/ui/button.tsx';
 import { Input } from '@/components/ui/input.tsx';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu.tsx';
 import { LIBRARY_FILTER_OPTIONS } from '../domain/status-metadata';
 import { useLibraryCommandBarState } from '../ui/hooks/useLibraryCommandBarState';
 import { LibraryActiveFilters } from './LibraryActiveFilters';
+import { LibraryFiltersMenu } from './LibraryFiltersMenu';
 
 interface LibraryCommandBarProps {
   searchValue: string;
@@ -67,10 +60,6 @@ export const LibraryCommandBar = ({
     onCollectionChange(null);
   };
 
-  const clearAllFilters = () => {
-    onClearAllFilters();
-  };
-
   return (
     <section className="space-y-3 rounded-xl border border-slate-200 bg-white/90 p-3 shadow-sm">
       <div className="flex flex-col gap-2 xl:flex-row xl:items-center">
@@ -113,64 +102,18 @@ export const LibraryCommandBar = ({
             })}
           </div>
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="h-9 gap-2 border-slate-200">
-                <SlidersHorizontal className="h-4 w-4" />
-                Filtros
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-80">
-              <DropdownMenuLabel>Categoria</DropdownMenuLabel>
-              <DropdownMenuItem onClick={() => onCategoryChange(null)} className="justify-between gap-2">
-                <span>Todas as categorias</span>
-                {selectedCategoryId == null ? <Check className="h-4 w-4 text-slate-500" /> : null}
-              </DropdownMenuItem>
-              <div className="max-h-52 overflow-y-auto">
-                {state.flattenedCategories.map((node) => (
-                  <DropdownMenuItem
-                    key={node.category.id}
-                    onClick={() => onCategoryChange(node.category.id)}
-                    className="justify-between gap-2"
-                    style={{ paddingLeft: `${8 + node.depth * 14}px` }}
-                  >
-                    <span className="truncate">{node.category.name}</span>
-                    {selectedCategoryId === node.category.id ? (
-                      <Check className="h-4 w-4 text-slate-500" />
-                    ) : null}
-                  </DropdownMenuItem>
-                ))}
-              </div>
-              <DropdownMenuItem onClick={onOpenCategoryManager} className="text-slate-600">
-                Gerenciar categorias
-              </DropdownMenuItem>
-
-              <DropdownMenuSeparator />
-
-              <DropdownMenuLabel>Colecao</DropdownMenuLabel>
-              <DropdownMenuItem onClick={() => onCollectionChange(null)} className="justify-between gap-2">
-                <span>Todas as colecoes</span>
-                {selectedCollectionId == null ? <Check className="h-4 w-4 text-slate-500" /> : null}
-              </DropdownMenuItem>
-              <div className="max-h-52 overflow-y-auto">
-                {collections.map((collection) => (
-                  <DropdownMenuItem
-                    key={collection.id}
-                    onClick={() => onCollectionChange(collection.id)}
-                    className="justify-between gap-2"
-                  >
-                    <span className="truncate">{collection.name}</span>
-                    {selectedCollectionId === collection.id ? (
-                      <Check className="h-4 w-4 text-slate-500" />
-                    ) : null}
-                  </DropdownMenuItem>
-                ))}
-              </div>
-              <DropdownMenuItem onClick={onOpenCollectionManager} className="text-slate-600">
-                Gerenciar colecoes
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <LibraryFiltersMenu
+            flattenedCategories={state.flattenedCategories}
+            collections={collections}
+            selectedCategoryId={selectedCategoryId}
+            selectedCollectionId={selectedCollectionId}
+            selectedCategoryName={state.selectedCategory?.name ?? 'Todas'}
+            selectedCollectionName={state.selectedCollection?.name ?? 'Todas'}
+            onCategoryChange={onCategoryChange}
+            onCollectionChange={onCollectionChange}
+            onOpenCategoryManager={onOpenCategoryManager}
+            onOpenCollectionManager={onOpenCollectionManager}
+          />
 
           <Button onClick={onOpenUpload} className="h-9 gap-2">
             <Plus className="h-4 w-4" />
@@ -183,7 +126,7 @@ export const LibraryCommandBar = ({
         <LibraryActiveFilters
           filters={state.activeFilters}
           onClearFilter={clearFilter}
-          onClearAll={clearAllFilters}
+          onClearAll={onClearAllFilters}
         />
       ) : null}
     </section>

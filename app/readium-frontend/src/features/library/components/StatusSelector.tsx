@@ -14,7 +14,7 @@ import { BOOK_STATUS_LABEL } from '../domain/status-metadata';
 interface StatusSelectorProps {
   status: BookStatus;
   onChange: (status: BookStatus) => void;
-  variant?: 'default' | 'minimal' | 'badge';
+  variant?: 'default' | 'minimal' | 'badge' | 'dot';
   className?: string;
 }
 
@@ -22,14 +22,16 @@ const statusConfig = {
   TO_READ: {
     label: BOOK_STATUS_LABEL.TO_READ,
     icon: Clock,
-    color: 'text-blue-500',
-    bgColor: 'bg-blue-500/10',
-    borderColor: 'border-blue-500/20',
+    color: 'text-red-500',
+    dotColor: 'bg-red-500',
+    bgColor: 'bg-red-500/10',
+    borderColor: 'border-red-500/20',
   },
   READING: {
     label: BOOK_STATUS_LABEL.READING,
     icon: BookOpen,
     color: 'text-amber-500',
+    dotColor: 'bg-amber-500',
     bgColor: 'bg-amber-500/10',
     borderColor: 'border-amber-500/20',
   },
@@ -37,6 +39,7 @@ const statusConfig = {
     label: BOOK_STATUS_LABEL.READ,
     icon: CheckCircle2,
     color: 'text-green-500',
+    dotColor: 'bg-emerald-500',
     bgColor: 'bg-green-500/10',
     borderColor: 'border-green-500/20',
   },
@@ -49,7 +52,20 @@ export default function StatusSelector({ status, onChange, variant = 'default', 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        {variant === 'badge' ? (
+        {variant === 'dot' ? (
+          <button
+            type="button"
+            className={cn(
+              "inline-flex h-6 w-6 items-center justify-center rounded-full bg-white focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-300 sm:h-5 sm:w-5",
+              className
+            )}
+            onClick={(e) => e.stopPropagation()}
+            aria-label={`Alterar status: ${current.label}`}
+            title={current.label}
+          >
+            <span className={cn("h-2.5 w-2.5 rounded-full ring-2 ring-white/90 shadow-sm", current.dotColor)} />
+          </button>
+        ) : variant === 'badge' ? (
           <button
             className={cn(
               "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-medium border transition-colors hover:bg-opacity-80 outline-none ring-0 focus:ring-0 focus:outline-none",
@@ -85,7 +101,7 @@ export default function StatusSelector({ status, onChange, variant = 'default', 
           </Button>
         )}
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-40">
+      <DropdownMenuContent align="end" className="w-[min(15rem,calc(100vw-2rem))]">
         {(Object.keys(statusConfig) as BookStatus[]).map((s) => {
           const config = statusConfig[s];
           const ItemIcon = config.icon;
@@ -96,7 +112,7 @@ export default function StatusSelector({ status, onChange, variant = 'default', 
                 e.stopPropagation();
                 onChange(s);
               }}
-              className="gap-2 cursor-pointer"
+              className="gap-2"
             >
               <ItemIcon className={cn("w-4 h-4", config.color)} />
               <span>{config.label}</span>

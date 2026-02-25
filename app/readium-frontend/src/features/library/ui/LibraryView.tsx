@@ -17,6 +17,7 @@ interface LibraryViewProps {
   totalPages: number;
   isLoading: boolean;
   isError: boolean;
+  isOfflineFallback: boolean;
   page: number;
   statusFilter: StatusFilter;
   searchQuery: string;
@@ -28,6 +29,10 @@ interface LibraryViewProps {
   selectedCategoryId: number | null;
   collections: ReadingCollection[];
   selectedCollectionId: number | null;
+  downloadedByBookId: Map<number, boolean>;
+  downloadingBookId: number | null;
+  downloadingBookProgressPercent: number | null;
+  removingOfflineBookId: number | null;
   onSearchChange: (value: string) => void;
   onOpenUpload: () => void;
   onCloseUpload: () => void;
@@ -38,6 +43,8 @@ interface LibraryViewProps {
   onBookStatusChange: (bookId: number, status: BookStatus) => void;
   onBookManageCategories: (book: Book) => void;
   onBookManageCollections: (book: Book) => void;
+  onBookDownloadOffline: (book: Book) => void;
+  onBookRemoveOffline: (bookId: number) => void;
   onPageChange: (page: number) => void;
   onCategoryFilterChange: (categoryId: number | null) => void;
   onCollectionFilterChange: (collectionId: number | null) => void;
@@ -83,6 +90,7 @@ export default function LibraryView({
   totalPages,
   isLoading,
   isError,
+  isOfflineFallback,
   page,
   statusFilter,
   searchQuery,
@@ -94,6 +102,10 @@ export default function LibraryView({
   selectedCategoryId,
   collections,
   selectedCollectionId,
+  downloadedByBookId,
+  downloadingBookId,
+  downloadingBookProgressPercent,
+  removingOfflineBookId,
   onSearchChange,
   onOpenUpload,
   onCloseUpload,
@@ -104,6 +116,8 @@ export default function LibraryView({
   onBookStatusChange,
   onBookManageCategories,
   onBookManageCollections,
+  onBookDownloadOffline,
+  onBookRemoveOffline,
   onPageChange,
   onCategoryFilterChange,
   onCollectionFilterChange,
@@ -128,6 +142,11 @@ export default function LibraryView({
             <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs text-slate-600">
               {totalPages} pagina(s)
             </span>
+            {isOfflineFallback ? (
+              <span className="rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs text-amber-700">
+                Modo offline: exibindo livros baixados
+              </span>
+            ) : null}
           </div>
         </div>
 
@@ -151,7 +170,7 @@ export default function LibraryView({
         </div>
 
         {isLoading ? (
-          <div className="grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
+          <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 sm:gap-x-5 sm:gap-y-9 lg:grid-cols-4 lg:gap-x-6 lg:gap-y-10 xl:grid-cols-5 2xl:grid-cols-6">
             {Array.from({ length: 12 }).map((_, index) => (
               <div key={index} className="space-y-3">
                 <div className="aspect-[2/3] animate-pulse rounded-xl bg-muted" />
@@ -184,7 +203,7 @@ export default function LibraryView({
           </div>
         ) : (
           <>
-            <div className="grid grid-cols-2 gap-x-6 gap-y-10 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
+            <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 sm:gap-x-5 sm:gap-y-9 lg:grid-cols-4 lg:gap-x-6 lg:gap-y-10 xl:grid-cols-5 2xl:grid-cols-6">
               {books.map((book) => (
                 <BookCard
                   key={book.id}
@@ -193,6 +212,13 @@ export default function LibraryView({
                   onStatusChange={(status) => onBookStatusChange(book.id, status)}
                   onManageCategories={() => onBookManageCategories(book)}
                   onManageCollections={() => onBookManageCollections(book)}
+                  isOfflineAvailable={Boolean(downloadedByBookId.get(book.id))}
+                  isDownloadingOffline={downloadingBookId === book.id || removingOfflineBookId === book.id}
+                  offlineDownloadProgressPercent={
+                    downloadingBookId === book.id ? downloadingBookProgressPercent : null
+                  }
+                  onDownloadOffline={() => onBookDownloadOffline(book)}
+                  onRemoveOffline={() => onBookRemoveOffline(book.id)}
                   density="comfortable"
                 />
               ))}
