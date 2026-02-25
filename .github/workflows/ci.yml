@@ -43,19 +43,29 @@ jobs:
         working-directory: app/readium-frontend
         run: npm run build
 
-  mobile-android:
-    needs: frontend
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: npm
-          cache-dependency-path: app/readium-frontend/package-lock.json
-      - name: Install mobile dependencies
-        working-directory: app/readium-frontend
-        run: npm ci
-      - name: Sync Android assets
-        working-directory: app/readium-frontend
-        run: npm run cap:sync:android
+mobile-android:
+  needs: frontend
+  runs-on: ubuntu-latest
+  steps:
+    - uses: actions/checkout@v4
+
+    - uses: actions/setup-node@v4
+      with:
+        node-version: 22
+        cache: npm
+        cache-dependency-path: app/readium-frontend/package-lock.json
+
+    - name: Install mobile dependencies
+      working-directory: app/readium-frontend
+      run: npm ci
+
+    - name: Create .env.mobile
+      working-directory: app/readium-frontend
+      run: |
+        cat > .env.mobile << 'EOF'
+        VITE_API_URL=${{ secrets.VITE_API_URL }}
+        EOF
+
+    - name: Sync Android assets
+      working-directory: app/readium-frontend
+      run: npm run cap:sync:android
