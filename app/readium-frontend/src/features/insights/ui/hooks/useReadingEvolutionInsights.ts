@@ -6,25 +6,31 @@ import {
   buildReadingEvolutionSummary,
   mapEvolutionPointsToDailyProgress,
 } from '../../application/services/reading-evolution-analytics';
-import {
-  getBookMetricsUseCase,
-  getReadingEvolutionUseCase,
-} from '../../application/use-cases/insight-use-case-factory';
+import type { InsightsUseCases } from '../../application/use-cases/insight-use-case-factory';
+import { getInsightsUseCases } from '../../infrastructure/insights-use-cases';
 
 const EVOLUTION_DAYS = 30;
 const PACE_DAYS = 7;
 const CONSISTENCY_DAYS = 14;
 
-export const useReadingEvolutionInsights = () => {
+interface UseReadingEvolutionInsightsParams {
+  useCases?: InsightsUseCases;
+}
+
+export const useReadingEvolutionInsights = ({
+  useCases,
+}: UseReadingEvolutionInsightsParams = {}) => {
+  const resolvedUseCases = useCases ?? getInsightsUseCases();
+
   const metricsQuery = useQuery({
     queryKey: queryKeys.insightsMetrics(),
-    queryFn: () => getBookMetricsUseCase.execute(),
+    queryFn: () => resolvedUseCases.getBookMetricsUseCase.execute(),
     staleTime: 30_000,
   });
 
   const evolutionQuery = useQuery({
     queryKey: [...queryKeys.insightsRoot(), 'evolution', EVOLUTION_DAYS],
-    queryFn: () => getReadingEvolutionUseCase.execute(EVOLUTION_DAYS),
+    queryFn: () => resolvedUseCases.getReadingEvolutionUseCase.execute(EVOLUTION_DAYS),
     staleTime: 30_000,
   });
 

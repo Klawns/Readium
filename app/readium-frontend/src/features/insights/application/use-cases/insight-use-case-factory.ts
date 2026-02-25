@@ -1,4 +1,4 @@
-import { InsightsHttpRepository } from '../../infrastructure/api/insights-http-repository';
+import type { InsightsRepository } from '../../domain/ports/InsightsRepository';
 import {
   GetBookMetricsUseCase,
   GetBookRecommendationsUseCase,
@@ -6,9 +6,16 @@ import {
   GetSmartCollectionsUseCase,
 } from './insight-use-cases';
 
-const repository = new InsightsHttpRepository();
+export interface InsightsUseCases {
+  getBookMetricsUseCase: GetBookMetricsUseCase;
+  getSmartCollectionsUseCase: GetSmartCollectionsUseCase;
+  getBookRecommendationsUseCase: GetBookRecommendationsUseCase;
+  getReadingEvolutionUseCase: GetReadingEvolutionUseCase;
+}
 
-export const getBookMetricsUseCase = new GetBookMetricsUseCase(repository);
-export const getSmartCollectionsUseCase = new GetSmartCollectionsUseCase(repository);
-export const getBookRecommendationsUseCase = new GetBookRecommendationsUseCase(repository);
-export const getReadingEvolutionUseCase = new GetReadingEvolutionUseCase(repository);
+export const createInsightsUseCases = (repository: InsightsRepository): InsightsUseCases => ({
+  getBookMetricsUseCase: new GetBookMetricsUseCase(repository),
+  getSmartCollectionsUseCase: new GetSmartCollectionsUseCase(repository),
+  getBookRecommendationsUseCase: new GetBookRecommendationsUseCase(repository),
+  getReadingEvolutionUseCase: new GetReadingEvolutionUseCase(repository),
+});
