@@ -1,10 +1,7 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { queryKeys } from '@/lib/query-keys';
-import {
-  listBookCollectionsUseCase,
-  setBookCollectionsUseCase,
-} from '../../application/use-cases/reading-collection-use-case-factory';
+import { getReadingCollectionUseCases } from '../../application/use-cases/reading-collection-use-case-factory';
 
 interface AssignCollectionToBooksInput {
   collectionId: number;
@@ -15,6 +12,7 @@ const sanitizeBookIds = (bookIds: number[]) =>
   Array.from(new Set(bookIds.filter((bookId) => Number.isFinite(bookId) && bookId > 0)));
 
 export const useAssignCollectionToBooks = () => {
+  const useCases = getReadingCollectionUseCases();
   const queryClient = useQueryClient();
 
   const assignMutation = useMutation({
@@ -22,9 +20,9 @@ export const useAssignCollectionToBooks = () => {
       const targets = sanitizeBookIds(bookIds);
       await Promise.all(
         targets.map(async (bookId) => {
-          const existing = await listBookCollectionsUseCase.execute(bookId);
+          const existing = await useCases.listBookCollectionsUseCase.execute(bookId);
           const nextIds = Array.from(new Set([...existing.map((collection) => collection.id), collectionId]));
-          const saved = await setBookCollectionsUseCase.execute(bookId, nextIds);
+          const saved = await useCases.setBookCollectionsUseCase.execute(bookId, nextIds);
           queryClient.setQueryData(queryKeys.bookCollections(bookId), saved);
         }),
       );

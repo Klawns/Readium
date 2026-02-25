@@ -1,8 +1,9 @@
 import type { ReadingCollection } from '@/types';
+import type { MoveReadingCollectionAction } from '../../domain/collection-actions';
 
 interface UseCollectionManualOrderParams {
   collections: ReadingCollection[];
-  onMoveCollection: (payload: { collectionId: number; targetIndex: number }) => Promise<unknown>;
+  onMoveCollection: (payload: MoveReadingCollectionAction) => Promise<unknown>;
 }
 
 const sortCollections = (collections: ReadingCollection[]): ReadingCollection[] =>
@@ -46,4 +47,3 @@ export const useCollectionManualOrder = ({
     moveDown: (collectionId: number) => moveByDelta(collectionId, 1),
   };
 };
-

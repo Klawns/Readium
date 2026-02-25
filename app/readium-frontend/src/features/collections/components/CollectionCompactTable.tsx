@@ -1,8 +1,7 @@
 import type { Book, ReadingCollection } from '@/types';
 import { GripVertical } from 'lucide-react';
 import type { DragEvent } from 'react';
-
-type BookDropTarget = number | 'unassigned';
+import type { BookCollectionDropTarget } from '../domain/collection-actions';
 
 interface CollectionCompactTableProps {
   books: Book[];
@@ -12,7 +11,7 @@ interface CollectionCompactTableProps {
   onOpenBook: (bookId: number) => void;
   onDragStartBook: (bookId: number) => void;
   onDragEndBook: () => void;
-  onMoveBookToTarget: (bookId: number, target: BookDropTarget) => Promise<void>;
+  onMoveBookToTarget: (bookId: number, target: BookCollectionDropTarget) => Promise<void>;
 }
 
 const DEFAULT_ACTION_VALUE = '';

@@ -1,4 +1,10 @@
+import {
+  getConnectionMode,
+  type ConnectionMode,
+} from '@/features/preferences/application/services/connection-mode-service.ts';
 import { ReadingCollectionHttpRepository } from '../../infrastructure/api/reading-collection-http-repository';
+import { ReadingCollectionLocalRepository } from '../../infrastructure/local/reading-collection-local-repository';
+import type { ReadingCollectionRepository } from '../../domain/ports/ReadingCollectionRepository';
 import {
   CreateReadingCollectionUseCase,
   DeleteReadingCollectionUseCase,
@@ -9,12 +15,39 @@ import {
   UpdateReadingCollectionUseCase,
 } from './reading-collection-use-cases';
 
-const repository = new ReadingCollectionHttpRepository();
+export interface ReadingCollectionUseCases {
+  listReadingCollectionsUseCase: ListReadingCollectionsUseCase;
+  createReadingCollectionUseCase: CreateReadingCollectionUseCase;
+  updateReadingCollectionUseCase: UpdateReadingCollectionUseCase;
+  moveReadingCollectionUseCase: MoveReadingCollectionUseCase;
+  deleteReadingCollectionUseCase: DeleteReadingCollectionUseCase;
+  listBookCollectionsUseCase: ListBookCollectionsUseCase;
+  setBookCollectionsUseCase: SetBookCollectionsUseCase;
+}
 
-export const listReadingCollectionsUseCase = new ListReadingCollectionsUseCase(repository);
-export const createReadingCollectionUseCase = new CreateReadingCollectionUseCase(repository);
-export const updateReadingCollectionUseCase = new UpdateReadingCollectionUseCase(repository);
-export const moveReadingCollectionUseCase = new MoveReadingCollectionUseCase(repository);
-export const deleteReadingCollectionUseCase = new DeleteReadingCollectionUseCase(repository);
-export const listBookCollectionsUseCase = new ListBookCollectionsUseCase(repository);
-export const setBookCollectionsUseCase = new SetBookCollectionsUseCase(repository);
+const useCasesByMode = new Map<ConnectionMode, ReadingCollectionUseCases>();
+
+const createUseCases = (repository: ReadingCollectionRepository): ReadingCollectionUseCases => ({
+  listReadingCollectionsUseCase: new ListReadingCollectionsUseCase(repository),
+  createReadingCollectionUseCase: new CreateReadingCollectionUseCase(repository),
+  updateReadingCollectionUseCase: new UpdateReadingCollectionUseCase(repository),
+  moveReadingCollectionUseCase: new MoveReadingCollectionUseCase(repository),
+  deleteReadingCollectionUseCase: new DeleteReadingCollectionUseCase(repository),
+  listBookCollectionsUseCase: new ListBookCollectionsUseCase(repository),
+  setBookCollectionsUseCase: new SetBookCollectionsUseCase(repository),
+});
+
+const resolveRepositoryForMode = (mode: ConnectionMode): ReadingCollectionRepository =>
+  mode === 'LOCAL' ? new ReadingCollectionLocalRepository() : new ReadingCollectionHttpRepository();
+
+export const getReadingCollectionUseCases = (): ReadingCollectionUseCases => {
+  const mode = getConnectionMode();
+  const existing = useCasesByMode.get(mode);
+  if (existing) {
+    return existing;
+  }
+
+  const created = createUseCases(resolveRepositoryForMode(mode));
+  useCasesByMode.set(mode, created);
+  return created;
+};

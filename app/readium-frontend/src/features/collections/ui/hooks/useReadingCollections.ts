@@ -1,32 +1,24 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { queryKeys } from '@/lib/query-keys';
-import {
-  createReadingCollectionUseCase,
-  deleteReadingCollectionUseCase,
-  listReadingCollectionsUseCase,
-  moveReadingCollectionUseCase,
-  updateReadingCollectionUseCase,
-} from '../../application/use-cases/reading-collection-use-case-factory';
-
-interface SaveReadingCollectionPayload {
-  name: string;
-  description?: string | null;
-  color?: string;
-  icon?: string;
-  templateId?: string;
-}
+import type { SaveReadingCollectionCommand } from '../../domain/ports/ReadingCollectionRepository';
+import type {
+  MoveReadingCollectionAction,
+  UpdateReadingCollectionAction,
+} from '../../domain/collection-actions';
+import { getReadingCollectionUseCases } from '../../application/use-cases/reading-collection-use-case-factory';
 
 export const useReadingCollections = (query = '') => {
+  const useCases = getReadingCollectionUseCases();
   const queryClient = useQueryClient();
 
   const collectionsQuery = useQuery({
     queryKey: queryKeys.readingCollectionsList(query),
-    queryFn: () => listReadingCollectionsUseCase.execute(query),
+    queryFn: () => useCases.listReadingCollectionsUseCase.execute(query),
   });
 
   const createMutation = useMutation({
-    mutationFn: (payload: SaveReadingCollectionPayload) => createReadingCollectionUseCase.execute(payload),
+    mutationFn: (command: SaveReadingCollectionCommand) => useCases.createReadingCollectionUseCase.execute(command),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.readingCollectionsRoot() });
       queryClient.invalidateQueries({ queryKey: queryKeys.booksRoot() });
@@ -39,8 +31,8 @@ export const useReadingCollections = (query = '') => {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ collectionId, payload }: { collectionId: number; payload: SaveReadingCollectionPayload }) =>
-      updateReadingCollectionUseCase.execute(collectionId, payload),
+    mutationFn: ({ collectionId, command }: UpdateReadingCollectionAction) =>
+      useCases.updateReadingCollectionUseCase.execute(collectionId, command),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.readingCollectionsRoot() });
       queryClient.invalidateQueries({ queryKey: queryKeys.booksRoot() });
@@ -53,7 +45,7 @@ export const useReadingCollections = (query = '') => {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (collectionId: number) => deleteReadingCollectionUseCase.execute(collectionId),
+    mutationFn: (collectionId: number) => useCases.deleteReadingCollectionUseCase.execute(collectionId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.readingCollectionsRoot() });
       queryClient.invalidateQueries({ queryKey: queryKeys.booksRoot() });
@@ -66,8 +58,8 @@ export const useReadingCollections = (query = '') => {
   });
 
   const moveMutation = useMutation({
-    mutationFn: ({ collectionId, targetIndex }: { collectionId: number; targetIndex: number }) =>
-      moveReadingCollectionUseCase.execute(collectionId, targetIndex),
+    mutationFn: ({ collectionId, targetIndex }: MoveReadingCollectionAction) =>
+      useCases.moveReadingCollectionUseCase.execute(collectionId, targetIndex),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: queryKeys.readingCollectionsRoot() });
       queryClient.invalidateQueries({ queryKey: queryKeys.booksRoot() });

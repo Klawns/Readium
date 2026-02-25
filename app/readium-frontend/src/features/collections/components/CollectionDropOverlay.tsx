@@ -2,14 +2,13 @@ import type { DragEvent } from 'react';
 import type { ReactNode } from 'react';
 import { ArrowRightLeft, Folder, FolderOpenDot } from 'lucide-react';
 import type { ReadingCollection } from '@/types';
-
-type DropTarget = number | 'unassigned' | null;
+import type { BookCollectionDropTarget, CollectionDropTarget } from '../domain/collection-actions';
 
 interface CollectionDropOverlayProps {
   collections: ReadingCollection[];
-  dropTarget: DropTarget;
+  dropTarget: CollectionDropTarget;
   isVisible: boolean;
-  onDragOverTarget: (target: number | 'unassigned') => void;
+  onDragOverTarget: (target: BookCollectionDropTarget) => void;
   onDragLeaveTarget: () => void;
   onDropOnCollection: (collectionId: number) => Promise<void>;
   onDropOnUnassigned: () => Promise<void>;
