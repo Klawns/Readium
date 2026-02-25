@@ -9,6 +9,7 @@ Readium e uma aplicacao self-hosted para biblioteca digital e leitura de livros.
 - Backend: testes Maven passando (`mvnw.cmd test`).
 - Frontend web: bundle/Vitest garantidos (`npm run build`, `npm run test -- --run`).
 - Docker: `app/Dockerfile` construindo os estagios `runtime-base` e `runtime-ocr`, com publicacao automatizada no Docker Hub via workflow.
+- Mobile Android: `npm run build:mobile` agora executa `scripts/build-mobile.js`, garantindo que o `.env.mobile` (ou via `READIUM_MOBILE_ENV_FILE`) configure a build antes de rodar o `vite build`.
 
 ## CI/CD
 
@@ -20,12 +21,13 @@ Readium e uma aplicacao self-hosted para biblioteca digital e leitura de livros.
 
 - Backend: Java 21, Spring Boot 4, Spring Data JPA, SQLite.
 - Frontend: React 18, TypeScript, Vite, TanStack Query, Tailwind CSS.
+- Mobile: Capacitor + Android (mesma base do frontend).
 - Infra: Docker e Docker Compose.
 
 ## Estrutura
 
 - `app/readium-backend`: API e regras de negocio.
-- `app/readium-frontend`: interface web.
+- `app/readium-frontend`: web app + mobile (Capacitor Android).
 - `app/Dockerfile`: build multi-stage (base e OCR).
 - `app/docker-compose.yml`: orquestracao local.
 
@@ -75,6 +77,50 @@ Acesso local:
 
 - Frontend: `http://localhost:3000`
 - Backend: `http://localhost:7717`
+
+## Mobile (Android)
+
+### Pré-requisitos
+
+- Node.js + npm
+- Java 21
+- Android Studio + SDK Android
+- Backend acessível pela mesma rede (LAN) quando testar no celular
+
+### Fluxo recomendado
+
+1. Copie `app/readium-frontend/.env.mobile.example` para `app/readium-frontend/.env.mobile`.
+2. Ajuste `VITE_API_BASE_URL` para o IP/porta do backend (ex: `http://192.168.0.22:7717/api`).
+3. Gere os assets mobile e sincronize com o Android:
+
+```bash
+cd app/readium-frontend
+npm run build:mobile
+npx cap sync android
+```
+
+> `npm run build:mobile` invoca `scripts/build-mobile.js`, que carrega o `.env.mobile` (padrão) ou o arquivo apontado por `READIUM_MOBILE_ENV_FILE` antes de executar o `vite build`. Atualize `VITE_API_BASE_URL`/`VITE_MOBILE_API_BASE_URL` nesse arquivo para apontar para o backend da rede.
+
+4. Abra no Android Studio:
+
+```bash
+npx cap open android
+```
+
+5. Build local de APK (opcional):
+
+```bash
+cd app/readium-frontend/android
+.\gradlew.bat assembleDebug
+.\gradlew.bat assembleRelease
+```
+
+Arquivos esperados:
+
+- Debug: `app/readium-frontend/android/app/build/outputs/apk/debug/app-debug.apk`
+- Release (unsigned): `app/readium-frontend/android/app/build/outputs/apk/release/app-release-unsigned.apk`
+
+Observacao: existe suporte de configuracao de servidor mobile dentro do app (menu `Configuracoes > Servidor mobile`) para trocar IP/URL sem rebuild completo.
 
 ## GitHub: commit e push
 
