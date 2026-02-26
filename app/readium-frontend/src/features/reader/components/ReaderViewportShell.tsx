@@ -17,6 +17,7 @@ import type {
 } from '../ui/hooks/pdf-viewport/PdfDocumentViewport.types';
 import { PdfDocumentViewport } from './PdfDocumentViewport';
 import ReaderControlsDock from './ReaderControlsDock';
+import { ReaderTouchModeFab } from './ReaderTouchModeFab';
 import ReaderAnnotationsSidebar from './ReaderAnnotationsSidebar';
 import { ReaderInteractionOverlays } from './ReaderInteractionOverlays';
 import { ReaderStatusIndicators } from './ReaderStatusIndicators';
@@ -48,8 +49,10 @@ interface ReaderViewportShellProps {
   isReaderLoading: boolean;
   isMobile: boolean;
   isReaderUiVisible: boolean;
+  isTouchSelectionModeEnabled: boolean;
   isAnnotationsSidebarOpen: boolean;
   onSetAnnotationsSidebarOpen: (open: boolean) => void;
+  onToggleTouchSelectionMode: () => void;
   onSelectionResolved: (selection: PendingSelection | null) => void;
   onTranslationOverlayInteract: (payload: TranslationOverlayInteractPayload) => void;
   onAnnotationOverlayInteract: (payload: AnnotationOverlayInteractPayload) => void;
@@ -96,8 +99,10 @@ export const ReaderViewportShell: React.FC<ReaderViewportShellProps> = ({
   isReaderLoading,
   isMobile,
   isReaderUiVisible,
+  isTouchSelectionModeEnabled,
   isAnnotationsSidebarOpen,
   onSetAnnotationsSidebarOpen,
+  onToggleTouchSelectionMode,
   onSelectionResolved,
   onTranslationOverlayInteract,
   onAnnotationOverlayInteract,
@@ -120,67 +125,81 @@ export const ReaderViewportShell: React.FC<ReaderViewportShellProps> = ({
   onSaveAnnotationNote,
   onDeleteAnnotationNote,
   onCancelAnnotationNote,
-}) => (
-  <div
-    ref={containerRef}
-    className={`reader-canvas-shell reader-motion-padding relative flex-1 overflow-hidden ${readerChromeSpacingClass}`}
-  >
-    <PdfDocumentViewport
-      engine={engine}
-      fileUrl={fileUrl}
-      containerRef={containerRef}
-      annotations={annotations}
-      translationOverlays={translationOverlays}
-      initialPage={initialPage}
-      currentZoomLevel={zoomLevel}
-      onSelectionResolved={onSelectionResolved}
-      onTranslationOverlayInteract={onTranslationOverlayInteract}
-      onAnnotationOverlayInteract={onAnnotationOverlayInteract}
-      onViewportStateChange={onViewportStateChange}
-      onViewportActionsReady={onViewportActionsReady}
-      onTextLayerQualityEvaluated={onTextLayerQualityEvaluated}
-      onViewportTap={onViewportTap}
-    />
+}) => {
+  const [isTouchPointerActive, setIsTouchPointerActive] = React.useState(false);
 
-    <ReaderControlsDock
-      currentPage={currentPage}
-      totalPages={totalPages}
-      zoomLevel={zoomLevel}
-      onPageChange={onPageChange}
-      onZoomIn={onZoomIn}
-      onZoomOut={onZoomOut}
-      onZoomReset={onZoomReset}
-      isVisible={isReaderUiVisible}
-    />
+  return (
+    <div
+      ref={containerRef}
+      className={`reader-canvas-shell reader-motion-padding relative flex-1 overflow-hidden ${readerChromeSpacingClass}`}
+    >
+      <PdfDocumentViewport
+        engine={engine}
+        fileUrl={fileUrl}
+        containerRef={containerRef}
+        pendingSelection={pendingSelection}
+        annotations={annotations}
+        translationOverlays={translationOverlays}
+        initialPage={initialPage}
+        currentZoomLevel={zoomLevel}
+        isTouchSelectionModeEnabled={isTouchSelectionModeEnabled}
+        onSelectionResolved={onSelectionResolved}
+        onTranslationOverlayInteract={onTranslationOverlayInteract}
+        onAnnotationOverlayInteract={onAnnotationOverlayInteract}
+        onViewportStateChange={onViewportStateChange}
+        onViewportActionsReady={onViewportActionsReady}
+        onTextLayerQualityEvaluated={onTextLayerQualityEvaluated}
+        onViewportTap={isTouchSelectionModeEnabled ? undefined : onViewportTap}
+        onTouchPointerActiveChange={setIsTouchPointerActive}
+      />
 
-    <ReaderAnnotationsSidebar
-      annotations={allAnnotations}
-      currentPage={currentPage}
-      isOpen={isAnnotationsSidebarOpen}
-      isVisible={!isMobile || isReaderUiVisible}
-      onOpenChange={onSetAnnotationsSidebarOpen}
-      onGoToPage={onGoToAnnotationPage}
-    />
+      <ReaderControlsDock
+        currentPage={currentPage}
+        totalPages={totalPages}
+        zoomLevel={zoomLevel}
+        onPageChange={onPageChange}
+        onZoomIn={onZoomIn}
+        onZoomOut={onZoomOut}
+        onZoomReset={onZoomReset}
+        isVisible={isReaderUiVisible}
+      />
+      {isMobile && (
+        <ReaderTouchModeFab
+          isTouchSelectionModeEnabled={isTouchSelectionModeEnabled}
+          onToggleTouchSelectionMode={onToggleTouchSelectionMode}
+        />
+      )}
 
-    <ReaderInteractionOverlays
-      pendingSelection={pendingSelection}
-      translationInput={translationInput}
-      activeTranslation={activeTranslation}
-      activeAnnotationNote={activeAnnotationNote}
-      isSavingNote={isSavingNote}
-      isDeletingNote={isDeletingNote}
-      onSelectColor={onSelectColor}
-      onCopySelection={onCopySelection}
-      onStartTranslateFlow={onStartTranslateFlow}
-      onCloseSelection={onCloseSelection}
-      onSaveTranslation={onSaveTranslation}
-      onCancelTranslation={onCancelTranslation}
-      onCloseActiveTranslation={onCloseActiveTranslation}
-      onSaveAnnotationNote={onSaveAnnotationNote}
-      onDeleteAnnotationNote={onDeleteAnnotationNote}
-      onCancelAnnotationNote={onCancelAnnotationNote}
-    />
+      <ReaderAnnotationsSidebar
+        annotations={allAnnotations}
+        currentPage={currentPage}
+        isOpen={isAnnotationsSidebarOpen}
+        isVisible={!isMobile || isReaderUiVisible}
+        onOpenChange={onSetAnnotationsSidebarOpen}
+        onGoToPage={onGoToAnnotationPage}
+      />
 
-    <ReaderStatusIndicators isTranslating={isTranslating} isReaderLoading={isReaderLoading} />
-  </div>
-);
+      <ReaderInteractionOverlays
+        pendingSelection={pendingSelection}
+        isTouchPointerActive={isTouchPointerActive}
+        translationInput={translationInput}
+        activeTranslation={activeTranslation}
+        activeAnnotationNote={activeAnnotationNote}
+        isSavingNote={isSavingNote}
+        isDeletingNote={isDeletingNote}
+        onSelectColor={onSelectColor}
+        onCopySelection={onCopySelection}
+        onStartTranslateFlow={onStartTranslateFlow}
+        onCloseSelection={onCloseSelection}
+        onSaveTranslation={onSaveTranslation}
+        onCancelTranslation={onCancelTranslation}
+        onCloseActiveTranslation={onCloseActiveTranslation}
+        onSaveAnnotationNote={onSaveAnnotationNote}
+        onDeleteAnnotationNote={onDeleteAnnotationNote}
+        onCancelAnnotationNote={onCancelAnnotationNote}
+      />
+
+      <ReaderStatusIndicators isTranslating={isTranslating} isReaderLoading={isReaderLoading} />
+    </div>
+  );
+};

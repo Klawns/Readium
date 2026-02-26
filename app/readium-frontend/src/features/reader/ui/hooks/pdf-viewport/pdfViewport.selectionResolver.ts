@@ -50,8 +50,10 @@ export const resolveViewportSelection = async ({
   retries,
   retryDelayMs,
 }: ResolveViewportSelectionParams) => {
+  logger.debug('resolve selection snapshot started', { retries, retryDelayMs });
   for (let attempt = 0; attempt <= retries; attempt += 1) {
     if (isDisposed()) {
+      logger.debug('resolve selection aborted: disposed', { attempt });
       return;
     }
 
@@ -61,6 +63,7 @@ export const resolveViewportSelection = async ({
         await waitForSelectionSync(retryDelayMs);
         continue;
       }
+      logger.debug('resolve selection failed: no selected bounding rect', { attempt, retries });
       emitSelection(null);
       return;
     }
@@ -72,6 +75,10 @@ export const resolveViewportSelection = async ({
         await waitForSelectionSync(retryDelayMs);
         continue;
       }
+      logger.debug('resolve selection failed: page metadata unavailable', {
+        attempt,
+        pageIndex,
+      });
       return;
     }
 
@@ -79,6 +86,12 @@ export const resolveViewportSelection = async ({
     if (!pageElement) {
       if (attempt < retries) {
         await waitForSelectionSync(retryDelayMs);
+      }
+      if (attempt === retries) {
+        logger.debug('resolve selection failed: page element not found', {
+          pageIndex,
+          selector: `[data-reader-page-index="${pageIndex}"]`,
+        });
       }
       continue;
     }
@@ -90,6 +103,10 @@ export const resolveViewportSelection = async ({
         await waitForSelectionSync(retryDelayMs);
         continue;
       }
+      logger.debug('resolve selection failed: no page highlight rects', {
+        attempt,
+        pageIndex,
+      });
       emitSelection(null);
       return;
     }
@@ -112,6 +129,10 @@ export const resolveViewportSelection = async ({
         await waitForSelectionSync(retryDelayMs);
         continue;
       }
+      logger.debug('resolve selection failed: selected text empty', {
+        attempt,
+        pageIndex,
+      });
       emitSelection(null);
       return;
     }
@@ -133,6 +154,13 @@ export const resolveViewportSelection = async ({
         y: pageClientRect.top + selectedRect.rect.origin.y * scaleY,
       },
     });
+    logger.debug('resolve selection succeeded', {
+      page: pageIndex + 1,
+      rectCount: pageRects.length,
+      textLength: selectedText.length,
+      attempt,
+    });
     return;
   }
+  logger.debug('resolve selection ended without emission');
 };

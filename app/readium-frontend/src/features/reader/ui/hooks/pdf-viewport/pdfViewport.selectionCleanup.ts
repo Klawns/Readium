@@ -1,3 +1,7 @@
+import { createLogger } from '@/lib/logger.ts';
+
+const logger = createLogger('reader-viewport-selection');
+
 interface SelectionScopeLike {
   getState(): { selecting: boolean };
   getBoundingRects(): Array<unknown>;
@@ -26,6 +30,7 @@ export const bindSelectionCleanupListeners = ({
       const state = selectionScope.getState();
       const hasSelectionRects = selectionScope.getBoundingRects().length > 0;
       if (state.selecting && !hasSelectionRects && !hasNativeSelectionText()) {
+        logger.debug('cleanup stale selection state');
         selectionScope.clear();
         emitSelection();
       }

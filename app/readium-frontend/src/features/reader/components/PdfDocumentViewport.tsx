@@ -16,10 +16,12 @@ const PdfDocumentViewportInner: React.FC<PdfDocumentViewportProps> = ({
   engine,
   fileUrl,
   containerRef,
+  pendingSelection,
   annotations,
   translationOverlays,
   initialPage,
   currentZoomLevel,
+  isTouchSelectionModeEnabled = false,
   onSelectionResolved,
   onTranslationOverlayInteract,
   onAnnotationOverlayInteract,
@@ -27,6 +29,7 @@ const PdfDocumentViewportInner: React.FC<PdfDocumentViewportProps> = ({
   onViewportActionsReady,
   onTextLayerQualityEvaluated,
   onViewportTap,
+  onTouchPointerActiveChange,
 }) => {
   const {
     documentManager,
@@ -41,9 +44,6 @@ const PdfDocumentViewportInner: React.FC<PdfDocumentViewportProps> = ({
   const { annotationsByPage, translationOverlaysByPage, annotationIdsWithTranslation } = usePdfViewportPageData({
     annotations,
     translationOverlays,
-  });
-  const touchAction = usePdfViewportTouchAction({
-    currentZoomLevel,
   });
 
   usePdfViewportActiveDocumentDebug({
@@ -72,9 +72,17 @@ const PdfDocumentViewportInner: React.FC<PdfDocumentViewportProps> = ({
     selectionCapability,
     annotationCapability,
     scrollCapability,
+    isTouchSelectionModeEnabled,
     onSelectionResolved,
     onTextLayerQualityEvaluated,
     onViewportTap,
+  });
+  React.useEffect(() => {
+    onTouchPointerActiveChange?.(interactionBindings.isTouchPointerActive);
+  }, [interactionBindings.isTouchPointerActive, onTouchPointerActiveChange]);
+  const touchAction = usePdfViewportTouchAction({
+    currentZoomLevel,
+    isTouchSelectionLocked: interactionBindings.isTouchSelectionLocked,
   });
 
   if (!activeDocumentId) {
@@ -96,6 +104,7 @@ const PdfDocumentViewportInner: React.FC<PdfDocumentViewportProps> = ({
       <PdfDocumentViewportContent
         activeDocumentId={activeDocumentId}
         touchAction={touchAction}
+        pendingSelection={pendingSelection}
         annotationsByPage={annotationsByPage}
         translationOverlaysByPage={translationOverlaysByPage}
         interactionBindings={interactionBindings}

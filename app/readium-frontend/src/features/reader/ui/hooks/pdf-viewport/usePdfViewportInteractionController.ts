@@ -14,6 +14,8 @@ import { usePdfViewportLinkNavigation } from './usePdfViewportLinkNavigation';
 
 export interface PdfViewportInteractionBindings {
   showTouchSelectionRects: boolean;
+  isTouchSelectionLocked: boolean;
+  isTouchPointerActive: boolean;
   preventNativeDrag: (event: React.DragEvent) => void;
   preventMobileContextMenu: (event: React.MouseEvent) => void;
   handlePointerDownCapture: (event: React.PointerEvent) => void;
@@ -32,6 +34,7 @@ interface UsePdfViewportInteractionControllerParams {
   selectionCapability: Readonly<SelectionCapability> | null;
   annotationCapability: Readonly<AnnotationCapability> | null;
   scrollCapability: Readonly<ScrollCapability> | null;
+  isTouchSelectionModeEnabled: boolean;
   onSelectionResolved: (selection: PendingSelection | null) => void;
   onTextLayerQualityEvaluated?: (lowTextLayerQuality: boolean) => void;
   onViewportTap?: (payload: { x: number; y: number }) => void;
@@ -48,6 +51,7 @@ export const usePdfViewportInteractionController = ({
   selectionCapability,
   annotationCapability,
   scrollCapability,
+  isTouchSelectionModeEnabled,
   onSelectionResolved,
   onTextLayerQualityEvaluated,
   onViewportTap,
@@ -56,6 +60,7 @@ export const usePdfViewportInteractionController = ({
     activeDocumentId,
     interactionCapability,
     selectionCapability,
+    isTouchSelectionModeEnabled,
     onViewportTap,
   });
 
@@ -67,6 +72,7 @@ export const usePdfViewportInteractionController = ({
     onSelectionResolved,
     lastPointerTypeRef: touchInteractions.lastPointerTypeRef,
     lastTouchSelectionAllowedRef: touchInteractions.lastTouchSelectionAllowedRef,
+    touchPointerEndSignal: touchInteractions.touchPointerEndSignal,
   });
 
   usePdfViewportTextLayerQuality({
@@ -92,6 +98,8 @@ export const usePdfViewportInteractionController = ({
 
   return {
     showTouchSelectionRects: touchInteractions.showTouchSelectionRects,
+    isTouchSelectionLocked: touchInteractions.isTouchSelectionLocked,
+    isTouchPointerActive: touchInteractions.isTouchPointerActive,
     preventNativeDrag: touchInteractions.preventNativeDrag,
     preventMobileContextMenu: touchInteractions.preventMobileContextMenu,
     handlePointerDownCapture: touchInteractions.handlePointerDownCapture,

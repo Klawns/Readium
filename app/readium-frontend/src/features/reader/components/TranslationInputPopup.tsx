@@ -33,6 +33,15 @@ const TranslationInputPopup: React.FC<TranslationInputPopupProps> = ({
     desktopWidth: 352,
     desktopOffset: 12,
   });
+  const popupStyle = isMobile
+    ? {
+        ...style,
+        left: '50%',
+        right: 'auto',
+        transform: 'translateX(-50%)',
+        width: 'min(calc(100vw - 1.25rem), 22rem)',
+      }
+    : style;
 
   useEffect(() => {
     inputRef.current?.focus();
@@ -55,12 +64,14 @@ const TranslationInputPopup: React.FC<TranslationInputPopupProps> = ({
     <div
       ref={popupRef}
       className={cn(
-        'reader-popup-surface rounded-2xl animate-in fade-in-90 zoom-in-95',
-        isMobile ? 'w-auto p-3.5' : 'w-80 p-3.5',
+        'reader-popup-surface rounded-2xl animate-in fade-in-90',
+        isMobile
+          ? 'w-[min(calc(100vw-1.25rem),22rem)] p-3 animate-in slide-in-from-bottom-2'
+          : 'w-80 p-3.5 zoom-in-95',
       )}
-      style={style}
+      style={popupStyle}
     >
-      <div className="mb-2 text-xs text-muted-foreground">
+      <div className={cn('text-muted-foreground', isMobile ? 'mb-1.5 text-[11px]' : 'mb-2 text-xs')}>
         Traduzindo: <span className="font-medium text-foreground italic">"{originalText}"</span>
         {detectedLanguage ? (
           <span className="ml-1">
@@ -74,9 +85,12 @@ const TranslationInputPopup: React.FC<TranslationInputPopupProps> = ({
           value={text}
           onChange={(event) => setText(event.target.value)}
           placeholder="Refine a traducao em portugues..."
-          className={cn('border-slate-900/10 bg-white text-sm focus-visible:ring-slate-300', isMobile ? 'h-9' : 'h-8')}
+          className={cn(
+            'border-slate-900/10 bg-white focus-visible:ring-slate-300',
+            isMobile ? 'h-8 text-xs' : 'h-8 text-sm',
+          )}
         />
-        <Button type="submit" size="icon" className={cn('rounded-lg', isMobile ? 'h-9 w-9' : 'h-8 w-8')}>
+        <Button type="submit" size="icon" className={cn('rounded-lg', isMobile ? 'h-8 w-8' : 'h-8 w-8')}>
           <Check className="h-4 w-4" />
         </Button>
         <Button
@@ -84,13 +98,21 @@ const TranslationInputPopup: React.FC<TranslationInputPopupProps> = ({
           variant="ghost"
           size="icon"
           onClick={onCancel}
-          className={cn('rounded-lg text-slate-600 hover:bg-slate-100 hover:text-slate-800', isMobile ? 'h-9 w-9' : 'h-8 w-8')}
+          className={cn(
+            'rounded-lg text-slate-600 hover:bg-slate-100 hover:text-slate-800',
+            isMobile ? 'h-8 w-8' : 'h-8 w-8',
+          )}
         >
           <X className="h-4 w-4" />
         </Button>
       </form>
       {googleTranslateUrl ? (
-        <div className="mt-2 rounded-lg border border-slate-900/10 bg-slate-50 px-2.5 py-2 text-xs text-slate-500">
+        <div
+          className={cn(
+            'mt-2 rounded-lg border border-slate-900/10 bg-slate-50 px-2.5 py-2 text-slate-500',
+            isMobile ? 'text-[11px]' : 'text-xs',
+          )}
+        >
           Traducao automatica indisponivel neste trecho.
           <Button asChild variant="link" size="sm" className="h-auto px-1 py-0 text-xs">
             <a href={googleTranslateUrl} target="_blank" rel="noopener noreferrer">

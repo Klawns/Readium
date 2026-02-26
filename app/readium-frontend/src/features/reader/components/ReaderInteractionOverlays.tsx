@@ -7,6 +7,8 @@ import TranslationInputPopup from './TranslationInputPopup';
 import TranslationPopup from './TranslationPopup';
 import AnnotationNotePopup from './AnnotationNotePopup';
 
+const TOUCH_SELECTION_POPUP_DELAY_MS = 260;
+
 interface ActiveAnnotationNoteState {
   annotation: ReaderAnnotation;
   position: { x: number; y: number };
@@ -14,6 +16,7 @@ interface ActiveAnnotationNoteState {
 
 interface ReaderInteractionOverlaysProps {
   pendingSelection: PendingSelection | null;
+  isTouchPointerActive: boolean;
   translationInput: TranslationInputState | null;
   activeTranslation: ActiveTranslationState | null;
   activeAnnotationNote: ActiveAnnotationNoteState | null;
@@ -33,6 +36,7 @@ interface ReaderInteractionOverlaysProps {
 
 export const ReaderInteractionOverlays: React.FC<ReaderInteractionOverlaysProps> = ({
   pendingSelection,
+  isTouchPointerActive,
   translationInput,
   activeTranslation,
   activeAnnotationNote,
@@ -48,48 +52,76 @@ export const ReaderInteractionOverlays: React.FC<ReaderInteractionOverlaysProps>
   onSaveAnnotationNote,
   onDeleteAnnotationNote,
   onCancelAnnotationNote,
-}) => (
-  <>
-    {pendingSelection && (
-      <SelectionActionPopup
-        position={pendingSelection.popupPosition}
-        onSelectColor={onSelectColor}
-        onCopy={onCopySelection}
-        onTranslate={onStartTranslateFlow}
-        onClose={onCloseSelection}
-      />
-    )}
+}) => {
+  const isTouchCapableDevice = React.useMemo(
+    () => typeof navigator !== 'undefined' && navigator.maxTouchPoints > 0,
+    [],
+  );
+  const [selectionForPopup, setSelectionForPopup] = React.useState<PendingSelection | null>(null);
 
-    {translationInput && (
-      <TranslationInputPopup
-        position={translationInput.position}
-        originalText={translationInput.originalText}
-        initialValue={translationInput.translatedText}
-        detectedLanguage={translationInput.detectedLanguage}
-        googleTranslateUrl={translationInput.googleTranslateUrl}
-        onSave={onSaveTranslation}
-        onCancel={onCancelTranslation}
-      />
-    )}
+  React.useEffect(() => {
+    if (!pendingSelection || isTouchPointerActive) {
+      setSelectionForPopup(null);
+      return;
+    }
 
-    {activeTranslation && (
-      <TranslationPopup
-        translation={activeTranslation.translation}
-        position={activeTranslation.position}
-        onClose={onCloseActiveTranslation}
-      />
-    )}
+    if (!isTouchCapableDevice) {
+      setSelectionForPopup(pendingSelection);
+      return;
+    }
 
-    {activeAnnotationNote && (
-      <AnnotationNotePopup
-        annotation={activeAnnotationNote.annotation}
-        position={activeAnnotationNote.position}
-        isSaving={isSavingNote}
-        isDeleting={isDeletingNote}
-        onSave={onSaveAnnotationNote}
-        onDelete={onDeleteAnnotationNote}
-        onCancel={onCancelAnnotationNote}
-      />
-    )}
-  </>
-);
+    const timerId = window.setTimeout(() => {
+      setSelectionForPopup(pendingSelection);
+    }, TOUCH_SELECTION_POPUP_DELAY_MS);
+
+    return () => {
+      window.clearTimeout(timerId);
+    };
+  }, [isTouchCapableDevice, isTouchPointerActive, pendingSelection]);
+
+  return (
+    <>
+      {selectionForPopup && (
+        <SelectionActionPopup
+          position={selectionForPopup.popupPosition}
+          onSelectColor={onSelectColor}
+          onCopy={onCopySelection}
+          onTranslate={onStartTranslateFlow}
+          onClose={onCloseSelection}
+        />
+      )}
+
+      {translationInput && (
+        <TranslationInputPopup
+          position={translationInput.position}
+          originalText={translationInput.originalText}
+          initialValue={translationInput.translatedText}
+          detectedLanguage={translationInput.detectedLanguage}
+          googleTranslateUrl={translationInput.googleTranslateUrl}
+          onSave={onSaveTranslation}
+          onCancel={onCancelTranslation}
+        />
+      )}
+
+      {activeTranslation && (
+        <TranslationPopup
+          translation={activeTranslation.translation}
+          position={activeTranslation.position}
+          onClose={onCloseActiveTranslation}
+        />
+      )}
+
+      {activeAnnotationNote && (
+        <AnnotationNotePopup
+          annotation={activeAnnotationNote.annotation}
+          position={activeAnnotationNote.position}
+          isSaving={isSavingNote}
+          isDeleting={isDeletingNote}
+          onSave={onSaveAnnotationNote}
+          onDelete={onDeleteAnnotationNote}
+          onCancel={onCancelAnnotationNote}
+        />
+      )}
+    </>
+  );
+};

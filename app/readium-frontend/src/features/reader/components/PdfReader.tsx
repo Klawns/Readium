@@ -32,6 +32,7 @@ const PdfReader: React.FC<PdfReaderProps> = ({
   isTriggeringOcr,
 }) => {
   const isMobile = useIsMobile();
+  const [isTouchSelectionModeEnabled, setIsTouchSelectionModeEnabled] = React.useState(false);
   const { engine, isLoading: engineLoading } = usePdfiumEngine();
   const {
     containerRef,
@@ -141,6 +142,26 @@ const PdfReader: React.FC<PdfReaderProps> = ({
     translationsCount: translations.length,
   });
 
+  React.useEffect(() => {
+    if (!isMobile) {
+      setIsTouchSelectionModeEnabled(false);
+    }
+  }, [isMobile]);
+
+  React.useEffect(() => {
+    setIsTouchSelectionModeEnabled(false);
+  }, [fileUrl]);
+
+  const handleToggleTouchSelectionMode = React.useCallback(() => {
+    setIsTouchSelectionModeEnabled((current) => {
+      const next = !current;
+      if (!next) {
+        clearPendingSelection();
+      }
+      return next;
+    });
+  }, [clearPendingSelection]);
+
   if (engineLoading || !engine) {
     return (
       <div className="reader-shell flex h-[100dvh] flex-col items-center justify-center gap-2 text-muted-foreground">
@@ -185,8 +206,10 @@ const PdfReader: React.FC<PdfReaderProps> = ({
         isReaderLoading={readerLoading}
         isMobile={isMobile}
         isReaderUiVisible={isReaderUiVisible}
+        isTouchSelectionModeEnabled={isTouchSelectionModeEnabled}
         isAnnotationsSidebarOpen={isAnnotationsSidebarOpen}
         onSetAnnotationsSidebarOpen={setIsAnnotationsSidebarOpen}
+        onToggleTouchSelectionMode={handleToggleTouchSelectionMode}
         onSelectionResolved={setPendingSelection}
         onTranslationOverlayInteract={handleTranslationOverlayInteract}
         onAnnotationOverlayInteract={openAnnotationNote}

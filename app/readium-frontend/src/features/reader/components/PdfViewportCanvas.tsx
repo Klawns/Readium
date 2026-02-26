@@ -5,7 +5,7 @@ import { GlobalPointerProvider } from '@embedpdf/plugin-interaction-manager/reac
 import { ZoomGestureWrapper } from '@embedpdf/plugin-zoom/react';
 import { createLogger } from '@/lib/logger.ts';
 import type { ReaderAnnotation } from '../domain/models';
-import type { ReaderTranslationOverlay } from '../ui/readerTypes';
+import type { PendingSelection, ReaderTranslationOverlay } from '../ui/readerTypes';
 import type {
   AnnotationOverlayInteractPayload,
   TranslationOverlayInteractPayload,
@@ -18,6 +18,7 @@ const logger = createLogger('reader-viewport');
 interface PdfViewportCanvasProps {
   activeDocumentId: string;
   touchAction: string;
+  pendingSelection: PendingSelection | null;
   annotationsByPage: Map<number, ReaderAnnotation[]>;
   translationOverlaysByPage: Map<number, ReaderTranslationOverlay[]>;
   interactionBindings: PdfViewportInteractionBindings;
@@ -28,6 +29,7 @@ interface PdfViewportCanvasProps {
 export const PdfViewportCanvas: React.FC<PdfViewportCanvasProps> = ({
   activeDocumentId,
   touchAction,
+  pendingSelection,
   annotationsByPage,
   translationOverlaysByPage,
   interactionBindings,
@@ -79,6 +81,7 @@ export const PdfViewportCanvas: React.FC<PdfViewportCanvasProps> = ({
                   height={rotatedHeight}
                   touchAction={touchAction}
                   showTouchSelectionRects={interactionBindings.showTouchSelectionRects}
+                  pendingSelectionRects={pendingSelection?.page === pageIndex + 1 ? pendingSelection.rects : null}
                   pageAnnotations={annotationsByPage.get(pageIndex + 1) ?? []}
                   pageOverlays={translationOverlaysByPage.get(pageIndex + 1) ?? []}
                   onTranslationOverlayInteract={onTranslationOverlayInteract}

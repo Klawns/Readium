@@ -21,10 +21,12 @@ export interface PdfDocumentViewportProps {
   engine: PdfEngine;
   fileUrl: string;
   containerRef: React.RefObject<HTMLDivElement | null>;
+  pendingSelection: PendingSelection | null;
   annotations: ReaderAnnotation[];
   translationOverlays: ReaderTranslationOverlay[];
   initialPage: number;
   currentZoomLevel: number;
+  isTouchSelectionModeEnabled?: boolean;
   onSelectionResolved: (selection: PendingSelection | null) => void;
   onTranslationOverlayInteract?: (payload: TranslationOverlayInteractPayload) => void;
   onAnnotationOverlayInteract?: (payload: AnnotationOverlayInteractPayload) => void;
@@ -32,4 +34,5 @@ export interface PdfDocumentViewportProps {
   onViewportActionsReady?: (actions: ReaderViewportActions | null) => void;
   onTextLayerQualityEvaluated?: (lowTextLayerQuality: boolean) => void;
   onViewportTap?: (payload: { x: number; y: number }) => void;
+  onTouchPointerActiveChange?: (isActive: boolean) => void;
 }

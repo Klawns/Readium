@@ -1,7 +1,10 @@
 import React from 'react';
 import { isTouchCapableDevice } from './pdfViewport.utils';
 
-export const usePdfViewportSelectionLayerBackground = (showTouchSelectionRects: boolean) => {
+export const usePdfViewportSelectionLayerBackground = (
+  showTouchSelectionRects: boolean,
+  hasPendingSelectionRects: boolean,
+) => {
   const isTouchDevice = React.useMemo(() => isTouchCapableDevice(), []);
-  return isTouchDevice && !showTouchSelectionRects ? 'transparent' : undefined;
+  return isTouchDevice && !showTouchSelectionRects && !hasPendingSelectionRects ? 'transparent' : undefined;
 };

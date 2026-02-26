@@ -3,7 +3,7 @@ import { Loader2 } from 'lucide-react';
 import { DocumentContent } from '@embedpdf/plugin-document-manager/react';
 import { createLogger } from '@/lib/logger.ts';
 import type { ReaderAnnotation } from '../domain/models';
-import type { ReaderTranslationOverlay } from '../ui/readerTypes';
+import type { PendingSelection, ReaderTranslationOverlay } from '../ui/readerTypes';
 import type {
   AnnotationOverlayInteractPayload,
   TranslationOverlayInteractPayload,
@@ -16,6 +16,7 @@ const logger = createLogger('reader-viewport');
 interface PdfDocumentViewportContentProps {
   activeDocumentId: string;
   touchAction: string;
+  pendingSelection: PendingSelection | null;
   annotationsByPage: Map<number, ReaderAnnotation[]>;
   translationOverlaysByPage: Map<number, ReaderTranslationOverlay[]>;
   interactionBindings: PdfViewportInteractionBindings;
@@ -26,6 +27,7 @@ interface PdfDocumentViewportContentProps {
 export const PdfDocumentViewportContent: React.FC<PdfDocumentViewportContentProps> = ({
   activeDocumentId,
   touchAction,
+  pendingSelection,
   annotationsByPage,
   translationOverlaysByPage,
   interactionBindings,
@@ -68,6 +70,7 @@ export const PdfDocumentViewportContent: React.FC<PdfDocumentViewportContentProp
           <PdfViewportCanvas
             activeDocumentId={activeDocumentId}
             touchAction={touchAction}
+            pendingSelection={pendingSelection}
             annotationsByPage={annotationsByPage}
             translationOverlaysByPage={translationOverlaysByPage}
             interactionBindings={interactionBindings}

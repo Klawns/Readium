@@ -1,5 +1,5 @@
 import React from 'react';
-import type { ReaderAnnotation } from '../domain/models';
+import type { ReaderAnnotation, ReaderRect } from '../domain/models';
 import type { ReaderTranslationOverlay } from '../ui/readerTypes';
 import type {
   AnnotationOverlayInteractPayload,
@@ -9,6 +9,7 @@ import { usePdfViewportSelectionLayerBackground } from '../ui/hooks/pdf-viewport
 import { PdfViewportPageSurface } from './PdfViewportPageSurface';
 import { PdfViewportAnnotationOverlays } from './PdfViewportAnnotationOverlays';
 import { PdfViewportTranslationOverlays } from './PdfViewportTranslationOverlays';
+import { PdfViewportPendingSelectionOverlay } from './PdfViewportPendingSelectionOverlay';
 
 interface PdfViewportPageProps {
   activeDocumentId: string;
@@ -18,6 +19,7 @@ interface PdfViewportPageProps {
   scale?: number;
   touchAction: string;
   showTouchSelectionRects: boolean;
+  pendingSelectionRects: ReaderRect[] | null;
   pageAnnotations: ReaderAnnotation[];
   pageOverlays: ReaderTranslationOverlay[];
   onTranslationOverlayInteract?: (payload: TranslationOverlayInteractPayload) => void;
@@ -34,6 +36,7 @@ export const PdfViewportPage: React.FC<PdfViewportPageProps> = ({
   scale,
   touchAction,
   showTouchSelectionRects,
+  pendingSelectionRects,
   pageAnnotations,
   pageOverlays,
   onTranslationOverlayInteract,
@@ -41,7 +44,12 @@ export const PdfViewportPage: React.FC<PdfViewportPageProps> = ({
   preventNativeDrag,
   preventMobileContextMenu,
 }) => {
-  const selectionLayerBackground = usePdfViewportSelectionLayerBackground(showTouchSelectionRects);
+  const hasPendingSelectionRects = Boolean(pendingSelectionRects?.length);
+  const shouldHideAnnotationVisuals = showTouchSelectionRects || hasPendingSelectionRects;
+  const selectionLayerBackground = usePdfViewportSelectionLayerBackground(
+    showTouchSelectionRects,
+    hasPendingSelectionRects,
+  );
 
   return (
     <PdfViewportPageSurface
@@ -55,8 +63,13 @@ export const PdfViewportPage: React.FC<PdfViewportPageProps> = ({
       preventNativeDrag={preventNativeDrag}
       preventMobileContextMenu={preventMobileContextMenu}
     >
-      <PdfViewportAnnotationOverlays annotations={pageAnnotations} onInteract={onAnnotationOverlayInteract} />
-      <PdfViewportTranslationOverlays overlays={pageOverlays} onInteract={onTranslationOverlayInteract} />
+      {!shouldHideAnnotationVisuals && (
+        <PdfViewportAnnotationOverlays annotations={pageAnnotations} onInteract={onAnnotationOverlayInteract} />
+      )}
+      {!shouldHideAnnotationVisuals && (
+        <PdfViewportTranslationOverlays overlays={pageOverlays} onInteract={onTranslationOverlayInteract} />
+      )}
+      {pendingSelectionRects && <PdfViewportPendingSelectionOverlay rects={pendingSelectionRects} />}
     </PdfViewportPageSurface>
   );
 };
