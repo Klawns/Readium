@@ -31,17 +31,19 @@ const processProgressOperation = async (
   operationId: string,
 ): Promise<void> => {
   const safeBookId = Math.floor(payload.bookId);
-  const safePage = Number.isFinite(payload.page) ? Math.max(1, Math.floor(payload.page)) : 1;
+  const safePage = Number.isFinite(payload.page) ? Math.max(0, Math.floor(payload.page)) : 0;
+  const safeMode: 'MAX' | 'EXACT' = payload.mode === 'EXACT' ? 'EXACT' : 'MAX';
   if (!Number.isFinite(safeBookId) || safeBookId <= 0) {
     return;
   }
 
   await bookApi.updateProgress(safeBookId, safePage, {
     keepalive: false,
+    mode: safeMode,
     operationId,
   });
-  await markLocalReadingProgressSynced(safeBookId, safePage);
-  await updateOfflineBookLastReadPage(safeBookId, safePage);
+  await markLocalReadingProgressSynced(safeBookId, safePage, safeMode);
+  await updateOfflineBookLastReadPage(safeBookId, safePage, safeMode);
 };
 
 const processBookStatusOperation = async (

@@ -29,5 +29,8 @@ export class BookLocalRepository implements BookRepository {
   async updateStatus(bookId: number, status: BookStatus): Promise<void> {
     await updateBookStatusOfflineFirst({ bookId, status });
   }
-}
 
+  async delete(_bookId: number): Promise<void> {
+    throw new Error('Remocao de livro indisponivel no modo local.');
+  }
+}

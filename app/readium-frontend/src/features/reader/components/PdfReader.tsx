@@ -1,6 +1,7 @@
 import React from 'react';
 import { Loader2 } from 'lucide-react';
 import { usePdfiumEngine } from '@embedpdf/engines/react';
+import { toast } from 'sonner';
 import PdfToolbar from './PdfToolbar';
 import { ReaderViewportShell } from './ReaderViewportShell';
 import { useReaderData } from '../ui/hooks/useReaderData';
@@ -97,7 +98,11 @@ const PdfReader: React.FC<PdfReaderProps> = ({
     deleteAnnotation,
   });
 
-  useReaderProgressSync({
+  const {
+    setManualProgressPage,
+    resetManualProgress,
+    isSavingManualProgress,
+  } = useReaderProgressSync({
     bookId,
     currentPage,
     initialPage,
@@ -152,6 +157,46 @@ const PdfReader: React.FC<PdfReaderProps> = ({
     setIsTouchSelectionModeEnabled(false);
   }, [fileUrl]);
 
+  const handleSetManualProgress = React.useCallback(async (page: number) => {
+    if (!Number.isFinite(page) || page < 1) {
+      toast.error('Pagina invalida.');
+      return;
+    }
+
+    const safeTotal = totalPages > 0 ? totalPages : Number.POSITIVE_INFINITY;
+    const nextPage = Math.min(Math.floor(page), safeTotal);
+    if (!Number.isFinite(nextPage) || nextPage < 1) {
+      toast.error('Pagina invalida.');
+      return;
+    }
+
+    try {
+      await setManualProgressPage(nextPage);
+      goToPage(nextPage);
+      toast.success('Progresso ajustado.');
+    } catch (error) {
+      if (error instanceof Error && error.message) {
+        toast.error(error.message);
+        return;
+      }
+      toast.error('Falha ao ajustar progresso.');
+    }
+  }, [goToPage, setManualProgressPage, totalPages]);
+
+  const handleResetProgress = React.useCallback(async () => {
+    try {
+      await resetManualProgress();
+      goToPage(1);
+      toast.success('Progresso resetado.');
+    } catch (error) {
+      if (error instanceof Error && error.message) {
+        toast.error(error.message);
+        return;
+      }
+      toast.error('Falha ao resetar progresso.');
+    }
+  }, [goToPage, resetManualProgress]);
+
   const handleToggleTouchSelectionMode = React.useCallback(() => {
     setIsTouchSelectionModeEnabled((current) => {
       const next = !current;
@@ -181,6 +226,11 @@ const PdfReader: React.FC<PdfReaderProps> = ({
         ocrDetails={ocrDetails}
         onTriggerOcr={onTriggerOcr}
         isTriggeringOcr={isTriggeringOcr}
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onSetManualProgress={handleSetManualProgress}
+        onResetProgress={handleResetProgress}
+        isSavingManualProgress={isSavingManualProgress}
         isVisible={isReaderUiVisible}
       />
 

@@ -1,7 +1,8 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, BookOpenText, Loader2, ScanSearch } from 'lucide-react';
+import { ArrowLeft, BookOpenText, Loader2, RotateCcw, Save, ScanSearch } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import StatusSelector from '@/features/library/components/StatusSelector';
 import { BookStatus, OcrStatus } from '@/types';
 
@@ -13,6 +14,11 @@ interface PdfToolbarProps {
   ocrDetails?: string | null;
   onTriggerOcr?: () => void;
   isTriggeringOcr?: boolean;
+  currentPage: number;
+  totalPages: number;
+  onSetManualProgress: (page: number) => Promise<void>;
+  onResetProgress: () => Promise<void>;
+  isSavingManualProgress?: boolean;
   isVisible?: boolean;
 }
 
@@ -31,9 +37,37 @@ const PdfToolbar: React.FC<PdfToolbarProps> = ({
   ocrDetails,
   onTriggerOcr,
   isTriggeringOcr,
+  currentPage,
+  totalPages,
+  onSetManualProgress,
+  onResetProgress,
+  isSavingManualProgress = false,
   isVisible = true,
 }) => {
+  const [manualPageInput, setManualPageInput] = React.useState(currentPage.toString());
   const isOcrBusy = isTriggeringOcr || ocrStatus === 'PENDING' || ocrStatus === 'RUNNING';
+  const isProgressActionBusy = isSavingManualProgress;
+
+  React.useEffect(() => {
+    setManualPageInput(currentPage.toString());
+  }, [currentPage]);
+
+  const handleApplyManualProgress = React.useCallback(async () => {
+    const parsed = Number(manualPageInput);
+    if (!Number.isFinite(parsed)) {
+      setManualPageInput(currentPage.toString());
+      return;
+    }
+
+    const safeTotal = totalPages > 0 ? totalPages : Number.POSITIVE_INFINITY;
+    const nextPage = Math.min(Math.max(1, Math.floor(parsed)), safeTotal);
+    if (!Number.isFinite(nextPage)) {
+      return;
+    }
+
+    setManualPageInput(nextPage.toString());
+    await onSetManualProgress(nextPage);
+  }, [currentPage, manualPageInput, onSetManualProgress, totalPages]);
 
   return (
     <div
@@ -64,6 +98,50 @@ const PdfToolbar: React.FC<PdfToolbarProps> = ({
         </div>
 
         <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5">
+            <Input
+              type="number"
+              min={1}
+              max={totalPages > 0 ? totalPages : undefined}
+              value={manualPageInput}
+              onChange={(event) => setManualPageInput(event.target.value)}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter') {
+                  void handleApplyManualProgress();
+                }
+              }}
+              className="h-8 w-12 border-slate-900/10 bg-white/65 px-2 text-center text-xs tabular-nums sm:w-16"
+              disabled={isProgressActionBusy}
+              aria-label="Pagina de progresso manual"
+            />
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-8 rounded-full border border-slate-900/10 bg-white/65 px-2 text-slate-700 hover:bg-white"
+              disabled={isProgressActionBusy}
+              onClick={() => {
+                void handleApplyManualProgress();
+              }}
+            >
+              {isProgressActionBusy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
+              <span className="ml-1 hidden text-[11px] sm:inline">Ajustar</span>
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              className="h-8 rounded-full border border-slate-900/10 bg-white/65 px-2 text-slate-700 hover:bg-white"
+              disabled={isProgressActionBusy}
+              onClick={() => {
+                void onResetProgress();
+              }}
+            >
+              <RotateCcw className="h-3.5 w-3.5" />
+              <span className="ml-1 hidden text-[11px] sm:inline">Resetar</span>
+            </Button>
+          </div>
+
           {onTriggerOcr && (
             <Button
               type="button"

@@ -3,6 +3,15 @@ import { VitePWA } from "vite-plugin-pwa";
 import path from "path";
 import { defineConfig } from "vite";
 
+const resolvePackageName = (id: string): string | null => {
+  const normalizedPath = id.replaceAll("\\", "/");
+  const packageMatch = normalizedPath.match(/node_modules\/((?:@[^/]+\/)?[^/]+)/);
+  return packageMatch?.[1] ?? null;
+};
+
+const toVendorChunkName = (packageName: string) =>
+  `vendor-${packageName.replace("@", "").replaceAll("/", "-")}`;
+
 // https://vitejs.dev/config/
 export default defineConfig(() => ({
   server: {
@@ -26,11 +35,28 @@ export default defineConfig(() => ({
     rollupOptions: {
       output: {
         manualChunks: (id) => {
-          if (!id.includes("node_modules")) return undefined;
-          if (id.includes("@embedpdf")) return "embedpdf";
-          if (id.includes("@tanstack")) return "tanstack";
-          if (id.includes("@radix-ui")) return "radix";
-          return "vendor";
+          if (!id.includes("node_modules")) {
+            return undefined;
+          }
+
+          const packageName = resolvePackageName(id);
+          if (!packageName) {
+            return "vendor";
+          }
+
+          if (packageName === "@embedpdf/engines") return "embedpdf-engine";
+          if (packageName.startsWith("@embedpdf/plugin-")) return "embedpdf-plugins";
+          if (packageName === "@embedpdf/core") return "embedpdf-core";
+          if (packageName === "@tanstack/react-query" || packageName === "@tanstack/query-core") return "tanstack-query";
+          if (packageName === "@tanstack/react-virtual") return "tanstack-virtual";
+          if (packageName.startsWith("@radix-ui/")) return "radix-ui";
+          if (packageName === "react-router" || packageName === "react-router-dom") return "react-router";
+          if (packageName === "react" || packageName === "react-dom" || packageName === "scheduler") return "react-core";
+          if (packageName === "lucide-react") return "icons";
+          if (packageName === "dexie") return "offline-storage";
+          if (packageName === "recharts") return "charts";
+
+          return toVendorChunkName(packageName);
         },
       },
     },

@@ -12,6 +12,7 @@ export interface LibraryUseCases {
   ) => Promise<BookPage>;
   uploadBook: (file: File, options?: UploadBookOptions) => Promise<Book>;
   updateBookStatus: (bookId: number, status: BookStatus) => Promise<void>;
+  deleteBook: (bookId: number) => Promise<void>;
 }
 
 export const createLibraryUseCases = (repository: BookRepository): LibraryUseCases => ({
@@ -19,4 +20,5 @@ export const createLibraryUseCases = (repository: BookRepository): LibraryUseCas
     repository.getBooks(status, page, size, query, categoryId, collectionId),
   uploadBook: (file, options) => repository.upload(file, options),
   updateBookStatus: (bookId, status) => repository.updateStatus(bookId, status),
+  deleteBook: (bookId) => repository.delete(bookId),
 });

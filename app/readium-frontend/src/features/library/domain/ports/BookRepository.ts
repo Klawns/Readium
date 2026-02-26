@@ -15,4 +15,5 @@ export interface BookRepository {
   ): Promise<BookPage>;
   upload(file: File, options?: UploadBookOptions): Promise<Book>;
   updateStatus(bookId: number, status: BookStatus): Promise<void>;
+  delete(bookId: number): Promise<void>;
 }

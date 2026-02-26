@@ -1,3 +1,4 @@
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { useLibrary } from '@/features/library/hooks/useLibrary.ts';
@@ -15,10 +16,12 @@ import { BookCollectionDialog } from '@/features/collections/components/BookColl
 import { useLibraryBookLookup } from '@/features/library/ui/hooks/useLibraryBookLookup.ts';
 import { useAssignCollectionToBooks } from '@/features/collections/ui/hooks/useAssignCollectionToBooks.ts';
 import { useOfflineBooks } from '@/features/offline/ui/hooks/useOfflineBooks';
+import { DeleteBookDialog } from '@/features/library/components/DeleteBookDialog.tsx';
 
 export default function LibraryPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const [bookPendingDeletion, setBookPendingDeletion] = React.useState<{ id: number; title: string } | null>(null);
   const { statusFilter, page, searchQuery, categoryId, collectionId, updateParams } = useLibrarySearchParams();
 
   const {
@@ -29,6 +32,8 @@ export default function LibraryPage() {
     isOfflineFallback,
     uploadBook,
     updateStatus,
+    deleteBook,
+    deletingBookId,
     isUploading,
     uploadProgress,
   } = useLibrary({ page, statusFilter, searchQuery, categoryId, collectionId });
@@ -87,6 +92,31 @@ export default function LibraryPage() {
     pageState.closeUploadModal();
   };
 
+  const handleOpenDeleteDialog = React.useCallback((bookId: number, title: string) => {
+    setBookPendingDeletion({ id: bookId, title });
+  }, []);
+
+  const handleDeleteDialogOpenChange = React.useCallback((open: boolean) => {
+    if (deletingBookId != null) {
+      return;
+    }
+    if (!open) {
+      setBookPendingDeletion(null);
+    }
+  }, [deletingBookId]);
+
+  const handleConfirmDelete = React.useCallback(async () => {
+    if (!bookPendingDeletion) {
+      return;
+    }
+    try {
+      await deleteBook(bookPendingDeletion.id);
+      setBookPendingDeletion(null);
+    } catch {
+      // O hook useLibrary ja dispara toast de erro; mantemos o modal aberto para nova tentativa.
+    }
+  }, [bookPendingDeletion, deleteBook]);
+
   return (
     <>
       <LibraryView
@@ -110,6 +140,7 @@ export default function LibraryPage() {
       downloadingBookId={isDownloadingBookId}
       downloadingBookProgressPercent={downloadingBookProgressPercent}
       removingOfflineBookId={isRemovingBookId}
+      deletingBookId={deletingBookId}
       onSearchChange={pageState.setLocalSearch}
       onOpenUpload={pageState.openUploadModal}
       onCloseUpload={pageState.closeUploadModal}
@@ -137,6 +168,17 @@ export default function LibraryPage() {
       onBookRemoveOffline={(bookId) => {
         void removeDownload(bookId);
       }}
+      onBookDelete={isOfflineFallback
+        ? undefined
+        : (book) => handleOpenDeleteDialog(book.id, book.title)}
+      />
+
+      <DeleteBookDialog
+      open={Boolean(bookPendingDeletion)}
+      bookTitle={bookPendingDeletion?.title ?? null}
+      isDeleting={deletingBookId === bookPendingDeletion?.id}
+      onOpenChange={handleDeleteDialogOpenChange}
+      onConfirmDelete={handleConfirmDelete}
       />
 
       <CollectionManagerDialog

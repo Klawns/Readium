@@ -33,6 +33,7 @@ interface LibraryViewProps {
   downloadingBookId: number | null;
   downloadingBookProgressPercent: number | null;
   removingOfflineBookId: number | null;
+  deletingBookId: number | null;
   onSearchChange: (value: string) => void;
   onOpenUpload: () => void;
   onCloseUpload: () => void;
@@ -45,6 +46,7 @@ interface LibraryViewProps {
   onBookManageCollections: (book: Book) => void;
   onBookDownloadOffline: (book: Book) => void;
   onBookRemoveOffline: (bookId: number) => void;
+  onBookDelete?: (book: Book) => void;
   onPageChange: (page: number) => void;
   onCategoryFilterChange: (categoryId: number | null) => void;
   onCollectionFilterChange: (collectionId: number | null) => void;
@@ -53,10 +55,14 @@ interface LibraryViewProps {
   onOpenCollectionManager: () => void;
 }
 
+const BOOK_GRID_CLASSES =
+  'grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 sm:gap-x-5 sm:gap-y-9 lg:grid-cols-4 lg:gap-x-6 lg:gap-y-10 xl:grid-cols-5 2xl:grid-cols-6';
+
 const getEmptyStateMessage = (statusFilter: StatusFilter, searchQuery: string) => {
   if (searchQuery) {
     return { title: 'Nenhum livro encontrado', desc: `Nao encontramos resultados para "${searchQuery}".` };
   }
+
   switch (statusFilter) {
     case 'READING':
       return {
@@ -85,6 +91,176 @@ const getEmptyStateMessage = (statusFilter: StatusFilter, searchQuery: string) =
   }
 };
 
+interface LibraryHeaderProps {
+  booksCount: number;
+  totalPages: number;
+  isOfflineFallback: boolean;
+}
+
+function LibraryHeader({ booksCount, totalPages, isOfflineFallback }: LibraryHeaderProps) {
+  return (
+    <div className="space-y-3">
+      <div className="space-y-1.5">
+        <h1 className="text-3xl font-bold tracking-tight text-foreground">Biblioteca</h1>
+        <p className="text-muted-foreground">Gerencie e organize sua colecao pessoal.</p>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs text-slate-600">
+          {booksCount} livros na pagina
+        </span>
+        <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs text-slate-600">
+          {totalPages} pagina(s)
+        </span>
+        {isOfflineFallback ? (
+          <span className="rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs text-amber-700">
+            Modo offline: exibindo livros baixados
+          </span>
+        ) : null}
+      </div>
+    </div>
+  );
+}
+
+function LibraryLoadingGrid() {
+  return (
+    <div className={BOOK_GRID_CLASSES}>
+      {Array.from({ length: 12 }).map((_, index) => (
+        <div key={index} className="space-y-3">
+          <div className="aspect-[2/3] animate-pulse rounded-xl bg-muted" />
+          <div className="space-y-2">
+            <div className="h-4 w-3/4 animate-pulse rounded bg-muted" />
+            <div className="h-3 w-1/2 animate-pulse rounded bg-muted" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function LibraryErrorState({ onRetry }: { onRetry: () => void }) {
+  return (
+    <div className="flex flex-col items-center justify-center rounded-xl border border-destructive/10 bg-destructive/5 py-24 text-destructive">
+      <p className="text-lg font-medium">Erro ao carregar livros</p>
+      <p className="mt-1 text-sm text-muted-foreground">Verifique sua conexao e tente novamente.</p>
+      <Button variant="outline" className="mt-4" onClick={onRetry}>
+        Tentar novamente
+      </Button>
+    </div>
+  );
+}
+
+interface LibraryEmptyStateProps {
+  statusFilter: StatusFilter;
+  searchQuery: string;
+  onOpenUpload: () => void;
+}
+
+function LibraryEmptyState({ statusFilter, searchQuery, onOpenUpload }: LibraryEmptyStateProps) {
+  const emptyState = getEmptyStateMessage(statusFilter, searchQuery);
+
+  return (
+    <div className="flex flex-col items-center justify-center py-32 text-center animate-fade-in">
+      {emptyState.icon}
+      <h3 className="mb-2 text-xl font-semibold text-foreground">{emptyState.title}</h3>
+      <p className="mx-auto mb-6 max-w-sm text-muted-foreground">{emptyState.desc}</p>
+      {statusFilter === 'ALL' && !searchQuery ? (
+        <Button onClick={onOpenUpload}>
+          <Plus className="mr-2 h-4 w-4" />
+          Adicionar Livro
+        </Button>
+      ) : null}
+    </div>
+  );
+}
+
+interface LibraryBooksGridProps {
+  books: Book[];
+  downloadedByBookId: Map<number, boolean>;
+  downloadingBookId: number | null;
+  downloadingBookProgressPercent: number | null;
+  removingOfflineBookId: number | null;
+  deletingBookId: number | null;
+  onBookClick: (bookId: number) => void;
+  onBookStatusChange: (bookId: number, status: BookStatus) => void;
+  onBookManageCategories: (book: Book) => void;
+  onBookManageCollections: (book: Book) => void;
+  onBookDownloadOffline: (book: Book) => void;
+  onBookRemoveOffline: (bookId: number) => void;
+  onBookDelete?: (book: Book) => void;
+}
+
+function LibraryBooksGrid({
+  books,
+  downloadedByBookId,
+  downloadingBookId,
+  downloadingBookProgressPercent,
+  removingOfflineBookId,
+  deletingBookId,
+  onBookClick,
+  onBookStatusChange,
+  onBookManageCategories,
+  onBookManageCollections,
+  onBookDownloadOffline,
+  onBookRemoveOffline,
+  onBookDelete,
+}: LibraryBooksGridProps) {
+  return (
+    <div className={BOOK_GRID_CLASSES}>
+      {books.map((book) => (
+        <BookCard
+          key={book.id}
+          book={book}
+          onClick={() => onBookClick(book.id)}
+          onStatusChange={(status) => onBookStatusChange(book.id, status)}
+          onManageCategories={() => onBookManageCategories(book)}
+          onManageCollections={() => onBookManageCollections(book)}
+          isOfflineAvailable={Boolean(downloadedByBookId.get(book.id))}
+          isDownloadingOffline={downloadingBookId === book.id || removingOfflineBookId === book.id}
+          offlineDownloadProgressPercent={
+            downloadingBookId === book.id ? downloadingBookProgressPercent : null
+          }
+          onDownloadOffline={() => onBookDownloadOffline(book)}
+          onRemoveOffline={() => onBookRemoveOffline(book.id)}
+          onDelete={onBookDelete ? () => onBookDelete(book) : undefined}
+          isDeleting={deletingBookId === book.id}
+          density="comfortable"
+        />
+      ))}
+    </div>
+  );
+}
+
+interface LibraryPaginationProps {
+  page: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
+}
+
+function LibraryPagination({ page, totalPages, onPageChange }: LibraryPaginationProps) {
+  if (totalPages <= 1) {
+    return null;
+  }
+
+  return (
+    <div className="mt-12 flex justify-center gap-2">
+      <Button variant="outline" disabled={page === 0} onClick={() => onPageChange(page - 1)}>
+        Anterior
+      </Button>
+      <div className="flex items-center px-4 text-sm font-medium text-muted-foreground">
+        Pagina {page + 1} de {totalPages}
+      </div>
+      <Button
+        variant="outline"
+        disabled={page >= totalPages - 1}
+        onClick={() => onPageChange(page + 1)}
+      >
+        Proxima
+      </Button>
+    </div>
+  );
+}
+
 export default function LibraryView({
   books,
   totalPages,
@@ -106,6 +282,7 @@ export default function LibraryView({
   downloadingBookId,
   downloadingBookProgressPercent,
   removingOfflineBookId,
+  deletingBookId,
   onSearchChange,
   onOpenUpload,
   onCloseUpload,
@@ -118,6 +295,7 @@ export default function LibraryView({
   onBookManageCollections,
   onBookDownloadOffline,
   onBookRemoveOffline,
+  onBookDelete,
   onPageChange,
   onCategoryFilterChange,
   onCollectionFilterChange,
@@ -125,30 +303,14 @@ export default function LibraryView({
   onOpenCategoryManager,
   onOpenCollectionManager,
 }: LibraryViewProps) {
-  const emptyState = getEmptyStateMessage(statusFilter, searchQuery);
-
   return (
     <AppLayout onUploadClick={onOpenUpload}>
       <div className="container mx-auto max-w-7xl space-y-6 px-4 py-8 animate-fade-in">
-        <div className="space-y-3">
-          <div className="space-y-1.5">
-            <h1 className="text-3xl font-bold tracking-tight text-foreground">Biblioteca</h1>
-            <p className="text-muted-foreground">Gerencie e organize sua colecao pessoal.</p>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs text-slate-600">
-              {books.length} livros na pagina
-            </span>
-            <span className="rounded-full border border-slate-200 bg-white px-2.5 py-1 text-xs text-slate-600">
-              {totalPages} pagina(s)
-            </span>
-            {isOfflineFallback ? (
-              <span className="rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs text-amber-700">
-                Modo offline: exibindo livros baixados
-              </span>
-            ) : null}
-          </div>
-        </div>
+        <LibraryHeader
+          booksCount={books.length}
+          totalPages={totalPages}
+          isOfflineFallback={isOfflineFallback}
+        />
 
         <div className="sticky top-0 z-20 -mx-1 border-b border-slate-200/70 bg-slate-50/85 px-1 py-2 backdrop-blur supports-[backdrop-filter]:bg-slate-50/70">
           <LibraryCommandBar
@@ -170,77 +332,38 @@ export default function LibraryView({
         </div>
 
         {isLoading ? (
-          <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 sm:gap-x-5 sm:gap-y-9 lg:grid-cols-4 lg:gap-x-6 lg:gap-y-10 xl:grid-cols-5 2xl:grid-cols-6">
-            {Array.from({ length: 12 }).map((_, index) => (
-              <div key={index} className="space-y-3">
-                <div className="aspect-[2/3] animate-pulse rounded-xl bg-muted" />
-                <div className="space-y-2">
-                  <div className="h-4 w-3/4 animate-pulse rounded bg-muted" />
-                  <div className="h-3 w-1/2 animate-pulse rounded bg-muted" />
-                </div>
-              </div>
-            ))}
-          </div>
+          <LibraryLoadingGrid />
         ) : isError ? (
-          <div className="flex flex-col items-center justify-center rounded-xl border border-destructive/10 bg-destructive/5 py-24 text-destructive">
-            <p className="text-lg font-medium">Erro ao carregar livros</p>
-            <p className="mt-1 text-sm text-muted-foreground">Verifique sua conexao e tente novamente.</p>
-            <Button variant="outline" className="mt-4" onClick={onRetry}>
-              Tentar novamente
-            </Button>
-          </div>
+          <LibraryErrorState onRetry={onRetry} />
         ) : books.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-32 text-center animate-fade-in">
-            {emptyState.icon}
-            <h3 className="mb-2 text-xl font-semibold text-foreground">{emptyState.title}</h3>
-            <p className="mx-auto mb-6 max-w-sm text-muted-foreground">{emptyState.desc}</p>
-            {statusFilter === 'ALL' && !searchQuery && (
-              <Button onClick={onOpenUpload}>
-                <Plus className="mr-2 h-4 w-4" />
-                Adicionar Livro
-              </Button>
-            )}
-          </div>
+          <LibraryEmptyState
+            statusFilter={statusFilter}
+            searchQuery={searchQuery}
+            onOpenUpload={onOpenUpload}
+          />
         ) : (
           <>
-            <div className="grid grid-cols-2 gap-x-4 gap-y-8 sm:grid-cols-3 sm:gap-x-5 sm:gap-y-9 lg:grid-cols-4 lg:gap-x-6 lg:gap-y-10 xl:grid-cols-5 2xl:grid-cols-6">
-              {books.map((book) => (
-                <BookCard
-                  key={book.id}
-                  book={book}
-                  onClick={() => onBookClick(book.id)}
-                  onStatusChange={(status) => onBookStatusChange(book.id, status)}
-                  onManageCategories={() => onBookManageCategories(book)}
-                  onManageCollections={() => onBookManageCollections(book)}
-                  isOfflineAvailable={Boolean(downloadedByBookId.get(book.id))}
-                  isDownloadingOffline={downloadingBookId === book.id || removingOfflineBookId === book.id}
-                  offlineDownloadProgressPercent={
-                    downloadingBookId === book.id ? downloadingBookProgressPercent : null
-                  }
-                  onDownloadOffline={() => onBookDownloadOffline(book)}
-                  onRemoveOffline={() => onBookRemoveOffline(book.id)}
-                  density="comfortable"
-                />
-              ))}
-            </div>
+            <LibraryBooksGrid
+              books={books}
+              downloadedByBookId={downloadedByBookId}
+              downloadingBookId={downloadingBookId}
+              downloadingBookProgressPercent={downloadingBookProgressPercent}
+              removingOfflineBookId={removingOfflineBookId}
+              deletingBookId={deletingBookId}
+              onBookClick={onBookClick}
+              onBookStatusChange={onBookStatusChange}
+              onBookManageCategories={onBookManageCategories}
+              onBookManageCollections={onBookManageCollections}
+              onBookDownloadOffline={onBookDownloadOffline}
+              onBookRemoveOffline={onBookRemoveOffline}
+              onBookDelete={onBookDelete}
+            />
 
-            {totalPages > 1 && (
-              <div className="mt-12 flex justify-center gap-2">
-                <Button variant="outline" disabled={page === 0} onClick={() => onPageChange(page - 1)}>
-                  Anterior
-                </Button>
-                <div className="flex items-center px-4 text-sm font-medium text-muted-foreground">
-                  Pagina {page + 1} de {totalPages}
-                </div>
-                <Button
-                  variant="outline"
-                  disabled={page >= totalPages - 1}
-                  onClick={() => onPageChange(page + 1)}
-                >
-                  Proxima
-                </Button>
-              </div>
-            )}
+            <LibraryPagination
+              page={page}
+              totalPages={totalPages}
+              onPageChange={onPageChange}
+            />
           </>
         )}
       </div>

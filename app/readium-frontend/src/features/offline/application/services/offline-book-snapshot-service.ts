@@ -44,8 +44,25 @@ export const upsertOfflineBookSnapshot = async (book: Partial<Book> & { id: numb
   });
 };
 
-export const updateOfflineBookLastReadPage = async (bookId: number, page: number): Promise<void> => {
-  const safePage = Math.max(1, Math.floor(page));
+type ProgressSyncMode = 'MAX' | 'EXACT';
+
+const resolveNextLastReadPage = (
+  previousLastReadPage: number,
+  safePage: number,
+  mode: ProgressSyncMode,
+): number => {
+  if (mode === 'EXACT') {
+    return safePage;
+  }
+  return Math.max(previousLastReadPage, safePage);
+};
+
+export const updateOfflineBookLastReadPage = async (
+  bookId: number,
+  page: number,
+  mode: ProgressSyncMode = 'MAX',
+): Promise<void> => {
+  const safePage = Math.max(0, Math.floor(page));
   const existing = await offlineBooksDb.booksOffline.get(bookId);
   const previousLastReadPage = existing?.lastReadPage ?? 0;
 
@@ -57,7 +74,7 @@ export const updateOfflineBookLastReadPage = async (bookId: number, page: number
     format: existing?.format ?? null,
     status: existing?.status ?? null,
     coverUrl: existing?.coverUrl ?? null,
-    lastReadPage: Math.max(previousLastReadPage, safePage),
+    lastReadPage: resolveNextLastReadPage(previousLastReadPage, safePage, mode),
     updatedAt: nowIso(),
   });
 };

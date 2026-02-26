@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { useMutation, useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { BookStatus, StatusFilter } from '@/types';
 import { toast } from 'sonner';
 import { createLogger } from '@/lib/logger.ts';
@@ -13,6 +13,7 @@ import { useLibraryOfflineFallback } from './useLibraryOfflineFallback';
 import { isLocalConnectionMode } from '@/features/preferences/application/services/connection-mode-service.ts';
 
 const logger = createLogger('library');
+const UPLOAD_PROGRESS_RESET_DELAY_MS = 450;
 
 interface UseLibraryParams {
   page: number;
@@ -22,19 +23,47 @@ interface UseLibraryParams {
   collectionId: number | null;
 }
 
+const resolveErrorMessage = (error: unknown, fallback: string) => {
+  if (error instanceof Error && error.message) {
+    return error.message;
+  }
+  return fallback;
+};
+
 export const useLibrary = (
   { page, statusFilter, searchQuery, categoryId, collectionId }: UseLibraryParams,
   useCases?: LibraryUseCases,
 ) => {
-  const resolveUseCases = (): LibraryUseCases => useCases ?? getLibraryUseCases();
+  const resolvedUseCases = useMemo<LibraryUseCases>(() => useCases ?? getLibraryUseCases(), [useCases]);
   const isLocalMode = isLocalConnectionMode();
   const queryClient = useQueryClient();
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
+  const uploadProgressTimeoutRef = useRef<number | null>(null);
+
+  const clearUploadProgressTimeout = useCallback(() => {
+    if (uploadProgressTimeoutRef.current == null) {
+      return;
+    }
+
+    window.clearTimeout(uploadProgressTimeoutRef.current);
+    uploadProgressTimeoutRef.current = null;
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      clearUploadProgressTimeout();
+    };
+  }, [clearUploadProgressTimeout]);
+
+  const invalidateBooksAndInsights = useCallback((refetchType: 'active' | 'inactive' = 'active') => {
+    queryClient.invalidateQueries({ queryKey: queryKeys.booksRoot(), refetchType });
+    queryClient.invalidateQueries({ queryKey: queryKeys.insightsRoot(), refetchType });
+  }, [queryClient]);
 
   const booksQuery = useQuery({
     queryKey: queryKeys.books(statusFilter, page, searchQuery, categoryId, collectionId),
     queryFn: () =>
-      resolveUseCases().fetchBooks(
+      resolvedUseCases.fetchBooks(
         statusFilter,
         page,
         LIBRARY_PAGE_SIZE,
@@ -51,61 +80,75 @@ export const useLibrary = (
   });
 
   const isUsingOfflineFallback = offlineFallback.isUsingOfflineFallback;
+  const booksFromApi = booksQuery.data?.content ?? [];
 
   useEffect(() => {
-    const books = booksQuery.data?.content ?? [];
-    if (books.length === 0) {
+    if (booksFromApi.length === 0) {
       return;
     }
-    void upsertOfflineBookSnapshots(books);
-  }, [booksQuery.data]);
+
+    void upsertOfflineBookSnapshots(booksFromApi);
+  }, [booksFromApi]);
 
   const uploadMutation = useMutation({
     mutationFn: (file: File) => {
+      clearUploadProgressTimeout();
       setUploadProgress(0);
-      return resolveUseCases().uploadBook(file, {
+      return resolvedUseCases.uploadBook(file, {
         onProgress: (progressPercent) => setUploadProgress(progressPercent),
       });
     },
     onSuccess: (createdBook) => {
       updateLibraryCachesAfterUpload(queryClient, createdBook);
-
       setUploadProgress(100);
       toast.success('Livro adicionado com sucesso!');
-      window.setTimeout(() => {
+
+      clearUploadProgressTimeout();
+      uploadProgressTimeoutRef.current = window.setTimeout(() => {
         setUploadProgress(null);
-      }, 450);
-      queryClient.invalidateQueries({ queryKey: queryKeys.booksRoot(), refetchType: 'inactive' });
-      queryClient.invalidateQueries({ queryKey: queryKeys.insightsRoot(), refetchType: 'inactive' });
+        uploadProgressTimeoutRef.current = null;
+      }, UPLOAD_PROGRESS_RESET_DELAY_MS);
+
+      invalidateBooksAndInsights('inactive');
     },
     onError: (error) => {
+      clearUploadProgressTimeout();
       setUploadProgress(null);
       logger.error('upload failed', error);
-      if (error instanceof Error && error.message) {
-        toast.error(error.message);
-        return;
-      }
-      toast.error('Erro ao fazer upload do livro.');
+      toast.error(resolveErrorMessage(error, 'Erro ao fazer upload do livro.'));
     },
   });
 
   const updateStatusMutation = useMutation({
     mutationFn: ({ id, status }: { id: number; status: BookStatus }) =>
-      resolveUseCases().updateBookStatus(id, status),
+      resolvedUseCases.updateBookStatus(id, status),
     onSuccess: () => {
       toast.success('Status atualizado!');
-      queryClient.invalidateQueries({ queryKey: queryKeys.booksRoot() });
-      queryClient.invalidateQueries({ queryKey: queryKeys.insightsRoot() });
+      invalidateBooksAndInsights();
     },
     onError: () => {
       toast.error('Erro ao atualizar status.');
     },
   });
 
+  const deleteBookMutation = useMutation({
+    mutationFn: (bookId: number) => resolvedUseCases.deleteBook(bookId),
+    onSuccess: () => {
+      toast.success('Livro removido com sucesso.');
+      invalidateBooksAndInsights();
+      queryClient.invalidateQueries({ queryKey: queryKeys.categoriesRoot(), refetchType: 'inactive' });
+      queryClient.invalidateQueries({ queryKey: queryKeys.readingCollectionsRoot(), refetchType: 'inactive' });
+    },
+    onError: (error: unknown) => {
+      logger.error('delete book failed', error);
+      toast.error(resolveErrorMessage(error, 'Erro ao remover livro.'));
+    },
+  });
+
   return {
-    books: isUsingOfflineFallback ? offlineFallback.books : (booksQuery.data?.content || []),
-    totalPages: isUsingOfflineFallback ? 1 : (booksQuery.data?.totalPages || 0),
-    totalElements: isUsingOfflineFallback ? offlineFallback.books.length : (booksQuery.data?.totalElements || 0),
+    books: isUsingOfflineFallback ? offlineFallback.books : booksFromApi,
+    totalPages: isUsingOfflineFallback ? 1 : (booksQuery.data?.totalPages ?? 0),
+    totalElements: isUsingOfflineFallback ? offlineFallback.books.length : (booksQuery.data?.totalElements ?? 0),
     isLoading: booksQuery.isLoading || (booksQuery.isError && offlineFallback.isLoading),
     isError: booksQuery.isError && !isUsingOfflineFallback && !offlineFallback.isLoading,
     isOfflineFallback: isLocalMode || isUsingOfflineFallback,
@@ -113,5 +156,7 @@ export const useLibrary = (
     isUploading: uploadMutation.isPending,
     uploadProgress,
     updateStatus: (id: number, status: BookStatus) => updateStatusMutation.mutate({ id, status }),
+    deleteBook: (id: number) => deleteBookMutation.mutateAsync(id),
+    deletingBookId: deleteBookMutation.isPending ? deleteBookMutation.variables ?? null : null,
   };
 };

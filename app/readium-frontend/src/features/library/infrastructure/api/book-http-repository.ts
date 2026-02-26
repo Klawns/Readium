@@ -21,4 +21,8 @@ export class BookHttpRepository implements BookRepository {
   updateStatus(bookId: number, status: BookStatus): Promise<void> {
     return bookApi.updateBookStatus(bookId, status);
   }
+
+  delete(bookId: number): Promise<void> {
+    return bookApi.deleteBook(bookId);
+  }
 }

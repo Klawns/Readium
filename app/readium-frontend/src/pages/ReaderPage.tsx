@@ -1,7 +1,8 @@
 import React from 'react';
 import { useParams } from 'react-router-dom';
-import PdfReader from '@/features/reader/components/PdfReader.tsx';
 import { useReaderBook } from '@/features/reader/ui/hooks/useReaderBook';
+
+const PdfReader = React.lazy(() => import('@/features/reader/components/PdfReader.tsx'));
 
 export default function ReaderPage() {
   const { id } = useParams<{ id: string }>();
@@ -44,19 +45,26 @@ export default function ReaderPage() {
 
   return (
     <div className="reader-shell h-[100dvh] w-full overflow-hidden">
-      <PdfReader
-        fileUrl={fileUrl}
-        bookId={bookId}
-        initialPage={book.lastReadPage || 1}
-        bookStatus={book.status}
-        onStatusChange={onStatusChange}
-        totalPages={book.pages || 0}
-        ocrStatus={ocrStatus?.status}
-        ocrScore={ocrScore}
-        ocrDetails={ocrStatus?.details ?? null}
-        onTriggerOcr={onTriggerOcr}
-        isTriggeringOcr={isTriggeringOcr}
-      />
+      <React.Suspense fallback={
+        <div className="flex h-[100dvh] items-center justify-center bg-background">
+          <span className="text-sm text-muted-foreground">Inicializando leitor...</span>
+        </div>
+      }
+      >
+        <PdfReader
+          fileUrl={fileUrl}
+          bookId={bookId}
+          initialPage={book.lastReadPage || 1}
+          bookStatus={book.status}
+          onStatusChange={onStatusChange}
+          totalPages={book.pages || 0}
+          ocrStatus={ocrStatus?.status}
+          ocrScore={ocrScore}
+          ocrDetails={ocrStatus?.details ?? null}
+          onTriggerOcr={onTriggerOcr}
+          isTriggeringOcr={isTriggeringOcr}
+        />
+      </React.Suspense>
     </div>
   );
 }

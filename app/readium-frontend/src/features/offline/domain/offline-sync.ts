@@ -65,6 +65,7 @@ export interface SyncQueueRecord {
 export interface UpsertProgressQueuePayload {
   bookId: number;
   page: number;
+  mode?: 'MAX' | 'EXACT';
 }
 
 export interface UpsertBookStatusQueuePayload {

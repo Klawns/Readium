@@ -10,6 +10,7 @@ export class ReaderProgressOfflineRepository implements ReaderProgressRepository
       bookId: command.bookId,
       page: command.page,
       keepalive: command.keepalive ?? false,
+      mode: command.mode ?? 'MAX',
     });
   }
 }

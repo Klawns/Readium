@@ -24,11 +24,64 @@ interface UploadBookOptions {
 interface UpdateProgressOptions {
   keepalive?: boolean;
   operationId?: string;
+  mode?: 'MAX' | 'EXACT';
 }
 
 interface UpdateBookStatusOptions {
   operationId?: string;
 }
+
+const assertSuccess = (status: number, fallbackMessage: string) => {
+  if (status >= 400) {
+    throw new Error(`${fallbackMessage}: ${status}`);
+  }
+};
+
+const buildBookQueryParams = (
+  status?: StatusFilter,
+  page = 0,
+  size = 12,
+  query?: string,
+  categoryId?: number | null,
+  collectionId?: number | null,
+): Record<string, string> => {
+  const params: Record<string, string> = {
+    page: page.toString(),
+    size: size.toString(),
+  };
+
+  if (status && status !== 'ALL') {
+    params.status = status;
+  }
+
+  if (query && query.trim()) {
+    params.query = query.trim();
+  }
+
+  if (typeof categoryId === 'number' && Number.isFinite(categoryId) && categoryId > 0) {
+    params.categoryId = categoryId.toString();
+  }
+
+  if (typeof collectionId === 'number' && Number.isFinite(collectionId) && collectionId > 0) {
+    params.collectionId = collectionId.toString();
+  }
+
+  return params;
+};
+
+const normalizeProgressOptions = (
+  keepaliveOrOptions: boolean | UpdateProgressOptions,
+): Required<Pick<UpdateProgressOptions, 'keepalive'>> & UpdateProgressOptions => {
+  if (typeof keepaliveOrOptions === 'boolean') {
+    return { keepalive: keepaliveOrOptions };
+  }
+
+  return {
+    keepalive: keepaliveOrOptions.keepalive ?? false,
+    operationId: keepaliveOrOptions.operationId,
+    mode: keepaliveOrOptions.mode,
+  };
+};
 
 export const bookApi = {
   getBooks: async (
@@ -39,39 +92,17 @@ export const bookApi = {
     categoryId?: number | null,
     collectionId?: number | null,
   ): Promise<BookPage> => {
-    const params: Record<string, string> = {
-      page: page.toString(),
-      size: size.toString(),
-    };
+    const response = await httpClient.get<BookPage>('/books', {
+      params: buildBookQueryParams(status, page, size, query, categoryId, collectionId),
+    });
 
-    if (status && status !== 'ALL') {
-      params.status = status;
-    }
-
-    if (query && query.trim()) {
-      params.query = query.trim();
-    }
-
-    if (typeof categoryId === 'number' && Number.isFinite(categoryId) && categoryId > 0) {
-      params.categoryId = categoryId.toString();
-    }
-
-    if (typeof collectionId === 'number' && Number.isFinite(collectionId) && collectionId > 0) {
-      params.collectionId = collectionId.toString();
-    }
-
-    const response = await httpClient.get<BookPage>('/books', { params });
-
-    if (response.status >= 400) {
-      throw new Error(`Erro na API: ${response.status}`);
-    }
-
+    assertSuccess(response.status, 'Erro na API');
     return PaginatedBookResponseSchema.parse(response.data);
   },
 
   getBook: async (bookId: number): Promise<Book> => {
     const response = await httpClient.get<Book>(`/books/${bookId}`);
-    if (response.status >= 400) throw new Error(`Erro ao buscar livro: ${response.status}`);
+    assertSuccess(response.status, 'Erro ao buscar livro');
     return BookSchema.parse(response.data);
   },
 
@@ -85,7 +116,8 @@ export const bookApi = {
       },
       onUploadProgress: options?.onProgress,
     });
-    if (response.status >= 400) throw new Error(`Erro ao fazer upload: ${response.status}`);
+
+    assertSuccess(response.status, 'Erro ao fazer upload');
     return BookSchema.parse(response.data);
   },
 
@@ -97,7 +129,8 @@ export const bookApi = {
     const response = await httpClient.patch('/books/status', { bookId, status }, {
       headers: options?.operationId ? { 'X-Operation-Id': options.operationId } : undefined,
     });
-    if (response.status >= 400) throw new Error(`Erro ao atualizar status: ${response.status}`);
+
+    assertSuccess(response.status, 'Erro ao atualizar status');
   },
 
   updateProgress: async (
@@ -105,38 +138,40 @@ export const bookApi = {
     page: number,
     keepaliveOrOptions: boolean | UpdateProgressOptions = false,
   ): Promise<void> => {
-    const options = typeof keepaliveOrOptions === 'boolean'
-      ? { keepalive: keepaliveOrOptions, operationId: undefined }
-      : {
-        keepalive: keepaliveOrOptions.keepalive ?? false,
-        operationId: keepaliveOrOptions.operationId,
-      };
+    const options = normalizeProgressOptions(keepaliveOrOptions);
+    const payload = options.mode ? { page, mode: options.mode } : { page };
 
     const response = await httpClient.patch(
       `/books/${bookId}/progress`,
-      { page },
+      payload,
       {
         keepalive: options.keepalive,
         headers: options.operationId ? { 'X-Operation-Id': options.operationId } : undefined,
       },
     );
-    if (response.status >= 400) throw new Error(`Erro ao atualizar progresso: ${response.status}`);
+
+    assertSuccess(response.status, 'Erro ao atualizar progresso');
+  },
+
+  deleteBook: async (bookId: number): Promise<void> => {
+    const response = await httpClient.delete(`/books/${bookId}`);
+    assertSuccess(response.status, 'Erro ao remover livro');
   },
 
   triggerOcr: async (bookId: number): Promise<void> => {
     const response = await httpClient.post(`/books/${bookId}/ocr`);
-    if (response.status >= 400) throw new Error(`Erro ao iniciar OCR: ${response.status}`);
+    assertSuccess(response.status, 'Erro ao iniciar OCR');
   },
 
   getOcrStatus: async (bookId: number): Promise<BookOcrStatusResponse> => {
     const response = await httpClient.get<BookOcrStatusResponse>(`/books/${bookId}/ocr-status`);
-    if (response.status >= 400) throw new Error(`Erro ao buscar status OCR: ${response.status}`);
+    assertSuccess(response.status, 'Erro ao buscar status OCR');
     return BookOcrStatusResponseSchema.parse(response.data);
   },
 
   getTextLayerQuality: async (bookId: number): Promise<BookTextLayerQualityResponse> => {
     const response = await httpClient.get<BookTextLayerQualityResponse>(`/books/${bookId}/text-layer-quality`);
-    if (response.status >= 400) throw new Error(`Erro ao buscar qualidade de texto: ${response.status}`);
+    assertSuccess(response.status, 'Erro ao buscar qualidade de texto');
     return BookTextLayerQualityResponseSchema.parse(response.data);
   },
 
@@ -154,6 +189,7 @@ export const getBook = bookApi.getBook;
 export const uploadBook = bookApi.uploadBook;
 export const updateBookStatus = bookApi.updateBookStatus;
 export const updateProgress = bookApi.updateProgress;
+export const deleteBook = bookApi.deleteBook;
 export const triggerOcr = bookApi.triggerOcr;
 export const getOcrStatus = bookApi.getOcrStatus;
 export const getTextLayerQuality = bookApi.getTextLayerQuality;
