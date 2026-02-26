@@ -59,8 +59,8 @@ export const usePdfViewportSelection = ({
         containerRef,
         emitSelection,
         isDisposed,
-        retries: shouldRetryForTouch ? 6 : 0,
-        retryDelayMs: shouldRetryForTouch ? 50 : 0,
+        retries: shouldRetryForTouch ? 6 : 3,
+        retryDelayMs: shouldRetryForTouch ? 50 : 30,
       });
     });
 

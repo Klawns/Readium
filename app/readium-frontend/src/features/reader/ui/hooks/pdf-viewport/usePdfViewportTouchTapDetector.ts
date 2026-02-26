@@ -13,7 +13,6 @@ interface UsePdfViewportTouchTapDetectorParams {
   resetTouchGesture: () => void;
   hasActiveTouchSelection: () => boolean;
   resetTouchSelectionControl: () => void;
-  lockTouchSelectionOnNextTick: () => void;
   onViewportTap?: (payload: { x: number; y: number }) => void;
 }
 
@@ -23,7 +22,6 @@ export const usePdfViewportTouchTapDetector = ({
   resetTouchGesture,
   hasActiveTouchSelection,
   resetTouchSelectionControl,
-  lockTouchSelectionOnNextTick,
   onViewportTap,
 }: UsePdfViewportTouchTapDetectorParams) => {
   const handlePointerMoveCapture = useCallback(
@@ -97,12 +95,6 @@ export const usePdfViewportTouchTapDetector = ({
         onViewportTap?.({ x: event.clientX, y: event.clientY });
       }
 
-      if (state.longPressTriggered) {
-        // Keep permission during pointerup dispatch so SelectionPlugin can finalize this gesture,
-        // then lock selection again to require a fresh long-press for the next gesture.
-        lockTouchSelectionOnNextTick();
-      }
-
       if (!state.longPressTriggered && !hasActiveTouchSelection()) {
         resetTouchSelectionControl();
       }
@@ -112,7 +104,6 @@ export const usePdfViewportTouchTapDetector = ({
     [
       clearLongPressTimer,
       hasActiveTouchSelection,
-      lockTouchSelectionOnNextTick,
       onViewportTap,
       resetTouchGesture,
       resetTouchSelectionControl,

@@ -14,17 +14,10 @@ export const usePdfViewportTouchSelectionControl = () => {
     setShowTouchSelectionRects(true);
   }, []);
 
-  const lockTouchSelectionOnNextTick = useCallback(() => {
-    window.setTimeout(() => {
-      lastTouchSelectionAllowedRef.current = false;
-    }, 0);
-  }, []);
-
   return {
     lastTouchSelectionAllowedRef,
     showTouchSelectionRects,
     resetTouchSelectionControl,
     allowTouchSelection,
-    lockTouchSelectionOnNextTick,
   };
 };

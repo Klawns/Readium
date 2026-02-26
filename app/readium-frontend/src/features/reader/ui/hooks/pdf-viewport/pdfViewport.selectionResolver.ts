@@ -57,6 +57,10 @@ export const resolveViewportSelection = async ({
 
     const [selectedRect] = selectionScope.getBoundingRects();
     if (!selectedRect) {
+      if (attempt < retries) {
+        await waitForSelectionSync(retryDelayMs);
+        continue;
+      }
       emitSelection(null);
       return;
     }

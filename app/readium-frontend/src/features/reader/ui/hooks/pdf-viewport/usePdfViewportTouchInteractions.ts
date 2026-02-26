@@ -27,7 +27,6 @@ export const usePdfViewportTouchInteractions = ({
     showTouchSelectionRects,
     resetTouchSelectionControl,
     allowTouchSelection,
-    lockTouchSelectionOnNextTick,
   } = usePdfViewportTouchSelectionControl();
   const { touchGestureRef, clearLongPressTimer, resetTouchGesture, beginTouchGesture } =
     usePdfViewportTouchGestureTimer({
@@ -50,7 +49,6 @@ export const usePdfViewportTouchInteractions = ({
     resetTouchGesture,
     hasActiveTouchSelection,
     resetTouchSelectionControl,
-    lockTouchSelectionOnNextTick,
     onViewportTap,
   });
 
