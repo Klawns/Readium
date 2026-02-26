@@ -6,6 +6,15 @@ import jakarta.validation.constraints.NotNull;
 public record UpdateProgressRequestDTO(
         @NotNull
         @Min(0)
-        Integer page
+        Integer page,
+        ProgressUpdateMode mode
 ) {
+    public ProgressUpdateMode resolvedMode() {
+        return mode == null ? ProgressUpdateMode.MAX : mode;
+    }
+
+    public enum ProgressUpdateMode {
+        MAX,
+        EXACT
+    }
 }

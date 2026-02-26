@@ -62,12 +62,12 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(ExternalServiceException.class)
     public ResponseEntity<ApiErrorResponse> handleExternalService(ExternalServiceException ex, HttpServletRequest req) {
-        return build(HttpStatus.BAD_GATEWAY, ex.getMessage(), req);
+        return build(HttpStatus.BAD_GATEWAY, "External service unavailable", req);
     }
 
     @ExceptionHandler(StorageException.class)
     public ResponseEntity<ApiErrorResponse> handleStorage(StorageException ex, HttpServletRequest req) {
-        return build(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage(), req);
+        return build(HttpStatus.INTERNAL_SERVER_ERROR, "Storage operation failed", req);
     }
 
     @ExceptionHandler(OptimisticLockingFailureException.class)

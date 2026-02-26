@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import java.util.concurrent.Executor;
+import java.util.concurrent.RejectedExecutionHandler;
 import java.util.concurrent.ThreadPoolExecutor;
 
 @Configuration
@@ -17,7 +18,13 @@ public class AsyncExecutorConfig {
             @Value("${app.ocr.async.max-pool-size:2}") int maxPoolSize,
             @Value("${app.ocr.async.queue-capacity:8}") int queueCapacity
     ) {
-        return buildExecutor("ocr-worker-", corePoolSize, maxPoolSize, queueCapacity);
+        return buildExecutor(
+                "ocr-worker-",
+                corePoolSize,
+                maxPoolSize,
+                queueCapacity,
+                new ThreadPoolExecutor.AbortPolicy()
+        );
     }
 
     @Bean(name = "metadataTaskExecutor")
@@ -26,21 +33,28 @@ public class AsyncExecutorConfig {
             @Value("${app.metadata.async.max-pool-size:2}") int maxPoolSize,
             @Value("${app.metadata.async.queue-capacity:16}") int queueCapacity
     ) {
-        return buildExecutor("metadata-worker-", corePoolSize, maxPoolSize, queueCapacity);
+        return buildExecutor(
+                "metadata-worker-",
+                corePoolSize,
+                maxPoolSize,
+                queueCapacity,
+                new ThreadPoolExecutor.CallerRunsPolicy()
+        );
     }
 
     private Executor buildExecutor(
             String threadNamePrefix,
             int corePoolSize,
             int maxPoolSize,
-            int queueCapacity
+            int queueCapacity,
+            RejectedExecutionHandler rejectedExecutionHandler
     ) {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
         executor.setThreadNamePrefix(threadNamePrefix);
         executor.setCorePoolSize(Math.max(1, corePoolSize));
         executor.setMaxPoolSize(Math.max(1, maxPoolSize));
         executor.setQueueCapacity(Math.max(0, queueCapacity));
-        executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());
+        executor.setRejectedExecutionHandler(rejectedExecutionHandler);
         executor.initialize();
         return executor;
     }

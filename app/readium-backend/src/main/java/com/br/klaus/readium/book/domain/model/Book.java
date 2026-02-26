@@ -130,16 +130,27 @@ public class Book {
     }
 
     public void updateReadingProgress(int newPage) {
-        if (newPage < 0) {
-            throw new IllegalArgumentException("Pagina invalida. O valor nao pode ser negativo.");
-        }
-        if (this.pages != null && newPage > this.pages) {
-            throw new IllegalArgumentException("Pagina invalida. O livro so tem " + this.pages + " paginas.");
-        }
-
+        validateProgressPage(newPage);
         int currentPage = this.lastReadPage == null ? 0 : this.lastReadPage;
         this.lastReadPage = Math.max(currentPage, newPage);
         refreshStatusFromProgress();
+    }
+
+    public void setReadingProgressExactly(int newPage) {
+        validateProgressPage(newPage);
+
+        if (this.pages != null && this.pages > 0 && newPage >= this.pages) {
+            this.lastReadPage = this.pages;
+            this.bookStatus = BookStatus.READ;
+            return;
+        }
+
+        this.lastReadPage = newPage;
+        if (newPage <= 0) {
+            this.bookStatus = BookStatus.TO_READ;
+            return;
+        }
+        this.bookStatus = BookStatus.READING;
     }
 
     public void setPages(Integer pages) {
@@ -162,6 +173,15 @@ public class Book {
         if (this.pages != null && this.pages > 0 && currentPage >= this.pages) {
             this.lastReadPage = this.pages;
             this.bookStatus = BookStatus.READ;
+        }
+    }
+
+    private void validateProgressPage(int page) {
+        if (page < 0) {
+            throw new IllegalArgumentException("Pagina invalida. O valor nao pode ser negativo.");
+        }
+        if (this.pages != null && page > this.pages) {
+            throw new IllegalArgumentException("Pagina invalida. O livro so tem " + this.pages + " paginas.");
         }
     }
 }

@@ -23,7 +23,7 @@ public class TranslationController {
     private final TranslationQueryService queryService;
 
     @PostMapping("/translations")
-    public ResponseEntity<TranslationResponseDTO> create(@RequestBody TranslationRequestDTO req) {
+    public ResponseEntity<TranslationResponseDTO> create(@RequestBody @Valid TranslationRequestDTO req) {
         TranslationResponseDTO response = commandService.save(req);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }

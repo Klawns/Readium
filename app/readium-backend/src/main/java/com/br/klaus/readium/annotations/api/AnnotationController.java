@@ -5,6 +5,7 @@ import com.br.klaus.readium.annotations.application.query.AnnotationQueryService
 import com.br.klaus.readium.annotations.api.dto.AnnotationRequestDTO;
 import com.br.klaus.readium.annotations.api.dto.AnnotationResponseDTO;
 import com.br.klaus.readium.annotations.api.dto.UpdateAnnotationRequestDTO;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -25,7 +26,7 @@ public class AnnotationController {
     @PostMapping("/annotations")
     public ResponseEntity<AnnotationResponseDTO> create(
             @RequestHeader(value = "X-Operation-Id", required = false) String operationId,
-            @RequestBody AnnotationRequestDTO req) {
+            @RequestBody @Valid AnnotationRequestDTO req) {
         AnnotationResponseDTO response = commandService.create(req, operationId);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
@@ -60,7 +61,7 @@ public class AnnotationController {
     public ResponseEntity<AnnotationResponseDTO> update(
             @RequestHeader(value = "X-Operation-Id", required = false) String operationId,
             @PathVariable Long id,
-            @RequestBody UpdateAnnotationRequestDTO req) {
+            @RequestBody @Valid UpdateAnnotationRequestDTO req) {
         return ResponseEntity.ok(commandService.update(id, req, operationId));
     }
 

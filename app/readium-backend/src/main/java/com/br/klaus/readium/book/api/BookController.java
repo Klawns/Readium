@@ -72,7 +72,7 @@ public class BookController {
     @PatchMapping("/status")
     public ResponseEntity<Void> updateStatus(
             @RequestHeader(value = "X-Operation-Id", required = false) String operationId,
-            @RequestBody UpdateBookStatusRequestDTO req) {
+            @RequestBody @Valid UpdateBookStatusRequestDTO req) {
         commandService.changeBookStatus(req, operationId);
         return ResponseEntity.noContent().build();
     }

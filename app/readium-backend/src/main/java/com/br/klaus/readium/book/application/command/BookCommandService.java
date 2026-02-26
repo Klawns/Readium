@@ -136,7 +136,11 @@ public class BookCommandService {
         Integer previousPage = book.getLastReadPage();
         Book.BookStatus previousStatus = book.getBookStatus();
 
-        book.updateReadingProgress(req.page());
+        if (req.resolvedMode() == UpdateProgressRequestDTO.ProgressUpdateMode.EXACT) {
+            book.setReadingProgressExactly(req.page());
+        } else {
+            book.updateReadingProgress(req.page());
+        }
         repository.save(book);
 
         if (!Objects.equals(previousPage, book.getLastReadPage()) || previousStatus != book.getBookStatus()) {
