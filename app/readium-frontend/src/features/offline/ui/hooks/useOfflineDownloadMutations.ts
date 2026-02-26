@@ -6,9 +6,15 @@ import { queryKeys } from '@/lib/query-keys';
 import type { OfflineDownloadUseCases } from '../../application/use-cases/offline-download-use-cases';
 import type { OfflineBookDownload } from '../../domain/offline-book';
 
-const invalidateOfflineQueries = (queryClient: ReturnType<typeof useQueryClient>) => {
+const invalidateOfflineQueries = (
+  queryClient: ReturnType<typeof useQueryClient>,
+  bookId?: number,
+) => {
   queryClient.invalidateQueries({ queryKey: queryKeys.offlineDownloadsRoot() });
   queryClient.invalidateQueries({ queryKey: queryKeys.offlineLibraryBooks() });
+  if (typeof bookId === 'number' && Number.isFinite(bookId) && bookId > 0) {
+    queryClient.invalidateQueries({ queryKey: queryKeys.readerAnnotationsRoot(bookId) });
+  }
 };
 
 const getErrorMessage = (error: unknown, fallback: string): string => (
@@ -55,7 +61,7 @@ export const useOfflineDownloadMutations = (
     },
     onSuccess: (record) => {
       queryClient.setQueryData(queryKeys.offlineDownload(record.bookId), record);
-      invalidateOfflineQueries(queryClient);
+      invalidateOfflineQueries(queryClient, record.bookId);
       toast.success('Livro salvo para leitura offline.');
     },
     onError: (error) => {
@@ -76,7 +82,7 @@ export const useOfflineDownloadMutations = (
     mutationFn: (bookId: number) => useCases.removeDownload(bookId),
     onSuccess: (_, bookId) => {
       queryClient.setQueryData(queryKeys.offlineDownload(bookId), null);
-      invalidateOfflineQueries(queryClient);
+      invalidateOfflineQueries(queryClient, bookId);
       toast.success('Arquivo offline removido.');
     },
     onError: (error) => {

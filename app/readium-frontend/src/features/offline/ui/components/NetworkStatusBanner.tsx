@@ -6,16 +6,23 @@ import { isDeviceOnline } from '../../application/services/offline-network-servi
 const BANNER_VISIBLE_MS = 5_000;
 
 export const NetworkStatusBanner = () => {
-  const [isOnline, setIsOnline] = useState<boolean>(() => isDeviceOnline());
-  const [isVisible, setIsVisible] = useState<boolean>(true);
+  const initialOnlineState = isDeviceOnline();
+  const [isOnline, setIsOnline] = useState<boolean>(initialOnlineState);
+  const [isVisible, setIsVisible] = useState<boolean>(() => !initialOnlineState);
 
   useEffect(() => {
     if (typeof window === 'undefined') {
       return undefined;
     }
 
-    const handleOnline = () => setIsOnline(true);
-    const handleOffline = () => setIsOnline(false);
+    const handleOnline = () => {
+      setIsOnline(true);
+      setIsVisible(true);
+    };
+    const handleOffline = () => {
+      setIsOnline(false);
+      setIsVisible(true);
+    };
 
     window.addEventListener('online', handleOnline);
     window.addEventListener('offline', handleOffline);
@@ -36,7 +43,7 @@ export const NetworkStatusBanner = () => {
     return () => {
       window.clearTimeout(timeoutId);
     };
-  }, [isVisible]);
+  }, [isVisible, isOnline]);
 
   if (!isVisible) {
     return null;
