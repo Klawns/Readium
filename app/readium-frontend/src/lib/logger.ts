@@ -47,7 +47,22 @@ const write = (scope: string, level: Exclude<LoggerLevel, 'silent'>, args: unkno
   }
 
   const prefix = `[${scope}]`;
-  const payload = [prefix, ...args];
+  const payload = [
+    prefix,
+    ...args.map((arg) => {
+      if (arg instanceof Error) {
+        return `${arg.name}: ${arg.message}`;
+      }
+      if (typeof arg === 'object' && arg !== null) {
+        try {
+          return JSON.stringify(arg);
+        } catch {
+          return String(arg);
+        }
+      }
+      return arg;
+    }),
+  ];
 
   if (level === 'debug' || level === 'info') {
     console.info(...payload);
@@ -68,4 +83,3 @@ export const createLogger = (scope: string) => ({
   warn: (...args: unknown[]) => write(scope, 'warn', args),
   error: (...args: unknown[]) => write(scope, 'error', args),
 });
-
