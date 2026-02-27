@@ -8,6 +8,6 @@ export const TOUCH_LONG_PRESS_CANCEL_MOVEMENT_PX = 24;
 export const TAP_MAX_DURATION_MS = 220;
 export const TAP_MAX_MOVEMENT_PX = 12;
 export const VIEWPORT_TOUCH_ACTION = 'pan-x pan-y pinch-zoom';
-export const VIEWPORT_TOUCH_ACTION_SELECTION_LOCK = 'none';
+export const VIEWPORT_TOUCH_ACTION_SELECTION_LOCK = 'pan-y pinch-zoom';
 export const VIEWPORT_TOUCH_ACTION_VERTICAL_ONLY = 'pan-y pinch-zoom';
 export const HORIZONTAL_PAN_LOCK_MIN_ZOOM = 1.7;

@@ -80,9 +80,12 @@ export const usePdfViewportTouchMode = ({
           modeId: TOUCH_SELECTION_MODE_ID,
         });
       }
-    } else if (activeMode === TOUCH_SELECTION_MODE_ID || activeMode === TOUCH_SCROLL_MODE_ID) {
-      scope.activateDefaultMode();
-      logger.debug('restored default interaction mode', { activeDocumentId });
+    } else if (activeMode !== TOUCH_SCROLL_MODE_ID) {
+      scope.activate(TOUCH_SCROLL_MODE_ID);
+      logger.debug('activated touch interaction mode', {
+        activeDocumentId,
+        modeId: TOUCH_SCROLL_MODE_ID,
+      });
     }
 
     return () => {

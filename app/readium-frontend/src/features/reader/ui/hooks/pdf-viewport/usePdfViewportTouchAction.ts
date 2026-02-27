@@ -26,11 +26,15 @@ export const usePdfViewportTouchAction = ({
       return VIEWPORT_TOUCH_ACTION;
     }
 
-    if (currentZoomLevel >= HORIZONTAL_PAN_LOCK_MIN_ZOOM) {
+    if (isTouchSelectionLocked) {
+      return VIEWPORT_TOUCH_ACTION_SELECTION_LOCK;
+    }
+
+    if (currentZoomLevel > HORIZONTAL_PAN_LOCK_MIN_ZOOM) {
       return VIEWPORT_TOUCH_ACTION_VERTICAL_ONLY;
     }
 
-    return isTouchSelectionLocked ? VIEWPORT_TOUCH_ACTION_SELECTION_LOCK : VIEWPORT_TOUCH_ACTION;
+    return VIEWPORT_TOUCH_ACTION;
   }, [currentZoomLevel, isTouchSelectionLocked]);
 
   useEffect(() => {
@@ -43,7 +47,8 @@ export const usePdfViewportTouchAction = ({
       touchAction,
       zoomLevel: currentZoomLevel,
       isTouchSelectionLocked,
-      horizontalPanLockActive: currentZoomLevel >= HORIZONTAL_PAN_LOCK_MIN_ZOOM,
+      horizontalPanLockActive:
+        !isTouchSelectionLocked && currentZoomLevel > HORIZONTAL_PAN_LOCK_MIN_ZOOM,
       lockMinZoom: HORIZONTAL_PAN_LOCK_MIN_ZOOM,
     });
   }, [currentZoomLevel, isTouchSelectionLocked, touchAction]);
