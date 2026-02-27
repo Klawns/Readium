@@ -36,6 +36,8 @@ services:
       - APP_OCRMYPDF_COMMAND=${APP_OCRMYPDF_COMMAND:-ocrmypdf}
       - APP_OCRMYPDF_LANGUAGES=${APP_OCRMYPDF_LANGUAGES:-eng+por}
       - APP_OCRMYPDF_TIMEOUT_SECONDS=${APP_OCRMYPDF_TIMEOUT_SECONDS:-1800}
+      - APP_WEB_CORS_ALLOWED_ORIGIN_PATTERNS=${APP_WEB_CORS_ALLOWED_ORIGIN_PATTERNS:-http://localhost:5173,http://127.0.0.1:5173,http://localhost:4173,http://127.0.0.1:4173,http://localhost,http://127.0.0.1,capacitor://localhost,ionic://localhost}
+      - APP_WEB_CORS_ALLOW_CREDENTIALS=${APP_WEB_CORS_ALLOW_CREDENTIALS:-false}
 
 volumes:
   readium-db:

@@ -12,7 +12,7 @@ import java.util.Arrays;
 @Slf4j
 public class WebConfig implements WebMvcConfigurer {
 
-    @Value("${app.web.cors.allowed-origin-patterns:http://localhost:5173,http://127.0.0.1:5173,http://localhost:4173,http://127.0.0.1:4173}")
+    @Value("${app.web.cors.allowed-origin-patterns:http://localhost:5173,http://127.0.0.1:5173,http://localhost:4173,http://127.0.0.1:4173,http://localhost,http://127.0.0.1,capacitor://localhost,ionic://localhost}")
     private String allowedOriginPatterns;
 
     @Value("${app.web.cors.allow-credentials:false}")

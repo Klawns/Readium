@@ -29,7 +29,7 @@ spring:
 app:
   web:
     cors:
-      allowed-origin-patterns: ${APP_WEB_CORS_ALLOWED_ORIGIN_PATTERNS:http://localhost:5173,http://127.0.0.1:5173,http://localhost:4173,http://127.0.0.1:4173}
+      allowed-origin-patterns: ${APP_WEB_CORS_ALLOWED_ORIGIN_PATTERNS:http://localhost:5173,http://127.0.0.1:5173,http://localhost:4173,http://127.0.0.1:4173,http://localhost,http://127.0.0.1,capacitor://localhost,ionic://localhost}
       allow-credentials: ${APP_WEB_CORS_ALLOW_CREDENTIALS:false}
   cache:
     translation-list:
