@@ -3,6 +3,7 @@ import type { InteractionManagerCapability, InteractionMode } from '@embedpdf/pl
 import type { SelectionCapability } from '@embedpdf/plugin-selection/react';
 import { createLogger } from '@/lib/logger.ts';
 import { TOUCH_SCROLL_MODE_ID, TOUCH_SELECTION_MODE_ID } from './pdfViewport.constants';
+import { isTouchCapableDevice } from './pdfViewport.utils';
 
 const logger = createLogger('reader-viewport');
 
@@ -22,8 +23,13 @@ export const usePdfViewportTouchMode = ({
   onCleanup,
 }: UsePdfViewportTouchModeParams) => {
   const registeredInteractionCapabilitiesRef = useRef<WeakSet<object>>(new WeakSet());
+  const isTouchDeviceRef = useRef<boolean>(isTouchCapableDevice());
 
   useEffect(() => {
+    if (!isTouchDeviceRef.current) {
+      return;
+    }
+
     if (!activeDocumentId || !interactionCapability || !selectionCapability) {
       return;
     }
@@ -65,13 +71,18 @@ export const usePdfViewportTouchMode = ({
     });
 
     const scope = interactionCapability.forDocument(activeDocumentId);
-    const targetMode = isTouchSelectionModeEnabled ? TOUCH_SELECTION_MODE_ID : TOUCH_SCROLL_MODE_ID;
-    if (scope.getActiveMode() !== targetMode) {
-      scope.activate(targetMode);
-      logger.debug('activated touch interaction mode', {
-        activeDocumentId,
-        modeId: targetMode,
-      });
+    const activeMode = scope.getActiveMode();
+    if (isTouchSelectionModeEnabled) {
+      if (activeMode !== TOUCH_SELECTION_MODE_ID) {
+        scope.activate(TOUCH_SELECTION_MODE_ID);
+        logger.debug('activated touch interaction mode', {
+          activeDocumentId,
+          modeId: TOUCH_SELECTION_MODE_ID,
+        });
+      }
+    } else if (activeMode === TOUCH_SELECTION_MODE_ID || activeMode === TOUCH_SCROLL_MODE_ID) {
+      scope.activateDefaultMode();
+      logger.debug('restored default interaction mode', { activeDocumentId });
     }
 
     return () => {
